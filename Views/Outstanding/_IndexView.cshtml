@@ -1,0 +1,189 @@
+﻿@model IEnumerable<Milk_Bakery.Models.CustTransaction>
+@{
+    string role = Context.Request.HttpContext.Session.GetString("role");
+}
+
+@if (role == "Customer")
+{
+   
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm text-center" id="dataTable" width="100%" cellspacing="0">
+            <thead class="thead-light" style="font-size:12px">
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.edate)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.invoiceamount)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.recipectamount)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.outstandingampunt)
+                    </th>
+                </tr>
+            </thead>
+            <tbody style="font-size:12px">
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.edate)
+                        </td>
+
+                        <td>
+                            @Html.DisplayFor(modelItem => item.invoiceamount)
+                        </td>
+
+                        <td>
+                            @Html.DisplayFor(modelItem => item.recipectamount)
+                        </td> 
+                      
+                            @if (item.outstandingampunt.ToString().Contains("-"))
+                            {
+                            <td class="text-success">
+                                    @Html.DisplayFor(modelItem => item.outstandingampunt)
+                            </td>
+                            }
+                            else
+                            {
+                            <td class="text-danger">
+                                    @Html.DisplayFor(modelItem => item.outstandingampunt)
+                            </td>
+                            }
+                       
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong style="font-size:10px">Last Update On :  @ViewBag.edate</strong>
+      
+    </div>
+
+}
+else if (role == "Sales")
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm text-center" id="dataTable" width="100%" cellspacing="0">
+            <thead class="thead-light" style="font-size:12px">
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.edate)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.invoiceamount)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.recipectamount)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.outstandingampunt)
+                    </th>
+                </tr>
+            </thead>
+            <tbody style="font-size:12px">
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.edate)
+                        </td>
+
+                        <td>
+                            @Html.DisplayFor(modelItem => item.invoiceamount)
+                        </td>
+
+                        <td>
+                            @Html.DisplayFor(modelItem => item.recipectamount)
+                        </td>
+
+                        @if (item.outstandingampunt.ToString().Contains("-"))
+                        {
+                            <td class="text-success">
+                                @Html.DisplayFor(modelItem => item.outstandingampunt)
+                            </td>
+                        }
+                        else
+                        {
+                            <td class="text-danger">
+                                @Html.DisplayFor(modelItem => item.outstandingampunt)
+                            </td>
+                        }
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong style="font-size:10px">Last Update On :  @ViewBag.edate</strong>
+
+    </div>
+}
+else
+{
+   
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm" id="dataTable" width="100%" cellspacing="0">
+            <thead class="thead-dark">
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.edate)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.invoiceamount)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.recipectamount)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.outstandingampunt)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.cmpname)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.customername)
+                    </th>
+
+
+
+
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.edate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.invoiceamount)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.recipectamount)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.outstandingampunt)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.cmpname)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.customername)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong style="font-size:10px">Last Update On :  @ViewBag.edate</strong>
+       
+    </div>
+}

@@ -1,0 +1,135 @@
+﻿@model Milk_Bakery.Models.User
+
+@{
+    
+    Layout = null;
+}
+
+<html>
+
+
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Milk & Bakery</title>
+
+    <link rel="icon" href="~/img/logo.svg" type="image/svg">
+<style>
+ 
+    .mainDiv {
+    display: flex;
+    min-height: 100%;
+    align-items: center;
+    justify-content: center;
+    background: #3b4465;
+    font-family: 'Open Sans', sans-serif;
+  }
+ .card {
+    width: 400px;
+    border-color: white;
+    background: #fff;
+    padding: 36px 0;
+    border-radius: 4px;
+    margin: 30px 0;
+    box-shadow: 0px 0 2px 0 rgba(0,0,0,0.25);
+  }
+#signupLogo {
+  max-height: 100px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+}
+.formTitle{
+  font-weight: 600;
+  margin-top: 20px;
+  color: #2F2D3B;
+  text-align: center;
+}
+.inputLabel {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 6px;
+  margin-top: 24px;
+}
+  .inputDiv {
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+  }
+input {
+  height: 40px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: none;
+  border: solid 1px #ccc;
+  padding: 0 11px;
+}
+input:disabled {
+  cursor: not-allowed;
+  border: solid 1px #eee;
+}
+.buttonWrapper {
+  margin-top: 40px;
+}
+  .submitButton {
+    width: 70%;
+    height: 40px;
+    margin: auto;
+    display: block;
+    color: #fff;
+    background-color: #065492;
+    border-color: #065492;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.035);
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+
+
+</style>
+</head>
+<body style=" background: #3b4465;">
+<div class="mainDiv">
+    <div class="card">
+        <form asp-action="Login" method="post" id="signupForm">
+
+			<img src="~/img/logo.svg" id="signupLogo" />
+
+            <h2 class="formTitle">
+                Login
+            </h2>
+
+            <div class="inputDiv">
+                <label class="inputLabel" for="password">User Name</label>
+                <input asp-for="phoneno" autocomplete="off" id="password"  required>
+                <span asp-validation-for="phoneno" class="text-danger"></span>
+            </div>
+
+            <div class="inputDiv">
+                <label class="inputLabel" for="confirmPassword">Password</label>
+                <input type="password" autocomplete="off" id="confirmPassword" asp-for="Password" required>
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="buttonWrapper">
+                <input type="submit" id="submitButton" value="Login" class="submitButton"/>
+                   
+            
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script src="~/js/site.js" asp-append-version="true"></script>
+@section Scripts {
+    @await Component.InvokeAsync("Notyf")
+    @await RenderSectionAsync("Scripts", required: false)
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+</body>
+</html>

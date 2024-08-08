@@ -1,0 +1,138 @@
+﻿@model List<PurchaseOrder>
+
+
+<link href="~/css/modal.css" rel="stylesheet" />
+
+<form asp-action="SaveSelectedRows" method="post">
+    <div class="w-screen-lg  mt-2">
+        <div class="table-responsive table-container max-h-80  overflow-y-auto">
+            <table class="w-full divide-y divide-gray-200" id="dataTable">
+                <thead class="bg-gray-200 sticky top-0">
+                    <tr>
+                <th>
+                 <input type="checkbox" class="" id="selectAll" />
+                </th>
+                    <th>OrderNo</th>
+                    <th>OrderDate</th>
+                    <th>Customername</th>
+                    <th>CustomerCode</th>
+                    <th>Segementname</th>
+                    <th>Segement Code</th>
+                    <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <tr>
+                        <td><input type="checkbox" asp-for="@Model[i].IsSelected" class="rowCheckbox" /></td>
+                        <td><input asp-for="@Model[i].OrderNo" class="border-0 bg-transparent" readonly /></td>
+                        <td>@Model[i].OrderDate.Date.ToShortDateString()</td>
+                        <td>@Model[i].Customername</td>
+                        <td>@Model[i].CustomerCode</td>
+                        <td>@Model[i].Segementname</td>
+                        <td>@Model[i].Segementcode</td>
+                        <td>
+                                <a onclick="showInPopup('@Url.Action("Update","OrderProcessFile",new {id=@Model[i].Id},Context.Request.Scheme)','Verify Order')" class="btn hover:bg-yellow-700 bg-yellow-600 rounded-sm shadow-md text-white"><i class="fas fa-pencil-alt"></i> Edit</a>
+                        </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    </div>
+    </div>
+   
+    <div class="row">
+        <div class="col-sm-10">
+            <span class="font-weight-bold text-capitalize">Total Quntity : @Model.Count()</span>
+        </div>
+        <div class="col-sm-2">
+            <button type="submit" id="filegenerate" class="btn hover:bg-blue-700 bg-blue-600 col-md-12 mt-1 rounded-sm shadow-md text-white">File Generate</button>
+        </div>
+    </div>
+   
+</form>
+
+<!-- Modal Popup -->
+<div class="modal" tabindex="-1" role="dialog" id="form-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-gray-300 text-center p-2">
+                <h5 class="modal-title text-dark text-2xl font-semibold"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+  
+}
+<script>
+    // Handle select all functionality
+    document.getElementById("selectAll").addEventListener("change", function () {
+        var checkboxes = document.getElementsByClassName("rowCheckbox");
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = this.checked;
+        }
+    });
+
+</script>
+<script>
+    showInPopup = (url,title) => {
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function (res) {
+                $('#form-modal .modal-body').html(res);
+                $('#form-modal .modal-title').html(title);
+                $('#form-modal').modal('show');
+                // to make popup draggable
+                
+            }
+        })
+    }
+</script>
+<script>
+    jQueryAjaxPost = form => {
+        try {
+            $.ajax({
+                type: 'POST',
+                url: form.action,
+                data: new FormData(form),
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    if (res.isValid) {
+                        console.log("hi");
+                        $('#form-modal').modal('hide');
+                    }
+                    else
+                        console.log("no");
+                    $('#form-modal').modal('hide');
+                },
+                error: function (err) {
+                    console.log("error")
+                }
+            })
+            //to prevent default form submit event
+            return false;
+        } catch (ex) {
+            console.log(ex)
+        }
+    }
+</script>
+
+<script>
+    function reloadPageAfter2Seconds() {
+        location.reload();
+    }
+    document.getElementById("filegenerate").addEventListener("click", function () {
+        // Call the function after 2 seconds (2000 milliseconds)
+        setTimeout(reloadPageAfter2Seconds, 10000);
+    });
+</script>

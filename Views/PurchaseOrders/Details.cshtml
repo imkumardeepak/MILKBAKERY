@@ -1,0 +1,403 @@
+﻿@model Milk_Bakery.Models.PurchaseOrder
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string role = Context.Request.HttpContext.Session.GetString("role");
+}
+
+
+@if (role == "Customer")
+{
+    <div class="mt-1">
+        <div class="card mb-1">
+            <div class="card-header text-white p-1" style="background-color:#FC2947;">
+                <div class="d-flex align-items-baseline">
+                    <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                    <h5 class="mx-auto text-white text-2xl font-semibold">Order Details</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form asp-action="Create" id="CodeSbyAnizForm" onkeydown="return event.key != 'Enter';" ;>
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                            <div class="row">
+                                <div class="form-group col-sm-6">
+                                    <label asp-for="Customername" class="control-label"></label>
+                                    <input asp-for="Customername" class="form-control" readonly />
+                                    <span asp-validation-for="Customername" class="text-danger"></span>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label asp-for="Segementname" class="control-label"></label>
+                                    <select id="wbridge" asp-for="Segementname" asp-items="@ViewBag.segemnt" class="form-control" onchange="dropdownChanged()" readonly></select>
+                                    <span asp-validation-for="Segementname" class="text-danger"></span>
+                                    <input asp-for="Segementcode" hidden class="form-control" readonly />
+                                    <input asp-for="CustomerCode" hidden class="form-control" readonly />
+
+                                </div>
+                            </div>
+                            @for (int i = 0; i < Model.ProductDetails.Count; i++)
+                            {
+                                <div class="row">
+                                    <div class="col-12"> <span class="pl-1"><input asp-for="@Model.ProductDetails[i].ProductName" class="border-0 bg-transparent font-weight-bold w-100 text-capitalize text-dark p-0" readonly /></span></div>
+                                    <div class="col-6">
+                                        <span class="pl-1">Unit : <input asp-for="@Model.ProductDetails[i].Unit" class="border-0 bg-transparent text-dark w-50 p-0" readonly /></span>
+                                        <span class="pl-1">Rate : <input asp-for="@Model.ProductDetails[i].Rate" class="border-0 bg-transparent text-dark w-50 p-0" readonly /></span>
+
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <button class="btn btn-danger decrement-btn" type="button" style="border-top-left-radius:50%;border-bottom-left-radius:50%" disabled>-</button>
+                                            </div>
+                                            <input type="number" asp-for="@Model.ProductDetails[i].qty" class="form-control border-danger w-25 number-input QtyTotal" dir="rtl" readonly>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-danger increment-btn" type="button" style="border-top-right-radius:50%;border-bottom-right-radius:50%" disabled>+</button>
+                                                <input type="hidden" asp-for="@Model.ProductDetails[i].Price" class="form-control" readonly />
+                                                <input type="hidden" asp-for="@Model.ProductDetails[i].IsDeleted" />
+                                                <input asp-for="@Model.ProductDetails[i].ProductCode" class="form-control" type="hidden" readonly />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="m-1">
+                            }
+
+
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <th style="font-size:12px">
+                                                Total Quantity:
+                                            </th>
+                                            <th style="width:150px">
+                                                <input type="text" id="txtQtyTotal" class="form-control" value="" readonly />
+                                            </th>
+
+                                            <th style="font-size:12px">
+                                                Total Amount:
+                                            </th>
+
+
+
+                                            <th style="width:230px">
+                                                <input type="text" id="txtAmountTotal" class="form-control" value="" readonly />
+                                            </th>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <br />
+                            <div class="row">
+                               @* <div class="col-md-6">
+                                    <input type="submit" value="Save" class="btn btn-primary col-md-12" onclick="return confirmation1(this);" />
+                                </div>*@
+                                <div class="col-md-6">
+                                    <a href="/Home/Index" class="btn btn-danger col-md-12">Back</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (role == "Sales")
+{
+    <div class="mt-1">
+        <div class="card mb-1">
+            <div class="card-header text-white p-1" style="background-color:#FC2947;">
+                <div class="d-flex align-items-baseline">
+                    <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                    <h5 class="mx-auto text-white text-2xl font-semibold">Order Details</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form asp-action="Create" id="CodeSbyAnizForm" onkeydown="return event.key != 'Enter';" ;>
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                            <div class="row">
+                                <div class="form-group col-sm-6">
+                                    <label asp-for="Customername" class="control-label"></label>
+                                    <input asp-for="Customername" class="form-control" readonly />
+                                    <span asp-validation-for="Customername" class="text-danger"></span>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label asp-for="Segementname" class="control-label"></label>
+                                    <select id="wbridge" asp-for="Segementname" asp-items="@ViewBag.segemnt" class="form-control" onchange="dropdownChanged()" readonly></select>
+                                    <span asp-validation-for="Segementname" class="text-danger"></span>
+                                    <input asp-for="Segementcode" hidden class="form-control" readonly />
+                                    <input asp-for="CustomerCode" hidden class="form-control" readonly />
+
+                                </div>
+                            </div>
+                            @for (int i = 0; i < Model.ProductDetails.Count; i++)
+                            {
+                                <div class="row">
+                                    <div class="col-12"> <span class="pl-1"><input asp-for="@Model.ProductDetails[i].ProductName" class="border-0 bg-transparent font-weight-bold w-100 text-capitalize text-dark p-0" readonly /></span></div>
+                                    <div class="col-6">
+                                        <span class="pl-1">Unit : <input asp-for="@Model.ProductDetails[i].Unit" class="border-0 bg-transparent text-dark w-50 p-0" readonly /></span>
+                                        <span class="pl-1">Rate : <input asp-for="@Model.ProductDetails[i].Rate" class="border-0 bg-transparent text-dark w-50 p-0" readonly /></span>
+
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <button class="btn btn-danger decrement-btn" type="button" style="border-top-left-radius:50%;border-bottom-left-radius:50%" disabled>-</button>
+                                            </div>
+                                            <input type="number" asp-for="@Model.ProductDetails[i].qty" class="form-control border-danger w-25 number-input QtyTotal" dir="rtl" readonly>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-danger increment-btn" type="button" style="border-top-right-radius:50%;border-bottom-right-radius:50%" disabled>+</button>
+                                                <input type="hidden" asp-for="@Model.ProductDetails[i].Price" class="form-control" readonly />
+                                                <input type="hidden" asp-for="@Model.ProductDetails[i].IsDeleted" />
+                                                <input asp-for="@Model.ProductDetails[i].ProductCode" class="form-control" type="hidden" readonly />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="m-1">
+                            }
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <th style="font-size:12px">
+                                                Total Quantity:
+                                            </th>
+                                            <th style="width:150px">
+                                                <input type="text" id="txtQtyTotal" class="form-control" value="" readonly />
+                                            </th>
+
+                                            <th style="font-size:12px">
+                                                Total Amount:
+                                            </th>
+
+
+
+                                            <th style="width:230px">
+                                                <input type="text" id="txtAmountTotal" class="form-control" value="" readonly />
+                                            </th>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <br />
+                            <div class="row">
+                                @* <div class="col-md-6">
+                            <input type="submit" value="Save" class="btn btn-primary col-md-12" onclick="return confirmation1(this);" />
+                            </div>*@
+                                <div class="col-md-6">
+                                    <a href="/Home/Index" class="btn btn-danger col-md-12">Back</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="mt-3">
+        <div class="card mb-3">
+            <div class="card-header text-white p-1" style="background-color:#FC2947;">
+                <div class="d-flex align-items-baseline">
+                    <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                    <h5 class="mx-auto text-white text-2xl font-semibold">Order Details</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form asp-action="Edit" id="CodeSbyAnizForm" onkeydown="return event.key != 'Enter';">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <input type="hidden" asp-for="Id" />
+                            <div class="row">
+                                <div class="form-group col-sm-6">
+                                    <label asp-for="OrderNo" class="control-label"></label>
+                                    <input asp-for="OrderNo" class="form-control" readonly />
+                                    <span asp-validation-for="OrderNo" class="text-danger"></span>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label asp-for="OrderDate" class="control-label"></label>
+                                    <input asp-for="OrderDate" class="form-control" readonly />
+                                    <span asp-validation-for="OrderDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="form-group col-sm-6">
+                                    <label asp-for="Customername" class="control-label"></label>
+                                    <input asp-for="Customername" class="form-control" readonly />
+                                    <input asp-for="CustomerCode" class="form-control" readonly  hidden/>
+                                    <span asp-validation-for="Customername" class="text-danger"></span>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label asp-for="Segementname" class="control-label"></label>
+                                    <input asp-for="Segementname" class="form-control" readonly />
+                                    <input asp-for="Segementcode" class="form-control" hidden />
+                                    <span asp-validation-for="Segementname" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="w-screen-lg  mt-2">
+                                <div class="table-responsive table-container max-h-80  overflow-y-auto">
+                                    <table class="w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-200 sticky top-0">
+                                            <tr>
+                                            <th>Product Name</th>
+                                            <th>Code</th>
+                                            <th>Quantity</th>
+                                            <th>Unit</th>
+                                            <th>Rate</th>
+                                            <th>Amount</th>
+                                            @* <th style="width:100px;">
+                                        <button id='btnAddDetailRow' type="button" class="btn btn-sm btn-secondary visible" onclick="AddItem(this)">
+                                        Add
+                                        </button>
+                                        </th>*@
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="CsDiv">
+                                        @for (int i = 0; i < Model.ProductDetails.Count; i++)
+                                        {
+
+                                            <tr>
+                                                <td style="width:300px">
+
+                                                    <input asp-for="@Model.ProductDetails[i].ProductName" class="form-control" readonly />
+                                                    <span asp-validation-for="@Model.ProductDetails[i].ProductName" class="text-danger"></span>
+                                                </td>
+
+                                                <td>
+                                                    <input asp-for="@Model.ProductDetails[i].ProductCode" class="form-control" readonly />
+                                                    <span asp-validation-for="@Model.ProductDetails[i].ProductCode" class="text-danger"></span>
+                                                </td>
+                                                <td>
+                                                        <input asp-for="@Model.ProductDetails[i].qty" class="form-control QtyTotal text-right" readonly />
+                                                    <span asp-validation-for="@Model.ProductDetails[i].qty" class="text-danger"></span>
+                                                </td>
+                                                <td>
+                                                    <input asp-for="@Model.ProductDetails[i].Unit" class="form-control text-right" readonly />
+                                                    <span asp-validation-for="@Model.ProductDetails[i].Unit" class="text-danger"></span>
+                                                </td>
+
+                                                <td>
+                                                        <input asp-for="@Model.ProductDetails[i].Rate" class="form-control text-right" readonly />
+                                                    <span asp-validation-for="@Model.ProductDetails[i].Rate" class="text-danger"></span>
+                                                </td>
+
+                                                <td>
+                                                        <input asp-for="@Model.ProductDetails[i].Price" class="form-control text-right" readonly />
+                                                    <input type="hidden" asp-for="@Model.ProductDetails[i].IsDeleted" />
+                                                </td>
+                                                @* <td>
+                                        <button id='btnremove-@i' type="button" class="btn btn-sm btn-danger visible" onclick="DeleteItem(this)">
+                                        Delete
+                                        </button>
+                                        </td>*@
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="responsive-table table text-center m-0 p-0">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width:300px">
+                                                Total Quantity:
+                                            </th>
+                                            <th>
+                                                <input type="text" id="txtQtyTotal" class="form-control text-right" value="" readonly />
+                                            </th>
+
+                                            <th style="width:300px">
+                                                Total Amount:
+                                            </th>
+
+
+
+                                            <th>
+                                                <input type="text" id="txtAmountTotal" class="form-control text-right" value="" readonly />
+                                            </th>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <br />
+                            <div class="px-4 text-right py-2">
+
+
+                                <a asp-action="Index" class="btn hover:bg-red-700 bg-red-600  rounded-sm shadow-md text-white mt-1">Back</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+
+<script>
+    CalcTotals();
+    function CalcTotals() {
+        console.log("hi");
+        var x = document.getElementsByClassName('QtyTotal');
+
+
+        var totalQty = 0;
+        var Amount = 0;
+        var totalAmount = 0;
+
+
+
+        var i;
+
+        for (i = 0; i < x.length; i++) {
+
+            var idofIsDeleted = i + "__IsDeleted";
+
+            var idofPrice = i + "__Rate";
+
+
+            var idofTotal = i + "__Price";
+
+            var hidIsDelId = document.querySelector("[id$='" + idofIsDeleted + "']").id;
+
+            var priceTxtId = document.querySelector("[id$='" + idofPrice + "']").id;
+
+            var totalTxtId = document.querySelector("[id$='" + idofTotal + "']").id;
+
+
+            if (document.getElementById(hidIsDelId).value != "true") {
+                totalQty = totalQty + eval(x[i].value);
+
+                var txttotal = document.getElementById(totalTxtId);
+                var txtprice = document.getElementById(priceTxtId);
+                txttotal.value = (eval(x[i].value) * txtprice.value).toFixed(2);
+
+                totalAmount = eval(totalAmount) + eval(txttotal.value);
+            }
+        }
+
+        document.getElementById('txtQtyTotal').value = totalQty;
+        document.getElementById('txtAmountTotal').value = totalAmount.toFixed(2);
+
+    }
+</script>

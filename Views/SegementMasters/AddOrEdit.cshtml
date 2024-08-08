@@ -1,0 +1,54 @@
+﻿@model Milk_Bakery.Models.SegementMaster
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-3">
+    <div class="card mb-3">
+          <div class="card-header bg-blue-500 text-white">
+            <div class="d-flex align-items-baseline">
+                <h5 class="mx-auto text-white text-2xl font-semibold">Segement Master</h5>
+                <a asp-action="Index" class="btn btn-success text-white"><i class="fa fa-reply"></i> Back</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <form asp-action="AddOrEdit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label asp-for="ShortName" class="control-label"></label>
+                                <input asp-for="ShortName" class="form-control" />
+                                <span asp-validation-for="ShortName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="SegementName" class="control-label"></label>
+                                <input asp-for="SegementName" class="form-control" />
+                                <span asp-validation-for="SegementName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label asp-for="Segement_Code" class="control-label"></label>
+                                <input asp-for="Segement_Code" class="form-control" />
+                                <span asp-validation-for="Segement_Code" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="px-4 text-right py-2">
+                            <input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
+                            <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+                        </div>
+        </form>
+    </div>
+</div>
+
+
+</div>
+</div>
+</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

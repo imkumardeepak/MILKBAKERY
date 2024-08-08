@@ -1,0 +1,308 @@
+﻿@model List<VisitEntery>
+@{
+    string role = Context.Request.HttpContext.Session.GetString("role");
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+
+  input[type=checkbox],
+input[type=radio] {
+    --active: #275efe;
+    --active-inner: #fff;
+    --focus: 2px rgba(39, 94, 254, 0.3);
+    --border: #bbc1e1;
+    --border-hover: #275efe;
+    --background: #fff;
+    --disabled: #f6f8ff;
+    --disabled-inner: #e1e6f9;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    height: 21px;
+    outline: none;
+    display: inline-block;
+    vertical-align: top;
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+    border: 1px solid var(--bc, var(--border));
+    background: var(--b, var(--background));
+    transition: background 0.3s, border-color 0.3s, box-shadow 0.2s;
+  }
+  input[type=checkbox]:after,
+input[type=radio]:after {
+    content: "";
+    display: block;
+    left: 0;
+    top: 0;
+    position: absolute;
+    transition: transform var(--d-t, 0.3s) var(--d-t-e, ease), opacity var(--d-o, 0.2s);
+  }
+  input[type=checkbox]:checked,
+input[type=radio]:checked {
+    --b: var(--active);
+    --bc: var(--active);
+    --d-o: 0.3s;
+    --d-t: 0.6s;
+    --d-t-e: cubic-bezier(0.2, 0.85, 0.32, 1.2);
+  }
+  input[type=checkbox]:disabled,
+input[type=radio]:disabled {
+    --b: var(--disabled);
+    cursor: not-allowed;
+    opacity: 0.9;
+  }
+  input[type=checkbox]:disabled:checked,
+input[type=radio]:disabled:checked {
+    --b: var(--disabled-inner);
+    --bc: var(--border);
+  }
+  input[type=checkbox]:disabled + label,
+input[type=radio]:disabled + label {
+    cursor: not-allowed;
+  }
+  input[type=checkbox]:hover:not(:checked):not(:disabled),
+input[type=radio]:hover:not(:checked):not(:disabled) {
+    --bc: var(--border-hover);
+  }
+  input[type=checkbox]:focus,
+input[type=radio]:focus {
+    box-shadow: 0 0 0 var(--focus);
+  }
+  input[type=checkbox]:not(.switch),
+input[type=radio]:not(.switch) {
+    width: 21px;
+  }
+  input[type=checkbox]:not(.switch):after,
+input[type=radio]:not(.switch):after {
+    opacity: var(--o, 0);
+  }
+  input[type=checkbox]:not(.switch):checked,
+input[type=radio]:not(.switch):checked {
+    --o: 1;
+  }
+  input[type=checkbox] + label,
+input[type=radio] + label {
+    font-size: 14px;
+    line-height: 21px;
+    display: inline-block;
+    vertical-align: top;
+    cursor: pointer;
+    margin-left: 4px;
+  }
+
+  input[type=checkbox]:not(.switch) {
+    border-radius: 7px;
+  }
+  input[type=checkbox]:not(.switch):after {
+    width: 5px;
+    height: 9px;
+    border: 2px solid var(--active-inner);
+    border-top: 0;
+    border-left: 0;
+    left: 7px;
+    top: 4px;
+    transform: rotate(var(--r, 20deg));
+  }
+  input[type=checkbox]:not(.switch):checked {
+    --r: 43deg;
+  }
+  input[type=checkbox].switch {
+    width: 38px;
+    border-radius: 11px;
+  }
+  input[type=checkbox].switch:after {
+    left: 2px;
+    top: 2px;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    background: var(--ab, var(--border));
+    transform: translateX(var(--x, 0));
+  }
+  input[type=checkbox].switch:checked {
+    --ab: var(--active-inner);
+    --x: 17px;
+  }
+  input[type=checkbox].switch:disabled:not(:checked):after {
+    opacity: 0.6;
+  }
+
+  input[type=radio] {
+    border-radius: 50%;
+  }
+  input[type=radio]:after {
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: var(--active-inner);
+    opacity: 0;
+    transform: scale(var(--s, 0.7));
+  }
+  input[type=radio]:checked {
+    --s: 0.5;
+  }
+
+   
+    .table-container {
+        width: 420px; /* Set your desired width */
+        height: 400px; /* Set your desired height */
+        overflow: auto;
+    }
+
+</style>
+<div class="mt-3">
+    <div class="card mb-3">
+        <div class="card-header text-white p-1" style="background-color:#FC2947;">
+            <div class="d-flex align-items-baseline">
+                <a href="/VisitReport/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                <h5 class="mx-auto text-white text-2xl font-semibold">Tracking Report</h5>
+            </div>
+        </div>
+        <div class="card-body">
+<label for="toggleSwitch" class="switch-label">FullMap View</label>
+<label>
+    <input id="s2" type="checkbox" class="switch" checked>
+</label>
+<label for="toggleSwitch" class="switch-label">Both</label>
+
+<div id="both" style="display:block">
+    <div class="row">
+        <div class="col-xl-7 col-sm-7">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div id="map" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-5 col-sm-5">
+            <div class="card" style="height: 400px;">
+                <div class="card-body p-0">
+
+                    <div class="table-responsive table-container" style="overflow-x: auto;">
+                        <table class="table table-sm">
+                            <thead class="bg-gray-200 sticky top-0">
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>City</th>
+                                    <th>Retailer</th>
+                                    <th>Location</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.Count; i++)
+                                {
+                                    <tr>
+                                        <td>@Model[i].CustnameName</td>
+                                        <td>@Model[i].city</td>
+                                        <td>@Model[i].retailer</td>
+                                        <td>@Model[i].location</td>
+                                        <td>@Model[i].dateTime.ToShortTimeString()</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="maponly" style="display:none">
+    <div class="row">
+        <div class="col-xl-12 col-sm-12">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div id="map1" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+
+</div>
+<script>
+    var map = L.map('map').setView([51.505, -0.09], 13);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Loop through the list of locations and add markers
+    @for (int i = 0; i < Model.Count; i++)
+    {
+        <text>
+         var lat = @Model[i].latitude;
+        var lon = @Model[i].longitute;
+        var name = '@i,@Model[i].retailer , @Model[i].location';
+        var marker = L.marker([lat, lon]).addTo(map);
+        marker.bindPopup(name);
+        // Create a marker for the user's current location
+        var userMarker = L.marker([lat, lon]).addTo(map);
+        userMarker.bindPopup(name).openPopup();
+
+        // Update the map view to center on the user's location
+        map.setView([lat, lon], 13);
+
+        </text>
+    }
+        function recenterMap1() {
+            map1.invalidateSize();
+            map1.setView([51.505, -0.09], 13);
+        }
+
+    const toggleSwitch = document.getElementById('s2');
+    const both = document.getElementById('both');
+    const maponly = document.getElementById('maponly');
+
+    toggleSwitch.addEventListener('change', function () {
+        if (toggleSwitch.checked) {
+            both.style.display = 'block';
+            maponly.style.display = 'none';
+        
+        }else {
+            both.style.display = 'none';
+            maponly.style.display = 'block';
+          
+        }
+    });
+</script>
+<script>
+    var map1 = L.map('map1').setView([51.505, -0.09], 13);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map1);
+
+    // Initialize arrays to store marker coordinates
+    var markerLatitudes = [];
+    var markerLongitudes = [];
+
+    // Loop through the list of locations and add markers
+    @for (int i = 0; i < Model.Count; i++)
+    {
+        <text>
+                    var lat1 = @Model[i].latitude;
+        var lon1 = @Model[i].longitute;
+        var name1 = '@Model[i].retailer , @Model[i].location';
+        var userMarker1 = L.marker([lat1, lon1]).addTo(map1);
+        userMarker1.bindPopup(name1).openPopup();
+
+        // Store marker coordinates in arrays
+        markerLatitudes.push(lat1);
+        markerLongitudes.push(lon1);
+        </text>
+    }
+
+        // Calculate the center coordinates as the average of all marker coordinates
+        var avgLat = markerLatitudes.reduce((a, b) => a + b, 0) / markerLatitudes.length;
+    var avgLon = markerLongitudes.reduce((a, b) => a + b, 0) / markerLongitudes.length;
+
+    // Set the map's view to the calculated center coordinates
+    map1.setView([avgLat, avgLon], 13);
+</script>
+

@@ -1,0 +1,165 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string role = Context.Request.HttpContext.Session.GetString("role");
+}
+
+<div id="loadingIndicator" class="loading-indicator">
+    <div class="spinner"></div>
+</div>
+<div class="mt-3">
+    <div class="card mb-3">
+        <div class="card-header text-white p-1" style="background-color:#FC2947;">
+            <div class="d-flex align-items-baseline">
+                <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                <h5 class="mx-auto text-white text-2xl font-semibold">RouteWise Summary Report</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="form-group col-6">
+                    <label for="dateInput">From Date:</label>
+                    <input type="date" id="Fromdate" class="form-control" name="dateInput">
+                </div>
+                <div class="form-group col-6">
+
+                    <label for="dateInput">To Date:</label>
+                    <input type="date" id="todate" class="form-control" name="dateInput">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <select id="segement" class="form-control" asp-items="@ViewBag.segemnt"></select>
+                </div>
+                <div class="form-group col-sm-6">
+                    <select id="customer" asp-items="@ViewBag.customer" class="form-control"></select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-10">
+                   @* <span class="font-weight-bold text-capitalize">Total Quntity : @Model.Count()</span>*@
+                </div>
+                <div class="col-sm-2">
+                    <button type="submit"  class="btn hover:bg-blue-700 bg-blue-600  mt-1 rounded-sm shadow-md text-white" onclick="dropdownChanged()">Show</button>
+                    <button type="submit"  class="btn hover:bg-blue-700 bg-blue-600  mt-1 rounded-sm shadow-md text-white" onclick="dropdownChanged1()">Export</button>
+                </div>
+            </div>
+  
+           
+        </div>
+    </div>
+    <div id="output" style="width:1080px">
+    </div>
+</div>
+<style>
+    /* Loading indicator */
+    .loading-indicator {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+        text-align: center;
+        z-index: 9999;
+    }
+
+    /* Spinner */
+    .spinner {
+        border: 6px solid #f3f3f3; /* Light gray border */
+        border-top: 6px solid #3498db; /* Blue border */
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        margin: auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: spin 2s linear infinite; /* CSS animation */
+    }
+
+   
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function dropdownChanged() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        loadingIndicator.style.display = 'block';
+        var CustomerValue = document.getElementById("customer").value;
+        var SegementValue = document.getElementById("segement").value;
+        var fromdate = document.getElementById("Fromdate").value;
+        var todate = document.getElementById("todate").value;
+        // Make an AJAX request to the controller action
+        $.ajax({
+            url: '/RouteReport/ActionName',
+            type: 'POST',
+            data: { Customer: CustomerValue, Segement: SegementValue, FromDate: fromdate, ToDate: todate },
+            success: function (result) {
+                $('#output').empty();
+                $("#output").html(result);
+                loadingIndicator.style.display = 'none';
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                loadingIndicator.style.display = 'none';
+                console.log("An error occurred while executing the action.");
+            }
+        });
+    }
+    
+
+</script>
+<script>
+    function dropdownChanged1() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        loadingIndicator.style.display = 'block';
+        var CustomerValue = document.getElementById("customer").value;
+        var SegementValue = document.getElementById("segement").value;
+        var fromdate = document.getElementById("Fromdate").value;
+        var todate = document.getElementById("todate").value;
+
+        // Make an AJAX request to the controller action
+        $.ajax({
+            url: '/RouteReport/Export',
+            type: 'POST',
+            data: { Customer: CustomerValue, Segement: SegementValue, FromDate: fromdate, ToDate: todate },
+            xhrFields: {
+                responseType: 'blob' // Important: Set the response type to blob
+            },
+            success: function (result) {
+                loadingIndicator.style.display = 'none';
+                // Create a temporary URL for the blob
+                var blobUrl = URL.createObjectURL(result);
+                var now = new Date();
+                var dateString = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
+                var timeString = ('0' + now.getHours()).slice(-2) + ('0' + now.getMinutes()).slice(-2) + ('0' + now.getSeconds()).slice(-2);
+
+                // Construct the file name
+                var fileName = dateString + '_' + timeString + '_RouteSummaryReport.xlsx';
+                // Create a temporary anchor element to trigger the download
+                var a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                a.download = fileName; // Set the desired filename
+                document.body.appendChild(a);
+
+                // Trigger the click event on the anchor element to start the download
+                a.click();
+
+                // Clean up resources
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(a);
+            },
+            error: function (xhr, status, error) {
+                loadingIndicator.style.display = 'none';
+                // Handle the error response
+                console.log("An error occurred while executing the action.");
+            }
+        });
+    }
+</script>
+
+
+
