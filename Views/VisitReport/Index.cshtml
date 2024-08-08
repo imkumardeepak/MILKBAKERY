@@ -1,0 +1,91 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string role = Context.Request.HttpContext.Session.GetString("role");
+}
+
+
+<div class="mt-3">
+    <div class="card mb-3">
+        <div class="card-header text-white p-1" style="background-color:#FC2947;">
+            <div class="d-flex align-items-baseline">
+                <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                <h5 class="mx-auto text-white text-2xl font-semibold">Tracking Report</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <form asp-action="Report" method="post" onkeydown="return event.key != 'Enter';">
+                <div class="row">
+                    <div class="form-group col-sm-4">
+                        <input type="date" id="Fromdate" class="form-control" name="dateInput" required>
+                    </div>
+                    <div class="form-group col-sm-4">
+                        <select  asp-items="@ViewBag.customer" name="salesname" class="form-control" required></select>
+                    </div>
+                    <div class="col-sm-4">
+                        <button type="submit" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+                    </div>
+                </div>
+            </form>
+           @*  <br>
+            @if (ViewBag.GridData != null)
+            {
+               
+            } *@
+        </div>
+    </div>
+  
+</div>
+@* 
+<script>
+    function dropdownChanged() {
+        var CustomerValue = document.getElementById("customer").value;
+        var fromdate = document.getElementById("Fromdate").value;
+        var todate = document.getElementById("Fromdate").value;
+ 
+
+        $.ajax({
+            url: '/VisitReport/ActionName',
+            type: 'POST',
+            data: { Customer: CustomerValue, FromDate: fromdate, ToDate: todate },
+            success: function (result) {
+                
+                $('#output').empty();
+                $("#output").html(result);
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                console.log("An error occurred while executing the action.");
+            }
+        });
+
+        var distance = calculateHaversineDistance(40.712776, -74.005974, 34.052235, -118.243683);
+        console.log(`Distance between New York and Los Angeles: ${distance.toFixed(2)} km`);
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const earthRadius = 6371; // Radius of the Earth in kilometers
+
+            // Convert latitude and longitude from degrees to radians
+            const lat1Rad = (lat1 * Math.PI) / 180;
+            const lon1Rad = (lon1 * Math.PI) / 180;
+            const lat2Rad = (lat2 * Math.PI) / 180;
+            const lon2Rad = (lon2 * Math.PI) / 180;
+
+            // Calculate differences in coordinates
+            const dLat = lat2Rad - lat1Rad;
+            const dLon = lon2Rad - lon1Rad;
+
+            // Haversine formula
+            const a =
+                Math.sin(dLat / 2) ** 2 +
+                Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLon / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = earthRadius * c;
+
+            return distance;
+        }
+    }
+
+   
+
+</script> *@
+

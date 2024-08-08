@@ -1,0 +1,114 @@
+﻿@model Milk_Bakery.Models.VisitEntery
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="w-full bg-white shadow-lg rounded-lg overflow-hidden mt-2">
+    <div class="card-header text-white p-1" style="background-color:#FC2947;">
+        <div class="d-flex align-items-baseline">
+            <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+            <h5 class="mx-auto text-white text-2xl font-semibold">Visit Entry</h5>
+        </div>
+    </div>
+    <div class="p-2">
+        <div class="w-screen-lg  mt-2">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="md:grid grid-cols-12 flex flex-col md:items-center gap-4 p-2">
+
+                    <div class="col-span-1 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Id</span>
+                        <input asp-for="Id" class="text-[12px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                    </div>
+
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Date Time<span class="text-red-500">*</span></span>
+                        <input asp-for="dateTime" class="text-[16px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" readonly />
+                        <span asp-validation-for="dateTime" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-8 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Customer<span class="text-red-500">*</span></span>
+                        <select asp-for="CustnameName" id="customer" class="text-[16px] h-10 bg-white text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.customer" onchange="dropdownChanged()"></select>
+                        <span asp-validation-for="CustnameName" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Route<span class="text-red-500">*</span></span>
+                        <input asp-for="route" id="route" class="text-[16px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                        <span asp-validation-for="route" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">City<span class="text-red-500">*</span></span>
+                        <input asp-for="city" id="city" class="text-[16px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                        <span asp-validation-for="city" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Retailer<span class="text-red-500">*</span></span>
+                        <input asp-for="retailer" class="text-[16px] h-10 text-gray-10 bg-white w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="retailer" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Remark<span class="text-red-500">*</span></span>
+                        <input asp-for="remarkss"  class="text-[16px] h-10 text-gray-10 bg-white w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="remarkss" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Latitude<span class="text-red-500">*</span></span>
+                        <input asp-for="latitude" id="latitude" class="text-[16px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                        <span asp-validation-for="latitude" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Longitude<span class="text-red-500">*</span></span>
+                        <input asp-for="longitute" id="longitute" class="text-[16px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                        <span asp-validation-for="longitute" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-6 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Location<span class="text-red-500">*</span></span>
+                        <input asp-for="location" id="location" class="text-[16px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                        <span asp-validation-for="location" class="text-danger"></span>
+                    </div>
+
+                    
+                </div>
+                <div id="map" style="height: 200px"></div>
+
+                <div class="px-4 text-right py-2">
+                    <input type="submit" value="Submit" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
+                    <a asp-controller="Home" asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+                </div>
+
+
+            </form>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+   
+    <script>
+        function dropdownChanged() {
+            var selectedOption = document.getElementById("customer").value;
+            // Make an AJAX request to the controller action
+            $.ajax({
+                url: '/VisitEnteries/ActionName',
+                type: 'POST',
+                data: { optionValue: selectedOption },
+                success: function (result) {
+                    document.getElementById("city").value = result.city;
+                    document.getElementById("route").value = result.route;
+                },
+                error: function (xhr, status, error) {
+                    // Handle the error response
+                  
+                    console.log("An error occurred while executing the action.");
+                }
+            });
+        }
+
+    </script>
+  
+
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

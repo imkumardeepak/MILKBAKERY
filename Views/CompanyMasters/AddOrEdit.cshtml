@@ -1,0 +1,93 @@
+﻿@model Milk_Bakery.Models.CompanyMaster
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="w-full bg-white shadow-lg rounded-lg overflow-hidden mt-2">
+    <div class="bg-blue-500 px-2 py-2 flex items-center justify-between">
+        <h2 class="text-white text-2xl font-semibold">Comapany Master</h2>
+          <a asp-action="Upload" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"><i class="fa fa-upload"></i>Upload</a>
+    </div>
+    <div class="p-2">
+        <div class="w-screen-lg  mt-2">
+            <form asp-action="AddOrEdit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="md:grid grid-cols-12 flex flex-col md:items-center gap-4 p-2">
+
+                    <div class="col-span-1 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Id</span>
+                        <input asp-for="Id" class="text-[12px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                    </div>
+
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Short  Name<span class="text-red-500">*</span></span>
+                        <input asp-for="ShortName" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="ShortName" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-8 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Name<span class="text-red-500">*</span></span>
+                        <input asp-for="Name" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Division<span class="text-red-500">*</span></span>
+                        <select asp-for="Division" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.segement"></select>
+                        <span asp-validation-for="Division" class="text-danger"></span>
+                    </div>
+                  
+                   
+                    <div class="col-span-6 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Address<span class="text-red-500">*</span></span>
+                        <input asp-for="Address" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">City<span class="text-red-500">*</span></span>
+                        <input asp-for="City" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="City" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Pincode<span class="text-red-500">*</span></span>
+                        <input asp-for="PinCode" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="PinCode" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Country<span class="text-red-500">*</span></span>
+                        <select asp-for="Country" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm">
+                            <option>India</option>
+                            <option>Berlin</option>
+                            <option>USA</option>
+                        </select>
+                        <span asp-validation-for="Country" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">State<span class="text-red-500">*</span></span>
+                        <input asp-for="State" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="State" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Phone No<span class="text-red-500">*</span></span>
+                        <input asp-for="PhoneNumber" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+                   
+                </div>
+
+                <div class="px-4 text-right py-2">
+                    <input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
+                    <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+                </div>
+
+
+            </form>
+    </div>
+</div>
+</div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,121 @@
+﻿@model Milk_Bakery.Models.EmployeeMaster
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-3">
+    <div class="card mb-3">
+        <div class="card-header bg-danger text-white">
+            <div class="d-flex align-items-baseline">
+                <a asp-action="Index" class="text-white"><i class="fa fa-arrow-left"></i></a>
+                <h5 class="mx-auto text-white text-2xl font-semibold">Employee Master</h5>
+                <a asp-action="Upload" class="text-white btn btn-default"><i class="fa fa-upload"></i> Import</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <form asp-action="AddOrEdit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+           <div class="row">
+                            <div class="col-md-6">
+                                <label asp-for="EmpCode" class="control-label"></label>
+                                <input asp-for="EmpCode" class="form-control form-control-sm" />
+                                <span asp-validation-for="EmpCode" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Department" class="control-label"></label>
+                                <select asp-for="Department" class="form-control form-control-sm" asp-items="@ViewBag.depart"></select>
+                                <span asp-validation-for="Department" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label asp-for="FirstName" class="control-label"></label>
+                                <input asp-for="FirstName" class="form-control" />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+                             <div class="col-md-6">
+                               <label asp-for="MiddileName" class="control-label"></label>
+                               <input asp-for="MiddileName" class="form-control" />
+                               <span asp-validation-for="MiddileName" class="text-danger"></span>
+                            </div>
+                         </div>
+                            <div class="row">
+                              <div class="col-md-6">
+                                <label asp-for="LastName" class="control-label"></label>
+                                <input asp-for="LastName" class="form-control" />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                              </div>
+                                <div class="col-md-6">
+                                 <label asp-for="Grade" class="control-label"></label>
+                                <select asp-for="Grade" class="form-control" asp-items="@ViewBag.Grade"></select>
+                                 <span asp-validation-for="Grade" class="text-danger"></span>
+                              </div>
+                            </div>
+                              <div class="row">
+                                <div class="col-md-6">
+                                  <label asp-for="UserType" class="control-label"></label>
+                                  <select asp-for="UserType" class="form-control">
+                                      <option>--Select UserLogin Type--</option>
+                                      <option>Admin</option>
+                                    <option>Sales</option>  
+                                    <option>Plant</option>
+                                    <option>Manager</option>
+                                </select>
+                                  <span asp-validation-for="UserType" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6">
+                                  <label asp-for="PhoneNumber" class="control-label"></label>
+                                <input asp-for="PhoneNumber" class="form-control" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                </div>
+                               </div>
+                               <div class="row">
+                                 <div class="col-md-6">
+                                   <label asp-for="EmployeeType" class="control-label"></label>
+                                   <input asp-for="EmployeeType" class="form-control" />
+                                   <span asp-validation-for="EmployeeType" class="text-danger"></span>
+                                 </div> <div class="col-md-6">
+                                   <label asp-for="Route" class="control-label"></label>
+                                <select asp-for="Route" class="form-control" asp-items="@ViewBag.route"></select>
+                                   <span asp-validation-for="Route" class="text-danger"></span>
+                                 </div>
+                               </div>
+                               <div class="row">
+                            <div class="col-md-6">
+                                <label asp-for="Designation" class="control-label"></label>
+                                <select asp-for="Designation" class="form-control" asp-items="@ViewBag.desgination"></select>
+                                <span asp-validation-for="Designation" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Segment" class="control-label"></label>
+                                <select asp-for="Segment" class="form-control" asp-items="@ViewBag.Segement" required></select>
+                                <span asp-validation-for="Segment" class="text-danger"></span>
+                            </div>
+                               </div>
+                        <div class="form-group form-check mt-3">
+                            <label class="form-check-label">
+                                <input class="form-check-input" asp-for="isActive" /> @Html.DisplayNameFor(model => model.isActive)
+                            </label>
+                        </div>
+                      
+           <br />
+                        <div class="px-4 text-right py-2">
+                            <input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
+                            <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+                        </div>
+        </form>
+    </div>
+</div>
+
+
+</div>
+</div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

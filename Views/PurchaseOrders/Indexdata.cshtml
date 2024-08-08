@@ -1,0 +1,121 @@
+﻿@model IEnumerable<Milk_Bakery.Models.PurchaseOrder>
+
+
+
+@{
+  
+    string role = Context.Request.HttpContext.Session.GetString("role");
+}
+
+@if (role == "Customer")
+{
+    <div class="row">
+              @foreach (var item in Model)
+                {
+                  
+                        <div class="col-sm-4 mb-2">
+                          <a asp-action="Details" asp-route-id="@item.Id" data-toggle="tooltip" data-placement="top" title="Details" style="text-decoration:none">
+                            <div class="card h-100">
+                                <div class="card-body text-dark text-capitalize p-1">
+                                    <span>OrderNo:-@item.OrderNo</span><br>
+                                    <span>OrderDate:-@item.OrderDate</span><br>
+                                    <span>SegementName:-@item.Segementname</span>
+                                </div>
+                            </div>
+                          </a>
+                        </div>
+                  
+
+                }
+    </div>
+}
+else if (role=="Sales")
+{
+    <div class="row">
+        @foreach (var item in Model)
+        {
+
+            <div class="col-sm-4 mb-2">
+                <a asp-action="Details" asp-route-id="@item.Id" data-toggle="tooltip" data-placement="top" title="Details" style="text-decoration:none">
+                    <div class="card h-100">
+                        <div class="card-body text-dark text-capitalize p-1">
+                            <span>OrderNo:-@item.OrderNo</span><br>
+                            <span>OrderDate:-@item.OrderDate</span><br>
+                            <span>SegementName:-@item.Segementname</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+
+        }
+    </div>
+}
+else
+{
+     <div class="w-screen-lg  mt-2">
+        <div class="table-responsive table-container max-h-80  overflow-y-auto">
+            <table class="w-full divide-y divide-gray-200">
+                <thead class="bg-gray-200 sticky top-0">
+                    <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.OrderNo)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.OrderDate)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Customername)
+                    </th>
+                    <th>
+                @Html.DisplayNameFor(model => model.CustomerCode)
+                </th>
+                <th>
+                @Html.DisplayNameFor(model => model.Segementname)
+                </th>
+                <th>
+                @Html.DisplayNameFor(model => model.Segementcode)
+                </th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.OrderNo)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.OrderDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Customername)
+                        </td>
+                         <td>
+                @Html.DisplayFor(modelItem => item.CustomerCode)
+                </td>
+                <td>
+                @Html.DisplayFor(modelItem => item.Segementname)
+                </td>
+                <td>
+                @Html.DisplayFor(modelItem => item.Segementcode)
+                </td>
+                        <td>
+
+                           
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info text-white" data-toggle="tooltip" data-placement="top" title="Details">
+                                <i class="fa fa-eye" aria-hidden="true"></i>
+                            </a>
+                           
+
+
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    </div>
+    
+}

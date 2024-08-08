@@ -1,0 +1,281 @@
+﻿@model Milk_Bakery.Models.PurchaseOrder
+
+@{
+    
+    string role = Context.Request.HttpContext.Session.GetString("role");
+}
+
+@if (role == "Customer")
+{
+    <input asp-for="Segementcode" hidden class="form-control" readonly />
+    <input asp-for="CustomerCode" hidden class="form-control" readonly />
+    <input asp-for="Segementname" class="form-control" hidden readonly />
+     <div class="vertical-scrollable-div">
+    @for (int i = 0; i < Model.ProductDetails.Count; i++)
+    {
+              <div class="row">
+                            <div class="col-12"> <span class="pl-1"><input asp-for="@Model.ProductDetails[i].ProductName" class="border-0 bg-transparent font-weight-bold w-100 text-capitalize text-dark p-0" readonly  /></span></div>
+                            <div class="col-6"><span class="pl-1">Unit : <input asp-for="@Model.ProductDetails[i].Unit" class="border-0 bg-transparent text-dark w-50 p-0" readonly  /></span>
+                                <span class="pl-1">Rate : <input asp-for="@Model.ProductDetails[i].Rate" class="border-0 bg-transparent text-dark w-50 p-0" readonly  /></span>
+                
+                            </div>
+                 <div class="col-6">
+                          <div class="input-group">
+                                 <div class="input-group-prepend">
+                        <button class="btn hover:bg-red-700 bg-red-600 decrement-btn text-white" type="button" style="border-top-left-radius:50%;border-bottom-left-radius:50%">-</button>
+                                  </div>
+                    <input type="number" asp-for="@Model.ProductDetails[i].qty" class="form-control border-danger w-25 number-input text-right QtyTotal" value="0" min="0" maxlength="4" onkeydown="handleKeyDown(event)">
+                                 <div class="input-group-append">
+                        <button class="btn hover:bg-red-700 bg-red-600 increment-btn text-white" type="button" style="border-top-right-radius:50%;border-bottom-right-radius:50%">+</button>
+                                        <input type="hidden" asp-for="@Model.ProductDetails[i].Price" class="form-control" readonly />
+                                        <input type="hidden" asp-for="@Model.ProductDetails[i].IsDeleted" />
+                                        <input asp-for="@Model.ProductDetails[i].ProductCode" class="form-control" type="hidden" readonly />
+                                  </div>
+                          </div>
+                    </div>
+              </div>
+                         <hr class="m-1">
+       
+    }
+   
+   </div>
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <tbody>
+                <tr>
+                    <th style="font-size:12px">
+                        Total Quantity:
+                    </th>
+                    <th style="width:150px">
+                        <input type="text" id="txtQtyTotal" class="form-control" value="" readonly />
+                    </th>
+
+                    <th style="font-size:12px">
+                        Total Amount:
+                    </th>
+
+
+
+                    <th style="width:230px">
+                        <input type="text" id="txtAmountTotal" class="form-control" value="" readonly />
+                    </th>
+
+
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+else if (role=="Sales")
+{
+    <input asp-for="Segementcode" hidden class="form-control" readonly />
+    <input asp-for="CustomerCode" hidden class="form-control" readonly />
+    <input asp-for="Segementname" class="form-control" hidden readonly />
+     <div class="vertical-scrollable-div">
+    @for (int i = 0; i < Model.ProductDetails.Count; i++)
+    {
+        <div class="row">
+            <div class="col-12"> <span class="pl-1"><input asp-for="@Model.ProductDetails[i].ProductName" class="border-0 bg-transparent font-weight-bold w-100 text-capitalize text-dark p-0" readonly /></span></div>
+            <div class="col-6">
+                <span class="pl-1">Unit : <input asp-for="@Model.ProductDetails[i].Unit" class="border-0 bg-transparent text-dark w-50 p-0" readonly /></span>
+                <span class="pl-1">Rate : <input asp-for="@Model.ProductDetails[i].Rate" class="border-0 bg-transparent text-dark w-50 p-0" readonly /></span>
+
+            </div>
+            <div class="col-6">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <button class="btn hover:bg-red-700 bg-red-600 decrement-btn text-white" type="button" style="border-top-left-radius:50%;border-bottom-left-radius:50%">-</button>
+                    </div>
+                    <input type="number" asp-for="@Model.ProductDetails[i].qty" class="form-control border-danger w-25 number-input QtyTotal text-right" value="0" min="0" maxlength="4" onkeydown="handleKeyDown(event)">
+                    <div class="input-group-append">
+                        <button class="btn hover:bg-red-700 bg-red-600 increment-btn text-white" type="button" style="border-top-right-radius:50%;border-bottom-right-radius:50%">+</button>
+                        <input type="hidden" asp-for="@Model.ProductDetails[i].Price" class="form-control" readonly />
+                        <input type="hidden" asp-for="@Model.ProductDetails[i].IsDeleted" />
+                        <input asp-for="@Model.ProductDetails[i].ProductCode" class="form-control" type="hidden" readonly />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr class="m-1">
+
+    }
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <tbody>
+                <tr>
+                    <th style="font-size:12px">
+                        Total Quantity:
+                    </th>
+                    <th style="width:150px">
+                        <input type="text" id="txtQtyTotal" class="form-control" value="" readonly />
+                    </th>
+
+                    <th style="font-size:12px">
+                        Total Amount:
+                    </th>
+
+
+
+                    <th style="width:230px">
+                        <input type="text" id="txtAmountTotal" class="form-control" value="" readonly />
+                    </th>
+
+
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <input asp-for="Segementcode" hidden class="form-control" readonly />
+    <input asp-for="CustomerCode" hidden class="form-control" readonly />
+    <input asp-for="Segementname" class="form-control" hidden readonly />
+     <div class="w-screen-lg  mt-2">
+        <div class="table-responsive table-container max-h-80  overflow-y-auto">
+            <table class="w-full divide-y divide-gray-200">
+                <thead class="bg-gray-200 sticky top-0">
+                    <tr>
+                    <th>Product Name</th>
+                    <th>Code</th>
+                    <th>Quantity</th>
+                    <th>Unit</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    @* <th style="width:100px;">
+                <button id='btnAddDetailRow' type="button" class="btn btn-sm btn-secondary visible" onclick="AddItem(this)">
+                Add
+                </button>
+                </th>*@
+                </tr>
+            </thead>
+
+            <tbody id="CsDiv">
+                @for (int i = 0; i < Model.ProductDetails.Count; i++)
+                {
+
+                    <tr>
+
+                        @*  <td style=" display: none;">
+                @Model.ProductDetails[i].ProductName
+
+                </td>*@
+                        <td style="width:300px">
+                            <input asp-for="@Model.ProductDetails[i].ProductName" class="form-control" readonly />
+                            <span asp-validation-for="@Model.ProductDetails[i].ProductName" class="text-danger"></span>
+
+                        </td>
+
+                        <td style="width:200px">
+                            <input asp-for="@Model.ProductDetails[i].ProductCode" class="form-control" readonly />
+                            <span asp-validation-for="@Model.ProductDetails[i].ProductCode" class="text-danger"></span>
+                        </td>
+                        <td>
+                                <input asp-for="@Model.ProductDetails[i].qty" class="form-control QtyTotal text-right" value="0" onkeydown="handleKeyDown(event)" />
+                            <span asp-validation-for="@Model.ProductDetails[i].qty" class="text-danger"></span>
+                        </td>
+                        <td>
+                            <input asp-for="@Model.ProductDetails[i].Unit" class="form-control" readonly />
+                            <span asp-validation-for="@Model.ProductDetails[i].Unit" class="text-danger"></span>
+                        </td>
+
+                        <td>
+                            <input asp-for="@Model.ProductDetails[i].Rate" class="form-control" readonly />
+                            <span asp-validation-for="@Model.ProductDetails[i].Rate" class="text-danger"></span>
+                        </td>
+
+                        <td>
+                            <input asp-for="@Model.ProductDetails[i].Price" class="form-control" readonly />
+                            <input type="hidden" asp-for="@Model.ProductDetails[i].IsDeleted" />
+                        </td>
+                        @* <td>
+                <button id='btnremove-@i' type="button" class="btn btn-sm btn-danger visible" onclick="DeleteItem(this)">
+                Delete
+                </button>
+                </td>*@
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    </div>
+    <div class="table-wrapper">
+        <table class="responsive-table table text-center m-0 p-0">
+            <tbody>
+                <tr>
+                    <th style="width:300px">
+                        Total Quantity:
+                    </th>
+                    <th>
+                        <input type="text" id="txtQtyTotal" class="form-control" value="" readonly />
+                    </th>
+
+                    <th style="width:300px">
+                        Total Amount:
+                    </th>
+
+
+
+                    <th>
+                        <input type="text" id="txtAmountTotal" class="form-control" value="" readonly />
+                    </th>
+
+
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
+
+<style>
+    input {
+        border: none;
+        background: none;
+        cursor: default;
+        padding: 0;
+        font-size: 16px;
+        color: #333; /* Set the desired color */
+        outline: none;
+    }
+</style>
+<script>
+    // Get the elements
+
+    var decrementBtns = document.querySelectorAll('.decrement-btn');
+    var incrementBtns = document.querySelectorAll('.increment-btn');
+    var numberInputs = document.querySelectorAll('.number-input');
+
+
+    // Handle the decrement button click event
+    decrementBtns.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            let currentValue = parseFloat(numberInputs[index].value);
+            if (!isNaN(currentValue)) {
+                numberInputs[index].value = Math.max(currentValue - 1, 0); // Ensure the value is not less than 0
+                CalcTotals();
+            }
+        });
+    });
+
+    // Handle the increment button click event
+    incrementBtns.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            let currentValue = parseFloat(numberInputs[index].value);
+            if (!isNaN(currentValue)) {
+                numberInputs[index].value = currentValue + 1;
+                CalcTotals();
+            }
+        });
+    });
+</script>
+
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+}

@@ -1,0 +1,73 @@
+﻿@model List<PurchaseOrder>
+
+
+
+
+<form asp-action="SaveSelectedRows" method="post">
+    <div class="w-screen-lg  mt-2">
+        <div class="table-responsive table-container max-h-80  overflow-y-auto">
+            <table class="w-full divide-y divide-gray-200" id="dataTable">
+                <thead class="bg-gray-200 sticky top-0">
+                    <tr>
+                    <th>
+                        <input type="checkbox" class="" id="selectAll" />
+                    </th>
+                    <th>OrderNo</th>
+                    <th>OrderDate</th>
+                    <th>Customername</th>
+                    <th>CustomerCode</th>
+                    <th>Segementname</th>
+                    <th>Segement Code</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    <tr>
+                        <td><input type="checkbox" asp-for="@Model[i].IsSelected" class="rowCheckbox" /></td>
+                        <td><input asp-for="@Model[i].OrderNo" class="border-0 bg-white" readonly /></td>
+                            <td>@Model[i].OrderDate.Date.ToShortDateString()</td>
+                        <td>@Model[i].Customername</td>
+                        <td>@Model[i].CustomerCode</td>
+                        <td>@Model[i].Segementname</td>
+                        <td>@Model[i].Segementcode</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-10">
+            <span class="font-weight-bold text-capitalize">Total Quntity : @Model.Count()</span>
+        </div>
+        <div class="col-sm-2">
+            <button type="submit" id="filegenerate" class="btn hover:bg-blue-700 bg-blue-600 col-md-12 mt-1 rounded-sm shadow-md text-white">File Generate</button>
+        </div>
+    </div>
+
+</form>
+
+@section scripts {
+
+}
+<script>
+    // Handle select all functionality
+    document.getElementById("selectAll").addEventListener("change", function () {
+        var checkboxes = document.getElementsByClassName("rowCheckbox");
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = this.checked;
+        }
+    });
+</script>
+
+<script>
+    function reloadPageAfter2Seconds() {
+        location.reload();
+    }
+    document.getElementById("filegenerate").addEventListener("click", function () {
+        // Call the function after 2 seconds (2000 milliseconds)
+        setTimeout(reloadPageAfter2Seconds, 10000);
+    });
+</script>

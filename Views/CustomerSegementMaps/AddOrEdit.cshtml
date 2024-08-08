@@ -1,0 +1,94 @@
+﻿@model Milk_Bakery.Models.CustomerSegementMap
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="w-full bg-white shadow-lg rounded-lg overflow-hidden mt-2">
+    <div class="bg-blue-500 px-2 py-2 flex items-center justify-between">
+        <h2 class="text-white text-2xl font-semibold">Customer SegementMap</h2>
+        <a asp-action="Upload" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"><i class="fa fa-upload"></i>Upload</a>
+    </div>
+    <div class="p-2">
+        <div class="w-screen-lg  mt-2">
+            <form asp-action="AddOrEdit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="md:grid grid-cols-12 flex flex-col md:items-center gap-4 p-2">
+
+
+                    <div class="col-span-4 relative">
+                        <div class="form-group">
+                            <label for="custname">Customer Name<span class="text-danger">*</span></label>
+                            <select asp-for="Customername" id="custname" class="form-control select2" asp-items="@ViewBag.customer" onchange="dropdownChanged()"></select>
+                            <span asp-validation-for="Customername" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                     <div class="col-span-4 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Customer Code</span>
+                        <input id="shortcode" asp-for="shortcode" class="text-[13px] h-10 bg-light text-gray-700 w-full border-2 px-2 rounded-sm" readonly />
+                    </div>
+                    
+                    <div class="col-span-4 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Segement Name<span class="text-red-500">*</span></span>
+                        <select asp-for="SegementName"  class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.segement"></select>
+                        <span asp-validation-for="SegementName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-span-6 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Customer Segement Code<span class="text-red-500">*</span></span>
+                        <input asp-for="custsegementcode" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="custsegementcode" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-span-6 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Segement Code 3rd Party<span class="text-red-500">*</span></span>
+                        <input asp-for="segementcode3party" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="segementcode3party" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-span-12 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Remarks</span>
+                        <input asp-for="remarks" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" cols="2" value="NA"/>
+                    </div>
+
+                     </div> 
+                      
+                        <div class="px-4 text-right py-2">
+                            <input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
+                            <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+                        </div>
+        </form>
+    </div>
+</div>
+
+
+</div>
+
+<script>
+    function dropdownChanged() {
+        var selectedOption = document.getElementById("custname").value;
+
+        // Make an AJAX request to the controller action
+        $.ajax({
+            url: '/CustomerSegementMaps/ActionName',
+            type: 'POST',
+            data: { optionValue: selectedOption },
+            success: function (result) {
+                console.log(result);
+                document.getElementById('shortcode').value = result;
+
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                console.log("An error occurred while executing the action.");
+            }
+        });
+    }
+</script>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

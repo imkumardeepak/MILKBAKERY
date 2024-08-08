@@ -1,0 +1,7 @@
+﻿@media (min-width: 768px) {
+    /* Make the modal appear in the center of the screen */
+    .modal-dialog {
+        margin: 20px auto;
+        max-width: 1000px; /* Set the desired maximum width of the modal */
+    }
+}

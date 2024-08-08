@@ -1,0 +1,113 @@
+﻿@using System.Data;
+@model DataTable
+@{
+    string role = Context.Request.HttpContext.Session.GetString("role");
+    Layout = null;
+
+}
+@functions {
+    string GetCellClass(string columnName)
+    {
+        if (columnName == "Total")
+        {
+            return "custom-column-color";
+            //return "background-color:#F7E987"; // CSS class for the desired column
+        }
+        else
+        {
+            return ""; // No additional class
+        }
+    }
+    string GetRowClass(DataRow dr)
+    {
+        var data = dr[1]?.ToString();
+        if (dr[1].ToString() == "Routewise Total")
+        {
+            return "total-row-color"; // CSS class for total rows
+        }
+        else if (dr[1].ToString() == "OverAll Total")
+        {
+            return "overall";
+        }
+        else
+        {
+            return ""; // No additional class
+        }
+    }
+    string GetheaderClass(string dr)
+    {
+       
+        if (dr.ToString() == "CustomerName")
+        {
+            return "header"; // CSS class for total rows
+        }
+        else
+        {
+            return ""; // No additional class
+        }
+    }
+}
+<style>
+    table{
+        padding:0;
+        margin:0;
+        padding-block:0;
+        margin-block:0;
+
+    }
+    .custom-column-color {
+        color: black;
+        background-color: #8CC0DE;
+        font-weight: bold;
+    }
+
+    .total-row-color {
+        background-color:khaki;
+        font-weight: bold;
+        color: black;
+    }
+
+    .table-container {
+        max-height: 500px; /* Set your desired fixed height */
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    .header{
+        width:250px;
+    }
+    .overall{
+        background-color: lightgreen;
+    }
+</style>
+
+
+
+@if (Model != null)
+{
+    <br />
+    <div class="table-container table-resposive">
+        <table class="table-bordered text-center table-sm">
+                <thead class="bg-gray-200">
+                <tr>
+                        @foreach (DataColumn dc in Model.Columns)
+                        {
+                        <th class="@GetheaderClass(dc.ColumnName)">@dc.ColumnName</th>
+                        }
+                    </tr>
+                </thead>
+            <tbody>
+                @foreach (DataRow dr in Model.Rows)
+                    {
+                    <tr class="@GetRowClass(dr)">
+                            @foreach (DataColumn dc in Model.Columns)
+                            {
+                            <td class="@GetCellClass(dc.ColumnName)">@dr[dc.ColumnName]</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+             
+            </table>
+        </div>
+  
+}

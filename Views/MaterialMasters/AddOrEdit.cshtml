@@ -1,0 +1,121 @@
+﻿@model Milk_Bakery.Models.MaterialMaster
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="w-full bg-white shadow-lg rounded-lg overflow-hidden mt-2">
+    <div class="bg-blue-500 px-2 py-2 flex items-center justify-between">
+        <h2 class="text-white text-2xl font-semibold">Material Master</h2>
+          <a asp-action="Upload" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"><i class="fa fa-upload"></i>Upload</a>
+    </div>
+    <div class="p-2">
+        <div class="w-screen-lg  mt-2">
+            <form asp-action="AddOrEdit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="md:grid grid-cols-12 flex flex-col md:items-center gap-4 p-2">
+
+                    <div class="col-span-1 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Id</span>
+                        <input asp-for="Id" class="text-[12px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                    </div>
+
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Short  Name<span class="text-red-500">*</span></span>
+                        <input asp-for="ShortName" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="ShortName" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-8 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Name<span class="text-red-500">*</span></span>
+                        <input asp-for="Materialname" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="Materialname" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Unit<span class="text-red-500">*</span></span>
+                        <select asp-for="Unit" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.unit"></select>
+                        <span asp-validation-for="Unit" class="text-danger"></span>
+                    </div>
+
+
+                    <div class="col-span-4 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Sub Category<span class="text-red-500">*</span></span>
+                        <select id="myDropdown" asp-for="subcategory" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.subcatgory" onchange="dropdownChanged()"></select>
+                        <span asp-validation-for="subcategory" class="text-danger"></span>
+                    </div>
+                   
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Category<span class="text-red-500">*</span></span>
+                        <input asp-for="Category" id="resultTextbox" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" readonly />
+                        <span asp-validation-for="Category" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-2 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Sequence<span class="text-red-500">*</span></span>
+                        <input asp-for="sequence" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" type="number" />
+                        <span asp-validation-for="sequence" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Segement<span class="text-red-500">*</span></span>
+                        <select asp-for="segementname" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.segement"></select>
+                        <span asp-validation-for="segementname" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Material Code<span class="text-red-500">*</span></span>
+                        <input asp-for="material3partycode" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="material3partycode" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Price<span class="text-red-500">*</span></span>
+                        <input asp-for="price" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="price" class="text-danger"></span>
+                    </div> 
+                    <div class="col-span-3 relative">
+                        <span class="inline-flex items-center space-x-2">Active<span class="text-red-500">*</span></span>
+                        <input class="rounded border-gray-400 focus:ring focus:ring-blue-300 h-4 w-4" asp-for="isactive" />
+                        <span asp-validation-for="isactive" class="text-danger"></span>
+                    </div>
+                  
+                   
+                </div>
+
+                <div class="px-4 text-right py-2">
+                    <input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
+                    <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+                </div>
+
+
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function dropdownChanged() {
+        var selectedOption = document.getElementById("myDropdown").value;
+
+        // Make an AJAX request to the controller action
+        $.ajax({
+            url: '/MaterialMasters/ActionName',
+            type: 'POST',
+            data: { optionValue: selectedOption },
+            success: function (result) {
+               
+                document.getElementById("resultTextbox").value = result.data;
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                console.log("An error occurred while executing the action.");
+            }
+        });
+    }
+</script>
+
+
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

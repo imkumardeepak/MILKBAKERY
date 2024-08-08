@@ -1,0 +1,118 @@
+﻿@model IEnumerable<Milk_Bakery.Models.PurchaseOrder>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string role = Context.Request.HttpContext.Session.GetString("role");
+}
+
+@if (role == "Customer")
+{
+    <div class="mt-3">
+        <div class="card mb-3">
+            <div class="card-header text-white p-1" style="background-color:#FC2947;">
+                <div class="d-flex align-items-baseline">
+                    <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                    <h5 class="mx-auto text-white text-2xl font-semibold">View Order</h5>
+                </div>
+            </div>
+            <div class="card-body">
+
+                <div class="row">
+                    <div class="form-group col-6">
+                        <label for="dateInput">From Date:</label>
+                        <input type="date" id="Fromdate" class="form-control" name="dateInput" onchange="dropdownChanged()">
+                    </div>
+                    <div class="form-group col-6">
+
+                        <label for="dateInput">To Date:</label>
+                        <input type="date" id="todate" class="form-control" name="dateInput" onchange="dropdownChanged()">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group col-sm-6">
+                        <label for="dateInput">Customer</label>
+                        <select id="myDropdown1" class="form-control" asp-items="@ViewBag.customer" onchange="dropdownChanged()"></select>
+                    </div>
+
+                </div>
+
+
+                <div id="output">
+                </div>
+              
+             </div>
+        </div>
+     </div>
+                
+}
+else
+{
+
+    <div class="mt-3">
+        <div class="card mb-3">
+            <div class="card-header text-white p-1" style="background-color:#FC2947;">
+                <div class="d-flex align-items-baseline">
+                    <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                    <h5 class="mx-auto text-white text-2xl font-semibold">View Order</h5>
+
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="form-group col-6">
+                        <label for="dateInput">From Date:</label>
+                        <input type="date" id="Fromdate" class="form-control" name="dateInput" onchange="dropdownChanged()">
+                    </div>
+                    <div class="form-group col-6">
+
+                        <label for="dateInput">To Date:</label>
+                        <input type="date" id="todate" class="form-control" name="dateInput" onchange="dropdownChanged()">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group col-sm-6">
+                        <label for="dateInput">Customer</label>
+                        <select id="myDropdown1" class="form-control" asp-items="@ViewBag.customer" onchange="dropdownChanged()"></select>
+                    </div>
+
+                </div>
+
+                <div id="output">
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<script>
+    function dropdownChanged() {
+        var fromdate = document.getElementById("Fromdate").value;
+        var todate = document.getElementById("todate").value;
+        var Selected = document.getElementById("myDropdown1").value;
+        // Make an AJAX request to the controller action
+        $.ajax({
+            url: '/PurchaseOrders/ActionName2',
+            type: 'POST',
+            data: { FromDate: fromdate, ToDate: todate,SelectedOption:Selected },
+            success: function (result) {
+                $('#output').empty();
+                $("#output").html(result);
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                console.log("An error occurred while executing the action.");
+            }
+        });
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateField = document.getElementById('Fromdate');
+        const dateField1 = document.getElementById('todate');
+        dateField.value = getCurrentDate();
+        dateField1.value = getCurrentDate();
+    });
+   // document.addEventListener('DOMContentLoaded', dropdownChanged);
+</script>

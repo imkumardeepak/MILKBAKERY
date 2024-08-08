@@ -1,0 +1,110 @@
+﻿@model Milk_Bakery.Models.Company_SegementMap
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-3">
+    <div class="card mb-3">
+          <div class="card-header bg-blue-500 text-white">
+            <div class="d-flex align-items-baseline">
+                <h5 class="mx-auto text-white text-2xl font-semibold">Company Segement Map</h5>
+                <a asp-action="Index" class="btn btn-success text-white"><i class="fa fa-reply"></i> Back</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <form asp-action="AddOrEdit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label asp-for="Companyname" class="control-label"></label>
+                                <select asp-for="Companyname" id="compnyname" class="form-control" asp-items="@ViewBag.company" onchange="dropdownChanged()"></select>
+                                <span asp-validation-for="Companyname" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Segementname" class="control-label"></label>
+                                <select asp-for="Segementname" id="segemnent" class="form-control" asp-items="@ViewBag.segement" onchange="dropdownChanged1()"></select>
+                                <span asp-validation-for="Segementname" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label asp-for="companycode" class="control-label"></label>
+                                <input asp-for="companycode" id="compnycode" class="form-control" readonly />
+                                <span asp-validation-for="companycode" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="segementcode" class="control-label"></label>
+                                <input asp-for="segementcode" id="segementcode" class="form-control" readonly />
+                                <span asp-validation-for="segementcode" class="text-danger"></span>
+                            </div>
+                        </div>
+                      
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label asp-for="remarks" class="control-label"></label>
+                                <input asp-for="remarks" class="form-control" />
+
+                            </div>
+                        </div>
+                        <div class="px-4 text-right py-2">
+                            <input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
+                            <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+                        </div>
+        </form>
+    </div>
+</div>
+
+
+</div>
+</div>
+</div>
+<script>
+    function dropdownChanged() {
+        var selectedOption = document.getElementById("compnyname").value;
+
+        // Make an AJAX request to the controller action
+        $.ajax({
+            url: '/Company_SegementMap/ActionName',
+            type: 'POST',
+            data: { optionValue: selectedOption },
+            success: function (result) {
+                console.log(result);
+                document.getElementById('compnycode').value = result;
+
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                console.log("An error occurred while executing the action.");
+            }
+        });
+    }
+</script>
+<script>
+    function dropdownChanged1() {
+        var selectedOption = document.getElementById("segemnent").value;
+
+        // Make an AJAX request to the controller action
+        $.ajax({
+            url: '/Company_SegementMap/ActionName1',
+            type: 'POST',
+            data: { optionValue: selectedOption },
+            success: function (result) {
+                console.log(result);
+                document.getElementById('segementcode').value = result;
+
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                console.log("An error occurred while executing the action.");
+            }
+        });
+    }
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

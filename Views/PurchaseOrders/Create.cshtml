@@ -1,0 +1,230 @@
+﻿@model Milk_Bakery.Models.PurchaseOrder
+
+@{
+	ViewData["Title"] = "Create";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+	string role = Context.Request.HttpContext.Session.GetString("role");
+
+}
+
+@if (role == "Customer")
+{
+	<div class="mt-1">
+		<div class="card mb-1">
+			<div class="card-header text-white p-1" style="background-color:#FC2947;">
+				<div class="d-flex align-items-baseline">
+					<a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+					<h5 class="mx-auto text-white text-2xl font-semibold">Place Order</h5>
+				@*	<ul class="navbar-nav ml-auto ml-md-0">
+						<li class="nav-item dropdown no-arrow">
+							<a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<i class="fas fa fa-filter fa-fw"></i>
+							</a>
+							<div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+								@foreach (var item in ViewBag.segemnt)
+								{
+									<a class="dropdown-item" href="#">@item.Value</a>
+								}
+								
+							</div>
+						</li>
+					</ul>*@
+				</div>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-md-12">
+						<form asp-action="Create" id="CodeSbyAnizForm" onkeydown="return event.key != 'Enter';">
+							<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+							<div class="row" id="myDiv">
+								<div class="form-group col-sm-6">
+									<label asp-for="Customername" class="control-label"></label>
+									<select asp-for="Customername" id="myDropdown1" class="form-control" asp-items="@ViewBag.customer" onchange="changewb()" readonly></select>
+									<span asp-validation-for="Customername" class="text-danger"></span>
+								</div>
+								<div class="form-group col-sm-6">
+									<label asp-for="Segementname" class="control-label"></label>
+									<select id="wbridge" asp-for="Segementname" asp-items="@ViewBag.segemnt" class="form-control"></select>
+									<span asp-validation-for="Segementname" class="text-danger"></span>
+									
+
+								</div>
+							</div>
+
+
+
+							<div id="output">
+							</div>
+							<div class="px-4 text-right py-2" id="nextview">
+								<a href="/Home/Index" class="btn hover:bg-red-700 bg-red-600  rounded-sm shadow-md text-white">Back</a>
+								<button type="button" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" onclick="dropdownChanged()">Next</button>
+							</div>
+							<div id="submitview" style="display: none;">
+								<div class="px-4 text-right py-2">
+
+									<a asp-action="Create" class="btn hover:bg-red-700 bg-red-600  rounded-sm shadow-md text-white mt-1">Back</a>
+									<input type="submit" value="Save Order" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white mt-1" onclick="return confirmation1(this);" />
+
+								</div>
+
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+}
+else
+{
+	<div class="mt-3">
+		<div class="card mb-3">
+			<div class="card-header text-white p-1" style="background-color:#FC2947;">
+				<div class="d-flex align-items-baseline">
+					<a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+					<h5 class="mx-auto text-white text-2xl font-semibold">Place Order</h5>
+				</div>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-md-12">
+						<form asp-action="Create" id="CodeSbyAnizForm" onkeydown="return event.key != 'Enter';" ;>
+							<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+							<input asp-for="OrderDate" class="form-control" readonly hidden />
+							<input asp-for="OrderNo" class="form-control" readonly hidden />
+
+							<div class="row" id="myDiv">
+								<div class="form-group col-sm-6">
+									<label asp-for="Customername" class="control-label"></label>
+									<select asp-for="Customername" id="myDropdown1" class="form-control" asp-items="@ViewBag.customer" onchange="changewb()"></select>
+									<span asp-validation-for="Customername" class="text-danger"></span>
+								</div>
+								<div class="form-group col-sm-6">
+									<label asp-for="Segementname" class="control-label"></label>
+									<select id="wbridge" asp-for="Segementname" asp-items="@ViewBag.segemnt" class="form-control"></select>
+									<span asp-validation-for="Segementname" class="text-danger"></span>
+									
+
+								</div>
+							</div>
+							@*<div class="row">
+						<div class="form-group col-sm-6">
+						<label asp-for="Segementname"  class="control-label"></label>
+
+
+						</div>
+						<div class="form-group col-sm-6">
+						<label asp-for="Segementcode" class="control-label"></label>
+
+						<span asp-validation-for="Segementcode" class="text-danger"></span>
+						</div>
+						</div>*@
+
+							<div id="output">
+							</div>
+							<div class="px-4 text-right py-2" id="nextview">
+
+								<a href="/Home/Index" class="btn hover:bg-red-700 bg-red-600  rounded-sm shadow-md text-white">Back</a>
+								<button type="button" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" onclick="dropdownChanged()">Next</button>
+
+
+							</div>
+							<div id="submitview" style="display: none;">
+								<div class="px-4 text-right py-2">
+
+									<a asp-action="Create" class="btn hover:bg-red-700 bg-red-600  rounded-sm shadow-md text-white mt-1">Back</a>
+									<input type="submit" value="Save Order" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white mt-1" onclick="return confirmation1(this);" />
+
+
+								
+								</div>
+
+							</div>
+
+
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+}
+
+
+<script>
+	function dropdownChanged() {
+		var selectedOption = document.getElementById("wbridge").value;
+		var selectedOption1 = document.getElementById("myDropdown1").value;
+		var div = document.getElementById('myDiv');
+		var  next= document.getElementById('nextview');
+		var save = document.getElementById('submitview');
+		// Make an AJAX request to the controller action
+		$.ajax({
+			url: '/PurchaseOrders/ActionName',
+			type: 'POST',
+			data: { optionValue: selectedOption, optionValue1:selectedOption1 },
+			success: function (result) {
+				div.style.display = 'none';
+				next.style.display = 'none';
+				save.style.display = 'block';
+				//save.classList.add('row');
+				$('#output').empty();
+				$("#output").html(result);
+			},
+			error: function (xhr, status, error) {
+				// Handle the error response
+				console.log("An error occurred while executing the action.");
+			}
+		});
+	}
+	
+</script>
+
+
+
+
+<script>
+	
+	function changewb() {
+
+		if (document.getElementById("myDropdown1").value != "") {
+			//alert("Hi");
+			var selectedValue = document.getElementById("myDropdown1").value;
+			//alert(selectedValue);
+			var studentSelect = $('#wbridge');
+			$.ajax({
+				url: '@Url.Action("fill_form", "PurchaseOrders")',
+				type: 'GET',
+				dataType: 'json',
+				data: { selectedvalue: selectedValue },
+				success: function (data) {
+					// Set the values in the textboxes
+					$('#wbridge').empty();
+					//console.log(data);
+					// Iterate over the returned data and append options to the second dropdown list
+
+					$('#wbridge').append($('<option>').text("--Select Segement--").val("--Select Segement--"));
+					$.each(data, function (index, item) {
+						$('#wbridge').append($('<option>').text(item.value).val(item.value));
+						//alert(item.text);
+						// $('#wbridge').append('<option value=' + item.value + '>' + item.text + '</option>');
+						//alert(item.value);
+					});
+
+				}
+			});
+		}
+
+	}
+</script>
+
+
+
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+}

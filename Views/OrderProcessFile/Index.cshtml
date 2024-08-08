@@ -1,0 +1,131 @@
+﻿@model IEnumerable<Milk_Bakery.Models.PurchaseOrder>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-3">
+    <div class="card mb-3">
+        <div class="card-header bg-blue-500 text-white p-1">
+            <div class="d-flex align-items-baseline">
+                <a asp-action="Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                <h5 class="mx-auto text-white text-2xl font-semibold">Order File Generation</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label for="dateInput">From Date:</label>
+                    <input type="date" id="Fromdate" class="form-control" name="dateInput" onchange="dropdownChanged()">
+                </div>
+                <div class="form-group col-sm-6">
+
+                    <label for="dateInput">To Date:</label>
+                    <input type="date" id="todate" class="form-control" name="dateInput" onchange="dropdownChanged()">
+                </div>
+            </div>
+           <div class="row">
+               <div class="col-sm-1">
+                    <label for="inputEmail3" class="col-form-label">Company</label>
+               </div>
+               <div class="col-sm-3">
+                    <select class="form-select form-control form-select-lg mb-3" id="company" aria-label=".form-select-lg example" asp-items="@ViewBag.company" onchange="changewb()">
+                    </select>
+               </div>
+                <div class="col-sm-1">
+                    <label for="inputEmail3" class="col-form-label">Segement</label>
+                </div>
+                <div class="col-sm-3">
+                    <select class="form-select form-control form-select-lg mb-3" id="segement" aria-label=".form-select-lg example" asp-items="@ViewBag.segement" onchange="dropdownChanged()">
+                    </select>
+                </div>
+                <div class="col-sm-4 mt-1">
+                    <div class="form-check form-check-inline bg-gray-200 rounded-sm p-1">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="unprocess" checked onchange="dropdownChanged()">
+                        <label class="form-check-label  font-semibold" for="inlineRadio2">Un-Process</label>
+                    </div>
+                    <div class="form-check form-check-inline bg-gray-200 rounded-sm p-1">
+                        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="process"  onchange="dropdownChanged()">
+                        <label class="form-check-label  font-semibold" for="inlineRadio1">Process</label>
+                    </div>
+                   
+                </div>
+           </div>
+          
+            <div class="mt-3">
+                <div id="output"></div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+<script>
+    function dropdownChanged() {
+        var selectedOption = document.getElementById("segement").value;
+        var someOtherValue = document.getElementById("company").value;
+        var fromdate = document.getElementById("Fromdate").value;
+        var todate = document.getElementById("todate").value;
+        const radioButtons = document.getElementsByName("inlineRadioOptions");
+
+        // Loop through the radio buttons to find the checked one
+        let selectedValue;
+        for (let i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].checked) {
+                selectedValue = radioButtons[i].value;
+                break;
+            }
+        }
+        // Make an AJAX request to the controller action
+        $.ajax({
+            url: '/OrderProcessFile/ActionName',
+            type: 'POST',
+            data: { optionValue: selectedOption, otherValue: someOtherValue,FromDate: fromdate, ToDate: todate,selectbox:selectedValue },
+            success: function (result) {
+                $('#form-modal').modal('hide');
+                $("#output").html(result);
+                console.log(result);
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                console.log("An error occurred while executing the action.");
+            }
+        });
+    }
+</script>
+
+<script>
+    function changewb() {
+
+        if (document.getElementById("company").value != "") {
+            //alert("Hi");
+            var selectedValue = document.getElementById("company").value;
+            //alert(selectedValue);
+            var studentSelect = $('#segement');
+            $.ajax({
+                url: '@Url.Action("fill_form", "OrderProcessFile")',
+                type: 'GET',
+                dataType: 'json',
+                data: { selectedvalue: selectedValue },
+                success: function (data) {
+                    // Set the values in the textboxes
+                    $('#segement').empty();
+                    //console.log(data);
+                    // Iterate over the returned data and append options to the second dropdown list
+
+                    $('#segement').append($('<option>').text("--Select Segement--").val("--Select Segement--"));
+                    $.each(data, function (index, item) {
+                        $('#segement').append($('<option>').text(item.value).val(item.value));
+                        //alert(item.text);
+                        // $('#wbridge').append('<option value=' + item.value + '>' + item.text + '</option>');
+                        //alert(item.value);
+                    });
+
+                }
+            });
+        }
+
+    }
+</script>
+
