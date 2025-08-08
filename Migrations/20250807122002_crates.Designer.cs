@@ -12,8 +12,8 @@ using Milk_Bakery.Data;
 namespace Milk_Bakery.Migrations
 {
     [DbContext(typeof(MilkDbContext))]
-    [Migration("20231020095338_seg")]
-    partial class seg
+    [Migration("20250807122002_crates")]
+    partial class crates
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -136,6 +136,35 @@ namespace Milk_Bakery.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Company_SegementMap");
+                });
+
+            modelBuilder.Entity("Milk_Bakery.Models.CratesType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Cratestype")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Height")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Length")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Width")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CratesTypes");
                 });
 
             modelBuilder.Entity("Milk_Bakery.Models.Cust2CustMap", b =>

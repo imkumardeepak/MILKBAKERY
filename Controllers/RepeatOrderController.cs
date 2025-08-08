@@ -126,7 +126,7 @@ namespace Milk_Bakery.Controllers
 
             var purchaseOrder = await _context.PurchaseOrder.Where(a => a.Id == id).Include(d => d.ProductDetails).FirstOrDefaultAsync();
             var product = _context.ProductDetails.Where(a => a.PurchaseOrderId == purchaseOrder.Id).AsEnumerable();
-            var material = await _context.MaterialMaster.Where(a => !product.Any(p => p.ProductName == a.Materialname) && !a.material3partycode.Contains("UTN") && a.segementname == purchaseOrder.Segementname).ToListAsync();
+            var material = await _context.MaterialMaster.Where(a => !product.Any(p => p.ProductName == a.Materialname) && !a.material3partycode.Contains("UTN") && a.segementname == purchaseOrder.Segementname && a.isactive==true).ToListAsync();
 
             int i = 0;
             foreach (var mat in material)

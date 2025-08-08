@@ -5,26 +5,26 @@
 namespace Milk_Bakery.Migrations
 {
     /// <inheritdoc />
-    public partial class seg : Migration
+    public partial class materialmasteradd : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "Segment",
-                table: "EmployeeMaster",
-                type: "nvarchar(500)",
-                maxLength: 500,
+                name: "CratesCode",
+                table: "MaterialMaster",
+                type: "nvarchar(1)",
+                maxLength: 1,
                 nullable: false,
-                defaultValue: "BAKERY DIVISION");
+                defaultValue: "");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Segment",
-                table: "EmployeeMaster");
+                name: "CratesCode",
+                table: "MaterialMaster");
         }
     }
 }

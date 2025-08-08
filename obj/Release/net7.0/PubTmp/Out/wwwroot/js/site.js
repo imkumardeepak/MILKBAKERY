@@ -6,7 +6,7 @@
 $(function () {
     //$('.select2').select2();
     //$('#CodesTable').DataTable();
-    $('.select2').select2();
+    //$('.select2').select2();
     $("#myDropdown1").select2();
     $("#dropcust").select2();
     $('#dataTable_table').DataTable();
@@ -241,7 +241,7 @@ function AddItem(btn) {
 
     var newRow = table.insertRow();
     newRow.innerHTML = rowOuterHtml;
-
+    $(newRow).find('select.select').select2();
     var x = document.getElementsByTagName("INPUT");
 
     for (var cnt = 0; cnt < x.length; cnt++) {
@@ -295,6 +295,43 @@ function DeleteItem(btn) {
     //CalcTotals();
 
 }
+
+function DeleteItemNew(btn) {
+    var table = document.getElementById('CodesTable');
+    var tbody = table.querySelector('tbody');
+    var btnIdx = btn.id.replace('btnremove-', '');
+
+    // Mark the corresponding hidden IsDeleted input field as true
+    var idOfIsDeleted = btnIdx + "__IsDeleted";
+    var txtIsDeleted = document.querySelector("[id$='" + idOfIsDeleted + "']");
+    if (txtIsDeleted) {
+        txtIsDeleted.value = "true";
+    }
+
+    // Remove the row
+    var row = $(btn).closest('tr');
+    row.remove();
+
+    // Update the IDs of remaining rows to keep them consistent
+    var rows = tbody.getElementsByTagName('tr');
+    for (var i = 0; i < rows.length; i++) {
+        // Update the delete button ID
+        var deleteButton = rows[i].querySelector("button[id^='btnremove-']");
+        if (deleteButton) {
+            deleteButton.id = 'btnremove-' + i;
+        }
+
+        // Update the indices in form inputs
+        var inputs = rows[i].querySelectorAll("[id$='__IsDeleted'], [id$='__qty'], [id$='__phone']");
+        inputs.forEach(input => {
+            var name = input.name.replace(/\[\d+\]/, `[${i}]`);
+            var id = input.id.replace(/\d+__/, `${i}__`);
+            input.name = name;
+            input.id = id;
+        });
+    }
+}
+
 
 
 function CalcTotals() {
@@ -370,8 +407,6 @@ document.addEventListener('change', function (e) {
             CalcTotals();
         }
     }
-
-
 });
 
 document.addEventListener('blur', function (e) {

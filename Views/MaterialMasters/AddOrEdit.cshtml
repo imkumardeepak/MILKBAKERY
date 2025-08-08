@@ -62,6 +62,12 @@
                     </div>
 
                     <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Crates Type<span class="text-red-500">*</span></span>
+                        <select asp-for="CratesCode" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.crates"></select>
+                        <span asp-validation-for="CratesCode" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-span-3 relative">
                         <span class="absolute bg-white left-3 -top-[12px] px-2">Material Code<span class="text-red-500">*</span></span>
                         <input asp-for="material3partycode" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
                         <span asp-validation-for="material3partycode" class="text-danger"></span>

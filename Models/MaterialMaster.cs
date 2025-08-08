@@ -34,12 +34,9 @@ namespace Milk_Bakery.Models
         [Display(Name = "Sub-Category")]
         public string subcategory { get; set; }
 
-
         [Required]
         [Display(Name = "Sequence")]
         public int sequence { get; set; }
-
-
 
         [Required]
         [StringLength(500)]
@@ -61,5 +58,10 @@ namespace Milk_Bakery.Models
 
         public bool isactive { get; set; }
 
-    }
+		[Required(ErrorMessage = "A Crates Code is required.")]
+		[Display(Name = "Crates Code")]
+		[StringLength(1, MinimumLength = 1, ErrorMessage = "Crates Code must be exactly 1 character.")]
+		public string CratesCode { get; set; }
+
+	}
 }
