@@ -1,0 +1,750 @@
+===============================================================================
+                     POSTMAN TESTING GUIDE - INVOICE API
+                           Milk & Bakery Project
+                              Version: 1.0
+                           Date: August 23, 2025
+===============================================================================
+
+TABLE OF CONTENTS:
+==================
+1. Postman Setup & Configuration
+2. Environment Variables Setup
+3. Collection Structure
+4. Authentication Setup
+5. Invoice Endpoints Testing
+6. Invoice Material Endpoints Testing
+7. Testing Scenarios & Workflows
+8. Error Testing
+9. Data Validation Testing
+10. Performance Testing Tips
+11. Troubleshooting Guide
+
+===============================================================================
+1. POSTMAN SETUP & CONFIGURATION
+===============================================================================
+
+1.1 INITIAL SETUP
+=================
+1. Download and install Postman from https://www.postman.com/
+2. Create a new workspace: "Milk & Bakery API Testing"
+3. Create a new collection: "Invoice API"
+
+1.2 BASE CONFIGURATION
+======================
+Collection Name: Invoice API
+Base URL: http://localhost:5000 (adjust to your server)
+Content-Type: application/json
+
+1.3 POSTMAN SETTINGS
+====================
+- Enable SSL certificate verification: OFF (for local testing)
+- Request timeout: 30000ms
+- Max redirects: 10
+- Send cookies with requests: ON
+
+===============================================================================
+2. ENVIRONMENT VARIABLES SETUP
+===============================================================================
+
+2.1 CREATE ENVIRONMENT
+=======================
+Environment Name: "Milk & Bakery - Local"
+
+Variables to create:
+┌─────────────────┬─────────────────────────────────┬─────────────────────┐
+│ Variable Name   │ Initial Value                   │ Current Value       │
+├─────────────────┼─────────────────────────────────┼─────────────────────┤
+│ baseUrl         │ http://localhost:5000           │ http://localhost:5000│
+│ apiPath         │ /api                            │ /api                │
+│ contentType     │ application/json                │ application/json    │
+│ sessionToken    │ (leave empty initially)         │ (will be set)       │
+│ testInvoiceId   │ 1                               │ 1                   │
+│ testMaterialId  │ 1                               │ 1                   │
+│ testCustomer    │ HAL001                          │ HAL001              │
+└─────────────────┴─────────────────────────────────┴─────────────────────┘
+
+2.2 ENVIRONMENT SCRIPT SETUP
+=============================
+In Collection Pre-request Script, add:
+```javascript
+// Set common headers
+pm.request.headers.add({
+    key: 'Content-Type',
+    value: pm.environment.get('contentType')
+});
+
+// Add timestamp for requests
+pm.environment.set('timestamp', new Date().toISOString());
+```
+
+===============================================================================
+3. COLLECTION STRUCTURE
+===============================================================================
+
+Organize your Postman collection as follows:
+
+📁 Invoice API
+├── 📁 01 - Authentication
+│   └── Login (if required)
+├── 📁 02 - Invoice Operations
+│   ├── GET All Invoices
+│   ├── GET Invoice by ID
+│   ├── Search Invoices
+│   ├── GET Invoices by Customer
+│   ├── GET Invoice Summary
+│   ├── POST Create Invoice
+│   ├── PUT Update Invoice
+│   └── DELETE Invoice
+├── 📁 03 - Material Operations
+│   ├── GET All Materials
+│   ├── GET Material by ID
+│   ├── GET Materials by Invoice
+│   ├── Search Materials
+│   ├── POST Create Material
+│   ├── POST Create Multiple Materials
+│   ├── PUT Update Material
+│   ├── DELETE Material
+│   ├── DELETE All Materials for Invoice
+│   └── GET Material Summary
+├── 📁 04 - Test Scenarios
+│   ├── Complete Invoice Workflow
+│   ├── Bulk Operations Test
+│   └── Error Handling Tests
+└── 📁 05 - Performance Tests
+    ├── Load Test - Get Invoices
+    └── Stress Test - Create Multiple
+
+===============================================================================
+4. AUTHENTICATION SETUP (If Required)
+===============================================================================
+
+4.1 SESSION-BASED AUTH SETUP
+=============================
+Request: POST {{baseUrl}}/Home/Login
+Headers:
+- Content-Type: application/json
+
+Body (raw JSON):
+{
+    "phoneno": "your_phone_number",
+    "Password": "your_password"
+}
+
+Test Script:
+```javascript
+pm.test("Login successful", function () {
+    pm.response.to.have.status(200);
+});
+
+// Extract session cookie if available
+const sessionCookie = pm.cookies.get('sessionId');
+if (sessionCookie) {
+    pm.environment.set('sessionToken', sessionCookie);
+}
+```
+
+4.2 AUTHORIZATION HEADER
+========================
+For requests requiring auth, add to Headers:
+Key: Authorization
+Value: Bearer {{sessionToken}}
+
+===============================================================================
+5. INVOICE ENDPOINTS TESTING
+===============================================================================
+
+5.1 GET ALL INVOICES
+====================
+Method: GET
+URL: {{baseUrl}}{{apiPath}}/Invoice?pageNumber=1&pageSize=20
+
+Headers:
+- Content-Type: {{contentType}}
+
+Tests Script:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response has success field", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('success');
+    pm.expect(jsonData.success).to.be.true;
+});
+
+pm.test("Response contains pagination", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.data).to.have.property('totalRecords');
+    pm.expect(jsonData.data).to.have.property('pageNumber');
+    pm.expect(jsonData.data).to.have.property('pageSize');
+});
+
+pm.test("Data array exists", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.data.data).to.be.an('array');
+});
+```
+
+-------------------------------------------------------------------------------
+
+5.2 GET INVOICE BY ID
+=====================
+Method: GET
+URL: {{baseUrl}}{{apiPath}}/Invoice/{{testInvoiceId}}
+
+Headers:
+- Content-Type: {{contentType}}
+
+Tests Script:
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Invoice details returned", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.data).to.have.property('invoiceId');
+    pm.expect(jsonData.data).to.have.property('invoiceNo');
+    pm.expect(jsonData.data).to.have.property('totalAmount');
+});
+
+pm.test("Invoice materials included", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.data).to.have.property('invoiceMaterials');
+    pm.expect(jsonData.data.invoiceMaterials).to.be.an('array');
+});
+
+// Store invoice data for other tests
+const responseJson = pm.response.json();
+if (responseJson.success && responseJson.data) {
+    pm.environment.set('lastInvoiceNo', responseJson.data.invoiceNo);
+    pm.environment.set('lastCustomerCode', responseJson.data.billToCode);
+}
+```
+
+-------------------------------------------------------------------------------
+
+5.3 SEARCH INVOICES
+===================
+Method: GET
+URL: {{baseUrl}}{{apiPath}}/Invoice/search
+
+Params:
+- invoiceNo: INV
+- customerCode: {{testCustomer}}
+- fromDate: 2025-01-01
+- toDate: 2025-12-31
+- pageNumber: 1
+- pageSize: 10
+- sortBy: TotalAmount
+- sortDirection: desc
+
+Tests Script:
+```javascript
+pm.test("Search returns results", function () {
+    pm.response.to.have.status(200);
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.success).to.be.true;
+});
+
+pm.test("Search filters applied", function () {
+    const jsonData = pm.response.json();
+    if (jsonData.data.data.length > 0) {
+        // Check if results match search criteria
+        jsonData.data.data.forEach(invoice => {
+            pm.expect(invoice.invoiceNo).to.include('INV');
+        });
+    }
+});
+```
+
+-------------------------------------------------------------------------------
+
+5.4 CREATE NEW INVOICE
+=======================
+Method: POST
+URL: {{baseUrl}}{{apiPath}}/Invoice
+
+Headers:
+- Content-Type: {{contentType}}
+
+Body (raw JSON):
+{
+    "invoiceNo": "INV-TEST-{{$timestamp}}",
+    "invoiceDate": "2025-08-23",
+    "customerRefPO": "PO-TEST-001",
+    "totalAmount": 15000.00,
+    "orderDate": "2025-08-23",
+    "billToName": "Test Customer Ltd",
+    "billToCode": "TEST001",
+    "shipToName": "Test Store",
+    "shipToCode": "STORE001",
+    "shipToRoute": "Route-Test",
+    "companyName": "Milk & Bakery Co.",
+    "companyCode": "MBC001",
+    "vehicleNo": "TEST1234",
+    "invoiceMaterials": [
+        {
+            "invoiceId": 0,
+            "productDescription": "Test Milk 1L",
+            "materialSapCode": "TEST001",
+            "batch": "BATCH001",
+            "unitPerCase": 12,
+            "quantityCases": 10,
+            "quantityUnits": 5,
+            "uom": "PCS"
+        }
+    ]
+}
+
+Pre-request Script:
+```javascript
+// Generate unique invoice number
+const timestamp = new Date().getTime();
+pm.environment.set('uniqueInvoiceNo', 'INV-TEST-' + timestamp);
+```
+
+Update Body to use:
+"invoiceNo": "{{uniqueInvoiceNo}}"
+
+Tests Script:
+```javascript
+pm.test("Invoice created successfully", function () {
+    pm.response.to.have.status(201);
+});
+
+pm.test("Response contains created invoice", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.success).to.be.true;
+    pm.expect(jsonData.data).to.have.property('invoiceId');
+});
+
+// Store created invoice ID for other tests
+const responseJson = pm.response.json();
+if (responseJson.success && responseJson.data) {
+    pm.environment.set('createdInvoiceId', responseJson.data.invoiceId);
+    pm.environment.set('createdInvoiceNo', responseJson.data.invoiceNo);
+}
+```
+
+-------------------------------------------------------------------------------
+
+5.5 UPDATE INVOICE
+==================
+Method: PUT
+URL: {{baseUrl}}{{apiPath}}/Invoice/{{createdInvoiceId}}
+
+Headers:
+- Content-Type: {{contentType}}
+
+Body (raw JSON):
+{
+    "invoiceId": {{createdInvoiceId}},
+    "invoiceNo": "{{createdInvoiceNo}}-UPDATED",
+    "invoiceDate": "2025-08-23",
+    "customerRefPO": "PO-TEST-001-REV",
+    "totalAmount": 18000.00,
+    "orderDate": "2025-08-23",
+    "billToName": "Test Customer Ltd Updated",
+    "billToCode": "TEST001",
+    "shipToName": "Test Store Updated",
+    "shipToCode": "STORE001",
+    "shipToRoute": "Route-Test-Updated",
+    "companyName": "Milk & Bakery Co.",
+    "companyCode": "MBC001",
+    "vehicleNo": "TEST1234",
+    "invoiceMaterials": [
+        {
+            "invoiceId": {{createdInvoiceId}},
+            "productDescription": "Updated Test Milk 1L",
+            "materialSapCode": "TEST001",
+            "batch": "BATCH001-NEW",
+            "unitPerCase": 12,
+            "quantityCases": 15,
+            "quantityUnits": 8,
+            "uom": "PCS"
+        }
+    ]
+}
+
+Tests Script:
+```javascript
+pm.test("Invoice updated successfully", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Update response is success", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.success).to.be.true;
+    pm.expect(jsonData.message).to.include('updated');
+});
+```
+
+-------------------------------------------------------------------------------
+
+5.6 DELETE INVOICE
+==================
+Method: DELETE
+URL: {{baseUrl}}{{apiPath}}/Invoice/{{createdInvoiceId}}
+
+Headers:
+- Content-Type: {{contentType}}
+
+Tests Script:
+```javascript
+pm.test("Invoice deleted successfully", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Delete response confirms deletion", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.success).to.be.true;
+    pm.expect(jsonData.message).to.include('deleted');
+});
+
+// Clean up environment variable
+pm.environment.unset('createdInvoiceId');
+```
+
+===============================================================================
+6. INVOICE MATERIAL ENDPOINTS TESTING
+===============================================================================
+
+6.1 CREATE MATERIAL
+====================
+Method: POST
+URL: {{baseUrl}}{{apiPath}}/InvoiceMaterial
+
+Headers:
+- Content-Type: {{contentType}}
+
+Body (raw JSON):
+{
+    "invoiceId": {{testInvoiceId}},
+    "productDescription": "Test Material {{$timestamp}}",
+    "materialSapCode": "TEST{{$timestamp}}",
+    "batch": "BATCH{{$timestamp}}",
+    "unitPerCase": 20,
+    "quantityCases": 5,
+    "quantityUnits": 10,
+    "uom": "PCS"
+}
+
+Tests Script:
+```javascript
+pm.test("Material created successfully", function () {
+    pm.response.to.have.status(201);
+});
+
+pm.test("Material has calculated total units", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.data).to.have.property('totalUnits');
+    // totalUnits = (quantityCases * unitPerCase) + quantityUnits
+    const expectedTotal = (5 * 20) + 10; // 110
+    pm.expect(jsonData.data.totalUnits).to.equal(expectedTotal);
+});
+
+// Store created material ID
+const responseJson = pm.response.json();
+if (responseJson.success && responseJson.data) {
+    pm.environment.set('createdMaterialId', responseJson.data.materialId);
+}
+```
+
+6.2 BULK CREATE MATERIALS
+=========================
+Method: POST
+URL: {{baseUrl}}{{apiPath}}/InvoiceMaterial/batch
+
+Headers:
+- Content-Type: {{contentType}}
+
+Body (raw JSON):
+{
+    "invoiceId": {{testInvoiceId}},
+    "materials": [
+        {
+            "invoiceId": {{testInvoiceId}},
+            "productDescription": "Bulk Material 1",
+            "materialSapCode": "BULK001",
+            "batch": "BULK_BATCH_001",
+            "unitPerCase": 25,
+            "quantityCases": 4,
+            "quantityUnits": 15,
+            "uom": "PCS"
+        },
+        {
+            "invoiceId": {{testInvoiceId}},
+            "productDescription": "Bulk Material 2",
+            "materialSapCode": "BULK002",
+            "batch": "BULK_BATCH_002",
+            "unitPerCase": 30,
+            "quantityCases": 3,
+            "quantityUnits": 20,
+            "uom": "PCS"
+        }
+    ]
+}
+
+Tests Script:
+```javascript
+pm.test("Bulk materials created", function () {
+    pm.response.to.have.status(201);
+});
+
+pm.test("Multiple materials returned", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.data).to.be.an('array');
+    pm.expect(jsonData.data.length).to.equal(2);
+});
+```
+
+===============================================================================
+7. TESTING SCENARIOS & WORKFLOWS
+===============================================================================
+
+7.1 COMPLETE INVOICE WORKFLOW
+==============================
+Create a folder "Workflow Tests" with these requests in order:
+
+1. Create Invoice → Store invoice ID
+2. Add Materials to Invoice → Store material IDs  
+3. Get Invoice with Materials → Verify complete data
+4. Update Invoice → Modify some fields
+5. Get Updated Invoice → Verify changes
+6. Delete Materials → Clean up materials
+7. Delete Invoice → Final cleanup
+
+7.2 ERROR HANDLING WORKFLOW
+============================
+1. Try to get non-existent invoice (404 test)
+2. Create invoice with missing required fields (400 test)
+3. Update invoice with mismatched ID (400 test)
+4. Create material for non-existent invoice (400 test)
+
+7.3 PERFORMANCE WORKFLOW
+========================
+1. Create multiple invoices (loop test)
+2. Search with large date range
+3. Get all invoices with large page size
+4. Measure response times
+
+===============================================================================
+8. ERROR TESTING
+===============================================================================
+
+8.1 VALIDATION ERROR TESTS
+===========================
+
+Test Name: Create Invoice - Missing Required Fields
+Method: POST
+URL: {{baseUrl}}{{apiPath}}/Invoice
+Body: { "invoiceDate": "2025-08-23" } // Missing required fields
+
+Expected Response: 400 Bad Request
+Test Script:
+```javascript
+pm.test("Validation error returned", function () {
+    pm.response.to.have.status(400);
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.success).to.be.false;
+    pm.expect(jsonData.errors).to.be.an('array');
+    pm.expect(jsonData.errors.length).to.be.greaterThan(0);
+});
+```
+
+8.2 NOT FOUND TESTS
+===================
+
+Test Name: Get Non-existent Invoice
+Method: GET
+URL: {{baseUrl}}{{apiPath}}/Invoice/99999
+
+Expected Response: 404 Not Found
+Test Script:
+```javascript
+pm.test("Invoice not found", function () {
+    pm.response.to.have.status(404);
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.success).to.be.false;
+    pm.expect(jsonData.message).to.include('not found');
+});
+```
+
+===============================================================================
+9. DATA VALIDATION TESTING
+===============================================================================
+
+9.1 FIELD VALIDATION TESTS
+===========================
+
+Test various field validations:
+
+1. Invoice Number Length Test:
+   - invoiceNo: "A" (too short)
+   - invoiceNo: "A".repeat(51) (too long)
+
+2. Amount Validation Test:
+   - totalAmount: -100 (negative)
+   - totalAmount: 0 (zero)
+   - totalAmount: "invalid" (non-numeric)
+
+3. Date Validation Test:
+   - invoiceDate: "invalid-date"
+   - invoiceDate: "2025-13-45" (invalid date)
+
+9.2 BUSINESS LOGIC TESTS
+========================
+
+1. Material Calculation Test:
+   Verify totalUnits = (quantityCases * unitPerCase) + quantityUnits
+
+2. Invoice Summary Test:
+   Create invoices and verify summary calculations
+
+3. Search Logic Test:
+   Verify search filters work correctly
+
+===============================================================================
+10. PERFORMANCE TESTING TIPS
+===============================================================================
+
+10.1 LOAD TESTING SETUP
+=======================
+1. Use Postman Runner or Newman CLI
+2. Set up test data collections
+3. Configure iteration counts (start with 10, increase gradually)
+4. Monitor response times
+
+Runner Configuration:
+- Iterations: 100
+- Delay: 100ms
+- Data file: test-data.json (optional)
+
+10.2 RESPONSE TIME BENCHMARKS
+=============================
+Add to test scripts:
+```javascript
+pm.test("Response time is acceptable", function () {
+    pm.expect(pm.response.responseTime).to.be.below(2000); // 2 seconds
+});
+```
+
+Set different thresholds:
+- GET operations: < 1000ms
+- POST operations: < 2000ms
+- Search operations: < 3000ms
+- Bulk operations: < 5000ms
+
+===============================================================================
+11. TROUBLESHOOTING GUIDE
+===============================================================================
+
+11.1 COMMON ISSUES
+==================
+
+Issue: Connection Error
+Solution: 
+- Check if API server is running (dotnet run)
+- Verify baseUrl in environment
+- Check firewall settings
+
+Issue: 401 Unauthorized
+Solution:
+- Verify authentication setup
+- Check session token
+- Re-run login request
+
+Issue: 500 Internal Server Error
+Solution:
+- Check API server logs
+- Verify database connection
+- Check request body format
+
+11.2 DEBUGGING TIPS
+===================
+
+1. Enable Postman Console (View → Show Postman Console)
+2. Add console.log() in test scripts:
+   ```javascript
+   console.log("Response:", pm.response.json());
+   ```
+
+3. Use Pre-request Scripts for debugging:
+   ```javascript
+   console.log("Request URL:", pm.request.url);
+   console.log("Request Body:", pm.request.body);
+   ```
+
+4. Check Network Tab in browser dev tools
+5. Verify Content-Type headers
+6. Check for CORS issues
+
+11.3 ENVIRONMENT ISSUES
+=======================
+
+1. Variable not set: Check environment selection
+2. Invalid JSON: Use JSON validator
+3. URL encoding: Use {{}} syntax correctly
+4. Case sensitivity: Check variable names
+
+===============================================================================
+12. POSTMAN COLLECTION EXPORT/IMPORT
+===============================================================================
+
+12.1 EXPORTING COLLECTION
+=========================
+1. Right-click collection → Export
+2. Choose Collection v2.1 format
+3. Save as "Invoice_API_Collection.json"
+4. Export environment as "Milk_Bakery_Environment.json"
+
+12.2 SHARING WITH TEAM
+======================
+1. Share collection and environment files
+2. Document any manual setup steps
+3. Include sample test data
+4. Provide server setup instructions
+
+===============================================================================
+SAMPLE TEST DATA
+===============================================================================
+
+Use this data for consistent testing:
+
+Valid Invoice Data:
+{
+    "invoiceNo": "INV-2025-SAMPLE",
+    "invoiceDate": "2025-08-23",
+    "customerRefPO": "PO-SAMPLE-001",
+    "totalAmount": 25000.00,
+    "orderDate": "2025-08-23",
+    "billToName": "Sample Customer",
+    "billToCode": "SAMPLE001",
+    "shipToName": "Sample Store",
+    "shipToCode": "STORE001",
+    "companyName": "Milk & Bakery Co.",
+    "companyCode": "MBC001",
+    "vehicleNo": "MH12SAMPLE"
+}
+
+Valid Material Data:
+{
+    "productDescription": "Sample Milk 1L",
+    "materialSapCode": "SAMPLE001",
+    "batch": "BATCH_SAMPLE",
+    "unitPerCase": 12,
+    "quantityCases": 10,
+    "quantityUnits": 5,
+    "uom": "PCS"
+}
+
+===============================================================================
+END OF POSTMAN TESTING GUIDE
+===============================================================================
+
+For additional support or questions about API testing, contact the development team.
+Remember to update this guide when API endpoints change.
+
+Last updated: August 23, 2025
