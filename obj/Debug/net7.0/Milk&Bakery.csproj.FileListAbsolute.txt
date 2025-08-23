@@ -1083,6 +1083,7 @@ D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.bui
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.build.json.cache
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.development.json
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.build.endpoints.json
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bak.735CE2D5.Up2Date
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bakery.dll
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\refint\Milk&Bakery.dll

@@ -172,6 +172,15 @@ namespace Milk_Bakery.Controllers.Api
                     return BadRequest(validationResponse);
                 }
 
+				var existingInvoice = await _context.Invoices.Where(i => i.InvoiceNo == createDto.InvoiceNo).FirstOrDefaultAsync();
+
+				if (existingInvoice != null)
+				{
+					var errorResponse = _mappingService.CreateErrorResponse<InvoiceResponseDto>(
+						"Failed to create invoice", new List<string> { "Invoice number already exists" });
+					return BadRequest(errorResponse);
+				}
+
                 var invoice = _mappingService.MapToEntity(createDto);
                 
                 // Set default values
