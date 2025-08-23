@@ -815,11 +815,6 @@ D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\Milk&Bakery.Razor
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\Milk&Bakery.sourcelink.json
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets.build.json
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets.development.json
-D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets\msbuild.Milk&Bakery.Microsoft.AspNetCore.StaticWebAssets.props
-D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets\msbuild.build.Milk&Bakery.props
-D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets\msbuild.buildMultiTargeting.Milk&Bakery.props
-D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets\msbuild.buildTransitive.Milk&Bakery.props
-D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets.pack.json
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\scopedcss\bundle\Milk&Bakery.styles.css
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\scopedcss\projectbundle\Milk&Bakery.bundle.scp.css
@@ -831,5 +826,9 @@ D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\Milk&Bakery.genru
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\ref\Milk&Bakery.dll
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\bin\Release\net7.0\Milk&Bakery.staticwebassets.endpoints.json
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets.build.endpoints.json
-D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets\msbuild.Milk&Bakery.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets.upToDateCheck.txt
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\rpswa.dswa.cache.json
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\rjimswa.dswa.cache.json
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\rjsmrazor.dswa.cache.json
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\rjsmcshtml.dswa.cache.json
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets.build.json.cache

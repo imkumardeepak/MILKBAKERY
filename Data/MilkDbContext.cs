@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Models;
 using System.ComponentModel.DataAnnotations.Schema;
+using static Milk_Bakery.Models.InvoiceDetails;
 
 namespace Milk_Bakery.Data
 {
@@ -35,6 +36,25 @@ namespace Milk_Bakery.Data
 		public DbSet<Milk_Bakery.Models.VisitEntery> VisitEntery { get; set; } = default!;
 		public DbSet<CratesType> CratesTypes { get; set; } = default!;
 
+		public DbSet<Invoice> Invoices { get; set; } = default!;
+		public DbSet<InvoiceMaterialDetail> InvoiceMaterials { get; set; } = default!;
 
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			base.OnModelCreating(modelBuilder);
+
+
+			modelBuilder.Entity<InvoiceMaterialDetail>()
+				.HasOne(m => m.Invoice)
+				.WithMany(i => i.InvoiceMaterials)
+				.HasForeignKey(m => m.InvoiceId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			modelBuilder.Entity<InvoiceMaterialDetail>()
+               .HasIndex(m => new { m.InvoiceId, m.MaterialId });
+
+			modelBuilder.Entity<Invoice>()
+				.HasIndex(m => new { m.InvoiceId, m.ShipToCode,m.BillToCode,m.InvoiceDate ,m.VehicleNo});
+		}
 	}
 }

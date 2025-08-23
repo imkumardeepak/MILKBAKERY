@@ -537,6 +537,126 @@ namespace Milk_Bakery.Migrations
                     b.ToTable("GradeMaster");
                 });
 
+            modelBuilder.Entity("Milk_Bakery.Models.InvoiceDetails+Invoice", b =>
+                {
+                    b.Property<int>("InvoiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InvoiceId"));
+
+                    b.Property<string>("BillToCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("BillToName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CompanyCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CustomerRefPO")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("InvoiceDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InvoiceNo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ShipToCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ShipToName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ShipToRoute")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("VehicleNo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("InvoiceId");
+
+                    b.HasIndex("InvoiceId", "ShipToCode", "BillToCode", "InvoiceDate", "VehicleNo");
+
+                    b.ToTable("Invoices");
+                });
+
+            modelBuilder.Entity("Milk_Bakery.Models.InvoiceDetails+InvoiceMaterialDetail", b =>
+                {
+                    b.Property<int>("MaterialId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaterialId"));
+
+                    b.Property<string>("Batch")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("InvoiceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MaterialSapCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ProductDescription")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("QuantityCases")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityUnits")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UOM")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("UnitPerCase")
+                        .HasColumnType("int");
+
+                    b.HasKey("MaterialId");
+
+                    b.HasIndex("InvoiceId", "MaterialId");
+
+                    b.ToTable("InvoiceMaterials");
+                });
+
             modelBuilder.Entity("Milk_Bakery.Models.Mappedcust", b =>
                 {
                     b.Property<int>("id")
@@ -939,6 +1059,17 @@ namespace Milk_Bakery.Migrations
                     b.Navigation("EmpToCustMaps");
                 });
 
+            modelBuilder.Entity("Milk_Bakery.Models.InvoiceDetails+InvoiceMaterialDetail", b =>
+                {
+                    b.HasOne("Milk_Bakery.Models.InvoiceDetails+Invoice", "Invoice")
+                        .WithMany("InvoiceMaterials")
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
+                });
+
             modelBuilder.Entity("Milk_Bakery.Models.Mappedcust", b =>
                 {
                     b.HasOne("Milk_Bakery.Models.Cust2CustMap", "Cust2CustMaps")
@@ -969,6 +1100,11 @@ namespace Milk_Bakery.Migrations
             modelBuilder.Entity("Milk_Bakery.Models.EmpToCustMap", b =>
                 {
                     b.Navigation("Cust2EmpMaps");
+                });
+
+            modelBuilder.Entity("Milk_Bakery.Models.InvoiceDetails+Invoice", b =>
+                {
+                    b.Navigation("InvoiceMaterials");
                 });
 
             modelBuilder.Entity("Milk_Bakery.Models.PurchaseOrder", b =>
