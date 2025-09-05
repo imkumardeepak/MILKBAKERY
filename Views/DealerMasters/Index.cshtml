@@ -1,0 +1,74 @@
+@{
+    ViewData["Title"] = "Dealer Masters";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dealer Masters</h1>
+        <a asp-action="Create" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus-circle fa-sm text-white-50"></i> Create New Dealer
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Dealer List</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Distributor ID</th>
+                            <th>Name</th>
+                            <th>Route Code</th>
+                            <th>City</th>
+                            <th>Phone No</th>
+                            <th>Email</th>
+                            <th>Orders</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.DistributorId</td>
+                                <td>@item.Name</td>
+                                <td>@item.RouteCode</td>
+                                <td>@item.City</td>
+                                <td>@item.PhoneNo</td>
+                                <td>@item.Email</td>
+                                <td>@item.OrderCount</td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-circle btn-sm">
+                                        <i class="fas fa-info-circle"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-circle btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-circle btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#dataTable').DataTable({
+                "order": [[0, "desc"]],
+                "pageLength": 25
+            });
+        });
+    </script>
+}

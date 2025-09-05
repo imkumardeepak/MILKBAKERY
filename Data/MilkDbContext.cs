@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿﻿﻿using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 using static Milk_Bakery.Models.InvoiceDetails;
@@ -35,6 +35,8 @@ namespace Milk_Bakery.Data
 		public DbSet<Milk_Bakery.Models.Cust2EmpMap> cust2EmpMaps { get; set; } = default!;
 		public DbSet<Milk_Bakery.Models.VisitEntery> VisitEntery { get; set; } = default!;
 		public DbSet<CratesType> CratesTypes { get; set; } = default!;
+		public DbSet<DealerMaster> DealerMasters { get; set; } = default!;
+		public DbSet<DealerBasicOrder> DealerBasicOrders { get; set; } = default!;
 
 		public DbSet<Invoice> Invoices { get; set; } = default!;
 		public DbSet<InvoiceMaterialDetail> InvoiceMaterials { get; set; } = default!;
@@ -42,7 +44,6 @@ namespace Milk_Bakery.Data
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
-
 
 			modelBuilder.Entity<InvoiceMaterialDetail>()
 				.HasOne(m => m.Invoice)
