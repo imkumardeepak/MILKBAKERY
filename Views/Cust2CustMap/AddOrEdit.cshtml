@@ -1,135 +1,135 @@
 ﻿@model Milk_Bakery.Models.Cust2CustMap
 
 @{
-    ViewData["Title"] = "Create";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+	ViewData["Title"] = "Create";
+	Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="mt-3">
-    <div class="card mb-3">
-        <div class="card-header bg-dark text-white p-2 m-0">
-            <div class="d-flex align-items-baseline">
-                <h5 class="mx-auto text-white text-2xl font-semibold">Customer Map</h5>
-                <a asp-action="AddOrEdit" class="btn btn-success text-white"><i class="fas fa-plus-square"></i> Add</a> 
-            </div>
-        </div>
-        <div class="card-body">
-        <form asp-action="AddOrEdit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="row">
-                <div class="form-group col-sm-6">
-                    <label asp-for="custname" class="control-label"></label>
-                        <select asp-for="custname" id="myDropdown1" class="form-control" asp-items="@ViewBag.customer" onchange="changewb()"></select>
-                    <span asp-validation-for="custname" class="text-danger"></span>
-                </div>
-                <div class="form-group col-sm-6">
-                    <label asp-for="phoneno" class="control-label"></label> 
-                    <input asp-for="phoneno" id="phone" class="form-control" readonly />
-                    <span asp-validation-for="phoneno" class="text-danger"></span>
-                </div>
-            </div>
-           
-            <div class="table-responsive">
-                <table id="CodesTable" class="table table-sm">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Customer Name</th>
-                            <th>Phone</th>
-                           
-                             <th style="width:100px;">
-                                    <button id='btnAddDetailRow' type="button" class="btn  text-white text-[16px] hover:bg-green-700 bg-green-600 visible" onclick="AddItem(this)">
-                            Add
-                            </button>
-                            </th>
-                        </tr>
-                    </thead>
+	<div class="card mb-3">
+		<div class="card-header bg-dark text-white p-2 m-0">
+			<div class="d-flex align-items-baseline">
+				<h5 class="mx-auto text-white text-2xl font-semibold">Customer Map</h5>
+				<a asp-action="AddOrEdit" class="btn btn-success text-white"><i class="fas fa-plus-square"></i> Add</a>
+			</div>
+		</div>
+		<div class="card-body">
+			<form asp-action="AddOrEdit">
+				<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+				<div class="row">
+					<div class="form-group col-sm-6">
+						<label asp-for="custname" class="control-label"></label>
+						<select asp-for="custname" id="myDropdown1" class="form-control" asp-items="@ViewBag.customer" onchange="changewb()"></select>
+						<span asp-validation-for="custname" class="text-danger"></span>
+					</div>
+					<div class="form-group col-sm-6">
+						<label asp-for="phoneno" class="control-label"></label>
+						<input asp-for="phoneno" id="phone" class="form-control" readonly />
+						<span asp-validation-for="phoneno" class="text-danger"></span>
+					</div>
+				</div>
 
-                    <tbody id="CsDiv">
-                        @for (int i = 0; i < Model.Mappedcusts.Count; i++)
-                        {
+				<div class="table-responsive">
+					<table id="CodesTable" class="table table-sm">
+						<thead class="thead-light">
+							<tr>
+								<th>Customer Name</th>
+								<th>Phone</th>
 
-                            <tr>
+								<th style="width:100px;">
+									<button id='btnAddDetailRow' type="button" class="btn  text-white text-[16px] hover:bg-green-700 bg-green-600 visible" onclick="AddItem(this)">
+										Add
+									</button>
+								</th>
+							</tr>
+						</thead>
 
-                                @*  <td style=" display: none;">
-                            @Model.ProductDetails[i].ProductName
+						<tbody id="CsDiv">
+							@for (int i = 0; i < Model.Mappedcusts.Count; i++)
+							{
 
-                            </td>*@
-                                <td style="width:300px">
-                                        <select asp-for="@Model.Mappedcusts[i].customer" class="form-control select" asp-items="@ViewBag.customer" onchange="handleSelectChange(this)"></select>
-                                    <span asp-validation-for="@Model.Mappedcusts[i].customer" class="text-danger"></span>
+								<tr>
 
-                                </td>
+									@*  <td style=" display: none;">
+								@Model.ProductDetails[i].ProductName
 
-                                <td style="width:200px">
-                                    <input asp-for="@Model.Mappedcusts[i].phone" class="form-control" readonly />
-                                    <span asp-validation-for="@Model.Mappedcusts[i].phone" class="text-danger"></span>
-                                    <input type="hidden" asp-for="@Model.Mappedcusts[i].IsDeleted" />
-                                </td>
-                               
-                                 <td>
-                                        <button id='btnremove-@i' type="button" class="btn  text-white text-[16px] hover:bg-red-700 bg-red-600 visible" onclick="DeleteItem(this)">
-                            Delete
-                            </button>
-                            </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-                <div class="px-4 text-right py-2">
-                    <input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
-                    <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
-                </div>
-        </form>
-    </div>
-</div>
+								</td>*@
+									<td style="width:300px">
+										<select asp-for="@Model.Mappedcusts[i].customer" class="form-control" asp-items="@ViewBag.customer" onchange="handleSelectChange(this)"></select>
+										<span asp-validation-for="@Model.Mappedcusts[i].customer" class="text-danger"></span>
+
+									</td>
+
+									<td style="width:200px">
+										<input asp-for="@Model.Mappedcusts[i].phone" class="form-control" readonly />
+										<span asp-validation-for="@Model.Mappedcusts[i].phone" class="text-danger"></span>
+										<input type="hidden" asp-for="@Model.Mappedcusts[i].IsDeleted" />
+									</td>
+
+									<td>
+										<button id='btnremove-@i' type="button" class="btn  text-white text-[16px] hover:bg-red-700 bg-red-600 visible" onclick="DeleteItemNew(this)">
+											Delete
+										</button>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+				<div class="px-4 text-right py-2">
+					<input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
+					<a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+				</div>
+			</form>
+		</div>
+	</div>
 
 </div>
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script>
-    // $(document).ready(function () {
-    //     $('.select').select2();
-    // });
+	// $(document).ready(function () {
+	//     $('.select').select2();
+	// });
 
-    function changewb() {
+	function changewb() {
 
-        if (document.getElementById("myDropdown1").value != "") {
+		if (document.getElementById("myDropdown1").value != "") {
 
-            var selectedValue = document.getElementById("myDropdown1").value;
-          
-            $.ajax({
-                url: '@Url.Action("fill_form", "Cust2CustMap")',
-                type: 'GET',
-                dataType: 'json',
-                data: { selectedvalue: selectedValue },
-                success: function (data) {
-                    document.getElementById("phone").value = data;
-                }
-            });
-        }
-    }
+			var selectedValue = document.getElementById("myDropdown1").value;
+
+			$.ajax({
+				url: '@Url.Action("fill_form", "Cust2CustMap")',
+				type: 'GET',
+				dataType: 'json',
+				data: { selectedvalue: selectedValue },
+				success: function (data) {
+					document.getElementById("phone").value = data;
+				}
+			});
+		}
+	}
 </script>
 <script>
-    function handleSelectChange(selectElement) {
-        var tid = selectElement.id;
-        var product = selectElement.value;
+	function handleSelectChange(selectElement) {
+		var tid = selectElement.id;
+		var product = selectElement.value;
 
-        var txtProductCodeId = tid.replaceAll('customer', 'phone');
-        var txtProductCode = document.getElementById(txtProductCodeId);
+		var txtProductCodeId = tid.replaceAll('customer', 'phone');
+		var txtProductCode = document.getElementById(txtProductCodeId);
 
-        txtProductCode.value = null;
+		txtProductCode.value = null;
 
-        $.ajax({
-            url: '@Url.Action("fill_form", "Cust2CustMap")',
-            type: 'GET',
-            dataType: 'json',
-            data: { selectedvalue: product },
-            success: function (data) {
-                txtProductCode.value = data;
-            }
-        });
-    }
+		$.ajax({
+			url: '@Url.Action("fill_form", "Cust2CustMap")',
+			type: 'GET',
+			dataType: 'json',
+			data: { selectedvalue: product },
+			success: function (data) {
+				txtProductCode.value = data;
+			}
+		});
+	}
 
 
 </script>

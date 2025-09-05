@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\Milk&amp;Bakery.props" />
-</Project>

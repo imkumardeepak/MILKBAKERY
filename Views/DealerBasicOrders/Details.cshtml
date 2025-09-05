@@ -1,0 +1,90 @@
+@model Milk_Bakery.Models.DealerBasicOrder
+
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Order Details</h1>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="d-none d-sm-inline-block btn btn-sm btn-warning shadow-sm">
+                <i class="fas fa-edit fa-sm text-white-50"></i> Edit
+            </a>
+            <a asp-action="Index" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Order Information</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.Id)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.Id)
+                        </dd>
+                        <dt class="col-sm-3">
+                            Dealer
+                        </dt>
+                        <dd class="col-sm-9">
+                            @if (Model.DealerMaster != null)
+                            {
+                                <a asp-controller="DealerMasters" asp-action="Details" asp-route-id="@Model.DealerId">
+                                    @Model.DealerMaster.Name
+                                </a>
+                            }
+                            else
+                            {
+                                <span>Unknown Dealer</span>
+                            }
+                        </dd>
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.MaterialName)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.MaterialName)
+                        </dd>
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.SapCode)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.SapCode)
+                        </dd>
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.ShortCode)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.ShortCode)
+                        </dd>
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.Quantity)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.Quantity)
+                        </dd>
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.BasicAmount)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.BasicAmount)
+                        </dd>
+                        <dt class="col-sm-3">
+                            Total Amount
+                        </dt>
+                        <dd class="col-sm-9">
+                            @((Model.Quantity * Model.BasicAmount).ToString("C"))
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

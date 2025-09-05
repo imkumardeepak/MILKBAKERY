@@ -1,0 +1,67 @@
+﻿@model CratesType
+
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Create New Crate Type" : "Edit Crate Type";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mx-auto p-4">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">
+            @ViewData["Title"]
+        </h2>
+
+        <form asp-action="AddOrEdit">
+            <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm mb-4"></div>
+
+            <input type="hidden" asp-for="Id" />
+
+            <div class="mb-4">
+                <label asp-for="Cratestype" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                <input asp-for="Cratestype" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                <span asp-validation-for="Cratestype" class="text-red-500 text-xs mt-1"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="CratesCode" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                <input asp-for="CratesCode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"/>
+                <span asp-validation-for="CratesCode" class="text-red-500 text-xs mt-1"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Width" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                <input asp-for="Width" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                <span asp-validation-for="Width" class="text-red-500 text-xs mt-1"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Height" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                <input asp-for="Height" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                <span asp-validation-for="Height" class="text-red-500 text-xs mt-1"></span>
+            </div>
+
+            <div class="mb-6">
+                <label asp-for="Length" class="block text-gray-700 text-sm font-bold mb-2"></label>
+                <input asp-for="Length" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                <span asp-validation-for="Length" class="text-red-500 text-xs mt-1"></span>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <i class="fas fa-save mr-2"></i> Save
+                </button>
+                <a asp-action="Index" class="inline-block align-baseline font-bold text-sm text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to List
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

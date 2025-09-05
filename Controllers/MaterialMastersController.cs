@@ -33,7 +33,8 @@ namespace Milk_Bakery.Controllers
         public async Task<IActionResult> AddOrEdit(int id = 0)
         {
             ViewBag.unit = Getunit();
-            ViewBag.subcatgory = Getsubcategory();
+			ViewBag.crates = GetCratesType();
+			ViewBag.subcatgory = Getsubcategory();
             ViewBag.gram = Getunit();
             ViewBag.segement = GetSegement();
             if (id == 0)
@@ -103,7 +104,8 @@ namespace Milk_Bakery.Controllers
             }
             ViewBag.unit = Getunit();
             ViewBag.subcatgory = Getsubcategory();
-            ViewBag.gram = Getunit();
+            ViewBag.crates = GetCratesType();
+			ViewBag.gram = Getunit();
             ViewBag.segement = GetSegement();
             return View(MaterialMaster);
         }
@@ -192,7 +194,25 @@ namespace Milk_Bakery.Controllers
 
             return lstProducts;
         }
-        private List<SelectListItem> GetSegement()
+
+        private List<SelectListItem> GetCratesType()
+        {
+            var lstProducts = new List<SelectListItem>();
+            lstProducts = _context.CratesTypes.AsNoTracking().Select(n =>
+            new SelectListItem
+            {
+                Value = n.CratesCode,
+                Text = n.Cratestype + " (" + n.CratesCode + ")"
+            }).ToList();
+            var defItem = new SelectListItem()
+            {
+                Value = "",
+                Text = "----Select Crates Type----"
+            };
+            lstProducts.Insert(0, defItem);
+            return lstProducts;
+		}
+		private List<SelectListItem> GetSegement()
         {
             var lstProducts = new List<SelectListItem>();
 

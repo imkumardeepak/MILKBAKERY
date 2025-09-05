@@ -100,7 +100,7 @@ namespace Milk_Bakery.Controllers
                 item.Segementname = lstProducts.Select(a => a.Text).FirstOrDefault();
                 ViewBag.customer = GetCustomer();
                 //item.ProductDetails.Add(new ProductDetail() { Id = 1 });
-                var material = _context.MaterialMaster.AsNoTracking().Where(m => !m.Materialname.StartsWith("CRATES")).OrderBy(a => a.Id).ToList();
+                var material = _context.MaterialMaster.AsNoTracking().Where(m => !m.Materialname.StartsWith("CRATES") && m.isactive == true).OrderBy(a => a.Id).ToList();
 
                 int i = 0;
                 foreach (var mat in material)
@@ -117,7 +117,7 @@ namespace Milk_Bakery.Controllers
                 ViewBag.customer = GetCustomer();
                 ViewBag.segemnt = GetSegement();
                 //item.ProductDetails.Add(new ProductDetail() { Id = 1 });
-                var material = _context.MaterialMaster.AsNoTracking().Where(m => !m.Materialname.StartsWith("CRATES")).OrderBy(a => a.sequence).ToList();
+                var material = _context.MaterialMaster.AsNoTracking().Where(m => !m.Materialname.StartsWith("CRATES") && m.isactive == true).OrderBy(a => a.sequence).ToList();
 
                 int i = 0;
                 foreach (var mat in material)
@@ -229,7 +229,7 @@ namespace Milk_Bakery.Controllers
             ViewBag.segemnt = lstProducts;
             var purchaseOrder = await _context.PurchaseOrder.Where(a => a.Id == id).Include(d => d.ProductDetails).FirstOrDefaultAsync();
             var product = _context.ProductDetails.Where(a => a.PurchaseOrderId == purchaseOrder.Id).AsEnumerable();
-            var material = await _context.MaterialMaster.Where(a => !product.Any(p => p.ProductName == a.Materialname)).OrderBy(a => a.sequence).ToListAsync();
+            var material = await _context.MaterialMaster.Where(a => !product.Any(p => p.ProductName == a.Materialname) && a.isactive == true).OrderBy(a => a.sequence).ToListAsync();
             material = material.Where(a => a.segementname == purchaseOrder.Segementname).ToList();
             int i = 0;
             foreach (var mat in material)
