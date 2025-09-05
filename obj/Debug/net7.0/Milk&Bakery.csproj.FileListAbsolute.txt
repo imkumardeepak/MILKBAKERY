@@ -1089,3 +1089,5 @@ D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\refint\Milk&Bakery.
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bakery.pdb
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bakery.genruntimeconfig.cache
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\ref\Milk&Bakery.dll
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\bin\Debug\net7.0\package-lock.json
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\bin\Debug\net7.0\package.json

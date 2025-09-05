@@ -1,4 +1,4 @@
-﻿using AspNetCoreHero.ToastNotification.Abstractions;
+﻿﻿using AspNetCoreHero.ToastNotification.Abstractions;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -82,6 +82,12 @@ namespace Milk_Bakery.Controllers
 			{
 				return RedirectToAction("Index");
 			}
+		}
+
+		[Authentication]
+		public IActionResult TestTailwind()
+		{
+			return View();
 		}
 
 		public IActionResult change(User user)
