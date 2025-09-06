@@ -1,4 +1,4 @@
-﻿﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿﻿﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
@@ -55,24 +55,30 @@ var numberInputs = document.querySelectorAll(".number-input");
 
 // Handle the decrement button click event
 decrementBtns.forEach((btn, index) => {
-  btn.addEventListener("click", () => {
-    let currentValue = parseFloat(numberInputs[index].value);
-    if (!isNaN(currentValue)) {
-      numberInputs[index].value = Math.max(currentValue - 1, 0); // Ensure the value is not less than 0
-      CalcTotals();
-    }
-  });
+  if (numberInputs[index]) {
+    // Check if numberInputs[index] exists
+    btn.addEventListener("click", () => {
+      let currentValue = parseFloat(numberInputs[index].value);
+      if (!isNaN(currentValue)) {
+        numberInputs[index].value = Math.max(currentValue - 1, 0); // Ensure the value is not less than 0
+        CalcTotals();
+      }
+    });
+  }
 });
 
 // Handle the increment button click event
 incrementBtns.forEach((btn, index) => {
-  btn.addEventListener("click", () => {
-    let currentValue = parseFloat(numberInputs[index].value);
-    if (!isNaN(currentValue)) {
-      numberInputs[index].value = currentValue + 1;
-      CalcTotals();
-    }
-  });
+  if (numberInputs[index]) {
+    // Check if numberInputs[index] exists
+    btn.addEventListener("click", () => {
+      let currentValue = parseFloat(numberInputs[index].value);
+      if (!isNaN(currentValue)) {
+        numberInputs[index].value = currentValue + 1;
+        CalcTotals();
+      }
+    });
+  }
 });
 
 var object = { status: false, ele: null };
@@ -177,33 +183,37 @@ $.ajax({
         },
       ],
     };
-    var ctx = $("#myChart").get(0).getContext("2d");
-    var myNewChart = new Chart(ctx, {
-      type: "bar",
-      data: dataT,
-      options: {
-        responsive: true,
-        //title: {display: true, text: 'CHART.JS DEMO CHART' },
-        legend: { position: "bottom" },
-        scales: {
-          xAxes: [
-            {
-              gridLines: { display: false },
-              display: true,
-              scaleLabel: { display: false, labelString: "" },
-            },
-          ],
-          yAxes: [
-            {
-              gridLines: { display: false },
-              display: true,
-              scaleLabel: { display: false, labelString: "" },
-              ticks: { stepSize: 10000, beginAtZero: true },
-            },
-          ],
+    // Check if myChart element exists before accessing its context
+    var myChartElement = $("#myChart");
+    if (myChartElement.length > 0 && myChartElement.get(0)) {
+      var ctx = myChartElement.get(0).getContext("2d");
+      var myNewChart = new Chart(ctx, {
+        type: "bar",
+        data: dataT,
+        options: {
+          responsive: true,
+          //title: {display: true, text: 'CHART.JS DEMO CHART' },
+          legend: { position: "bottom" },
+          scales: {
+            xAxes: [
+              {
+                gridLines: { display: false },
+                display: true,
+                scaleLabel: { display: false, labelString: "" },
+              },
+            ],
+            yAxes: [
+              {
+                gridLines: { display: false },
+                display: true,
+                scaleLabel: { display: false, labelString: "" },
+                ticks: { stepSize: 10000, beginAtZero: true },
+              },
+            ],
+          },
         },
-      },
-    });
+      });
+    }
   },
 });
 
@@ -219,40 +229,43 @@ function showPosition(position) {
   const latitude = document.getElementById("latitude");
   const Longitude = document.getElementById("longitute");
   const locations = document.getElementById("location");
-  latitude.value = position.coords.latitude;
-  Longitude.value = position.coords.longitude;
-  var map = L.map("map").setView([51.505, -0.09], 13);
+  if (latitude && Longitude && locations) {
+    // Check if elements exist
+    latitude.value = position.coords.latitude;
+    Longitude.value = position.coords.longitude;
+    var map = L.map("map").setView([51.505, -0.09], 13);
 
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  }).addTo(map);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
 
-  // Get the user's current location using the Geolocation API
-  navigator.geolocation.getCurrentPosition(function (position) {
-    var userLat = position.coords.latitude;
-    var userLng = position.coords.longitude;
+    // Get the user's current location using the Geolocation API
+    navigator.geolocation.getCurrentPosition(function (position) {
+      var userLat = position.coords.latitude;
+      var userLng = position.coords.longitude;
 
-    // Create a marker for the user's current location
-    var userMarker = L.marker([userLat, userLng]).addTo(map);
+      // Create a marker for the user's current location
+      var userMarker = L.marker([userLat, userLng]).addTo(map);
 
-    // Use Nominatim API to reverse geocode the coordinates and get the location name
-    var nominatimUrl =
-      "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
-      userLat +
-      "&lon=" +
-      userLng;
-    fetch(nominatimUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        var locationName = data.display_name;
-        userMarker.bindPopup("You are here: " + locationName).openPopup();
-        locations.value = locationName;
-      });
+      // Use Nominatim API to reverse geocode the coordinates and get the location name
+      var nominatimUrl =
+        "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
+        userLat +
+        "&lon=" +
+        userLng;
+      fetch(nominatimUrl)
+        .then((response) => response.json())
+        .then((data) => {
+          var locationName = data.display_name;
+          userMarker.bindPopup("You are here: " + locationName).openPopup();
+          locations.value = locationName;
+        });
 
-    // Update the map view to center on the user's location
-    map.setView([userLat, userLng], 13);
-  });
+      // Update the map view to center on the user's location
+      map.setView([userLat, userLng], 13);
+    });
+  }
 }
 function getCurrentDate() {
   const today = new Date();
@@ -267,13 +280,15 @@ document.addEventListener("DOMContentLoaded", function () {
   getLocation();
   const dateField = document.getElementById("Fromdate");
   const dateField1 = document.getElementById("todate");
-  dateField.value = getCurrentDate();
-  dateField1.value = getCurrentDate();
+  if (dateField) dateField.value = getCurrentDate();
+  if (dateField1) dateField1.value = getCurrentDate();
 });
 
 function AddItem(btn) {
   var table;
   table = document.getElementById("CodesTable");
+  if (!table) return; // Check if table exists
+
   var rows = table.getElementsByTagName("tr");
   var rowOuterHtml = rows[rows.length - 1].outerHTML;
 
@@ -326,6 +341,8 @@ function rebindvalidators() {
 
 function DeleteItem(btn) {
   var table = document.getElementById("CodesTable");
+  if (!table) return; // Check if table exists
+
   var rows = table.getElementsByTagName("tr");
 
   var btnIdx = btn.id.replaceAll("btnremove-", "");
@@ -336,7 +353,7 @@ function DeleteItem(btn) {
 
   var idOfIsDeleted = btnIdx + "__IsDeleted";
   var txtIsDeleted = document.querySelector("[id$='" + idOfIsDeleted + "']");
-  txtIsDeleted.value = "true";
+  if (txtIsDeleted) txtIsDeleted.value = "true";
 
   $(btn).closest("tr").remove();
 
@@ -345,6 +362,8 @@ function DeleteItem(btn) {
 
 function DeleteItemNew(btn) {
   var table = document.getElementById("CodesTable");
+  if (!table) return; // Check if table exists
+
   var tbody = table.querySelector("tbody");
   var btnIdx = btn.id.replace("btnremove-", "");
 
@@ -383,6 +402,7 @@ function DeleteItemNew(btn) {
 
 function CalcTotals() {
   var x = document.getElementsByClassName("QtyTotal");
+  if (!x || x.length === 0) return; // Check if elements exist
 
   var totalQty = 0;
   var Amount = 0;
@@ -397,30 +417,37 @@ function CalcTotals() {
 
     var idofTotal = i + "__Price";
 
-    var hidIsDelId = document.querySelector("[id$='" + idofIsDeleted + "']").id;
+    var hidIsDelId = document.querySelector("[id$='" + idofIsDeleted + "']");
+    var priceTxtId = document.querySelector("[id$='" + idofPrice + "']");
+    var totalTxtId = document.querySelector("[id$='" + idofTotal + "']");
 
-    var priceTxtId = document.querySelector("[id$='" + idofPrice + "']").id;
+    // Check if elements exist before accessing their properties
+    if (hidIsDelId && priceTxtId && totalTxtId) {
+      if (hidIsDelId.value != "true") {
+        totalQty = totalQty + eval(x[i].value);
 
-    var totalTxtId = document.querySelector("[id$='" + idofTotal + "']").id;
-
-    if (document.getElementById(hidIsDelId).value != "true") {
-      totalQty = totalQty + eval(x[i].value);
-
-      var txttotal = document.getElementById(totalTxtId);
-      var txtprice = document.getElementById(priceTxtId);
-      txttotal.value = (eval(x[i].value) * txtprice.value).toFixed(2);
-
-      totalAmount = eval(totalAmount) + eval(txttotal.value);
+        var txttotal = document.getElementById(totalTxtId.id);
+        var txtprice = document.getElementById(priceTxtId.id);
+        if (txttotal && txtprice) {
+          txttotal.value = (eval(x[i].value) * txtprice.value).toFixed(2);
+          totalAmount = eval(totalAmount) + eval(txttotal.value);
+        }
+      }
     }
   }
 
-  document.getElementById("txtQtyTotal").value = totalQty;
-  document.getElementById("txtAmountTotal").value = totalAmount.toFixed(2);
+  // Check if total elements exist before setting their values
+  var txtQtyTotal = document.getElementById("txtQtyTotal");
+  var txtAmountTotal = document.getElementById("txtAmountTotal");
+
+  if (txtQtyTotal) txtQtyTotal.value = totalQty;
+  if (txtAmountTotal) txtAmountTotal.value = totalAmount.toFixed(2);
 }
 
 document.addEventListener("focusout", function (e) {
   CalcTotals();
   var x = document.getElementsByClassName("QtyTotal");
+  if (!x) return; // Check if elements exist
 
   for (i = 0; i < x.length; i++) {
     if (eval(x[i].value) == undefined) {
@@ -432,6 +459,7 @@ document.addEventListener("focusout", function (e) {
 document.addEventListener("change", function (e) {
   CalcTotals();
   var x = document.getElementsByClassName("QtyTotal");
+  if (!x) return; // Check if elements exist
 
   for (i = 0; i < x.length; i++) {
     if (eval(x[i].value) == undefined) {
@@ -444,6 +472,7 @@ document.addEventListener("change", function (e) {
 document.addEventListener("blur", function (e) {
   CalcTotals();
   var x = document.getElementsByClassName("QtyTotal");
+  if (!x) return; // Check if elements exist
 
   for (i = 0; i < x.length; i++) {
     if (eval(x[i].value) == undefined) {
@@ -455,12 +484,13 @@ document.addEventListener("blur", function (e) {
 
 document.addEventListener("focusin", function (e) {
   var x = document.getElementsByClassName("QtyTotal");
+  if (!x) return; // Check if elements exist
 
   for (i = 0; i < x.length; i++) {
     var focusedElement = document.activeElement;
     //console.log(focusedElement);
 
-    if (focusedElement.value == 0) {
+    if (focusedElement && focusedElement.value == 0) {
       focusedElement.value = "";
     }
   }
@@ -474,6 +504,8 @@ function handleKeyDown(event) {
     // Calculate totals here using CalcTotals() function
 
     const x = document.getElementsByClassName("QtyTotal");
+    if (!x) return; // Check if elements exist
+
     const currentIndex = Array.from(x).indexOf(currentTextbox);
 
     if (currentIndex >= 0 && currentIndex < x.length - 1) {
@@ -530,19 +562,23 @@ function handleKeyDown(event) {
 
 //}, false);
 
+// Check if tableContainer exists before adding event listener
 const tableContainer = document.querySelector(".table-container");
+if (tableContainer) {
+  // Add scroll event listener to the table container
+  tableContainer.addEventListener("scroll", function () {
+    const tableHeader = this.querySelector("thead");
+    if (tableHeader) {
+      const isSticky = tableHeader.classList.contains("sticky");
+      const scrollTop = this.scrollTop;
 
-// Add scroll event listener to the table container
-tableContainer.addEventListener("scroll", function () {
-  const tableHeader = this.querySelector("thead");
-  const isSticky = tableHeader.classList.contains("sticky");
-  const scrollTop = this.scrollTop;
-
-  // If the table container is scrolled beyond the table header, add the sticky class
-  if (scrollTop > 0 && !isSticky) {
-    tableHeader.classList.add("sticky");
-  } else if (scrollTop === 0 && isSticky) {
-    // If the table container is scrolled back to the top, remove the sticky class
-    tableHeader.classList.remove("sticky");
-  }
-});
+      // If the table container is scrolled beyond the table header, add the sticky class
+      if (scrollTop > 0 && !isSticky) {
+        tableHeader.classList.add("sticky");
+      } else if (scrollTop === 0 && isSticky) {
+        // If the table container is scrolled back to the top, remove the sticky class
+        tableHeader.classList.remove("sticky");
+      }
+    }
+  });
+}

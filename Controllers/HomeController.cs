@@ -1,4 +1,4 @@
-﻿﻿using AspNetCoreHero.ToastNotification.Abstractions;
+﻿﻿﻿﻿using AspNetCoreHero.ToastNotification.Abstractions;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +35,28 @@ namespace Milk_Bakery.Controllers
 				ViewBag.pendingprocess = _context.PurchaseOrder.Where(a => a.verifyflag == 1 && a.processflag == 0).ToList().Count();
 				ViewBag.totalprocess = _context.PurchaseOrder.Where(a => a.verifyflag == 1 && a.processflag == 1).ToList().Count();
 				ViewBag.totalmoney = "₹" + _context.ProductDetails.Sum(a => a.Price);
+				
+				// Get dealer count for the logged-in customer
+				if (HttpContext.Session.GetString("role") == "Customer")
+				{
+					var customer = await _context.Customer_Master
+						.FirstOrDefaultAsync(c => c.phoneno == HttpContext.Session.GetString("UserName"));
+					
+					if (customer != null)
+					{
+						ViewBag.dealerCount = await _context.DealerMasters
+							.CountAsync(d => d.DistributorId == customer.Id);
+					}
+					else
+					{
+						ViewBag.dealerCount = 0;
+					}
+				}
+				else
+				{
+					ViewBag.dealerCount = await _context.DealerMasters.CountAsync();
+				}
+				
 				var purchase = await _context.PurchaseOrder.AsNoTracking().OrderByDescending(a => a.Id).Take(100).ToListAsync();
 				return View(purchase);
 			}
@@ -84,11 +106,7 @@ namespace Milk_Bakery.Controllers
 			}
 		}
 
-		[Authentication]
-		public IActionResult TestTailwind()
-		{
-			return View();
-		}
+	
 
 		public IActionResult change(User user)
 		{

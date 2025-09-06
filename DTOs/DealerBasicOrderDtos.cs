@@ -12,7 +12,6 @@ namespace Milk_Bakery.DTOs
         public string ShortCode { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal BasicAmount { get; set; }
-        public decimal TotalAmount => Quantity * BasicAmount;
     }
 
     // DealerBasicOrder create request DTO
@@ -34,11 +33,9 @@ namespace Milk_Bakery.DTOs
         public string ShortCode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Quantity is required")]
-        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0")]
         public int Quantity { get; set; }
 
         [Required(ErrorMessage = "Basic Amount is required")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Basic amount must be greater than 0")]
         public decimal BasicAmount { get; set; }
     }
 
@@ -64,24 +61,9 @@ namespace Milk_Bakery.DTOs
         public string ShortCode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Quantity is required")]
-        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0")]
         public int Quantity { get; set; }
 
         [Required(ErrorMessage = "Basic Amount is required")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Basic amount must be greater than 0")]
         public decimal BasicAmount { get; set; }
-    }
-
-    // DealerBasicOrder list item DTO
-    public class DealerBasicOrderListItemDto
-    {
-        public int Id { get; set; }
-        public int DealerId { get; set; }
-        public string DealerName { get; set; } = string.Empty;
-        public string MaterialName { get; set; } = string.Empty;
-        public string SapCode { get; set; } = string.Empty;
-        public int Quantity { get; set; }
-        public decimal BasicAmount { get; set; }
-        public decimal TotalAmount => Quantity * BasicAmount;
     }
 }

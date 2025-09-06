@@ -1083,11 +1083,10 @@ D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.bui
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.build.json.cache
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.development.json
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.build.endpoints.json
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bak.735CE2D5.Up2Date
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bakery.dll
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\refint\Milk&Bakery.dll
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bakery.pdb
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bakery.genruntimeconfig.cache
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\ref\Milk&Bakery.dll
-D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\bin\Debug\net7.0\package-lock.json
-D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\bin\Debug\net7.0\package.json

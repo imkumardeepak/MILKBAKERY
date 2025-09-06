@@ -1,4 +1,4 @@
-﻿@{
+﻿﻿@{
 
 	string role = Context.Request.HttpContext.Session.GetString("role");
 	string user = Context.Request.HttpContext.Session.GetString("UserName");
@@ -21,7 +21,10 @@
 	<link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" rel="stylesheet" />
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" />
+	<link href="~/SelectJs/sumoselect.css" rel="stylesheet" />
+
+	<!-- Tailwind CSS CDN -->
+	<script src="https://cdn.tailwindcss.com"></script>
 
 	<!-- Custom styles for this template-->
 	<link href="~/css/sb-admin.css" rel="stylesheet" />
@@ -779,7 +782,7 @@
 	<script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+	<script src="~/SelectJs/jquery.sumoselect.min.js"></script>
 	<script src="~/vendor/bootstrap/js/bootstrap.min.js"></script>
 	<!-- Core plugin JavaScript-->
 

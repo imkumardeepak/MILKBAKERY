@@ -12,6 +12,25 @@
     </div>
     <div class="p-2">
         <div class="w-screen-lg mt-2">
+            @if (ViewBag.Customers != null && ViewBag.Customers.Count > 1)
+            {
+                <div class="mb-4">
+                    <form method="get" class="flex items-center space-x-4">
+                        <label for="selectedCustomerId" class="text-gray-700 font-medium">Select Customer:</label>
+                        <select name="selectedCustomerId" id="selectedCustomerId" class="text-[13px] h-10 text-gray-700 w-64 border-2 px-2 rounded-sm">
+                            @foreach (SelectListItem customer in ViewBag.Customers)
+                            {
+                                if (!string.IsNullOrEmpty(customer.Value))
+                                {
+                                    <option value="@customer.Value" asp-selected="@(ViewBag.SelectedCustomerId?.ToString() == customer.Value)">@customer.Text</option>
+
+                                }
+                            }
+                        </select>
+                        <button type="submit" class="h-10 w-24 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn">Filter</button>
+                    </form>
+                </div>
+            }
             <div class="table-responsive table-container max-h-screen overflow-y-auto">
                 <table class="w-full divide-y divide-gray-200" id="dataTable">
                     <thead class="bg-gray-200 sticky top-0">

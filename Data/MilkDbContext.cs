@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 using static Milk_Bakery.Models.InvoiceDetails;
@@ -10,6 +10,7 @@ namespace Milk_Bakery.Data
 		public MilkDbContext(DbContextOptions<MilkDbContext> options) : base(options)
 		{
 		}
+
 		public DbSet<Milk_Bakery.Models.Customer_Master> Customer_Master { get; set; } = default!;
 		public DbSet<Milk_Bakery.Models.PlantMaster> PlantMaster { get; set; } = default!;
 		public DbSet<Milk_Bakery.Models.CompanyMaster> CompanyMaster { get; set; } = default!;
@@ -45,6 +46,13 @@ namespace Milk_Bakery.Data
 		{
 			base.OnModelCreating(modelBuilder);
 
+			// Configure the relationship between DealerMaster and DealerBasicOrder
+			modelBuilder.Entity<DealerBasicOrder>()
+				.HasOne(dbo => dbo.DealerMaster)
+				.WithMany(dm => dm.DealerBasicOrders)
+				.HasForeignKey(dbo => dbo.DealerId)
+				.OnDelete(DeleteBehavior.Cascade);
+
 			modelBuilder.Entity<InvoiceMaterialDetail>()
 				.HasOne(m => m.Invoice)
 				.WithMany(i => i.InvoiceMaterials)
@@ -52,10 +60,10 @@ namespace Milk_Bakery.Data
 				.OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<InvoiceMaterialDetail>()
-               .HasIndex(m => new { m.InvoiceId, m.MaterialId });
+				.HasIndex(m => new { m.InvoiceId, m.MaterialId });
 
 			modelBuilder.Entity<Invoice>()
-				.HasIndex(m => new { m.InvoiceId, m.ShipToCode,m.BillToCode,m.InvoiceDate ,m.VehicleNo});
+				.HasIndex(m => new { m.InvoiceId, m.ShipToCode, m.BillToCode, m.InvoiceDate, m.VehicleNo });
 		}
 	}
 }
