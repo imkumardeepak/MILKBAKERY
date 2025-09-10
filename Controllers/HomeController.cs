@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using AspNetCoreHero.ToastNotification.Abstractions;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,42 +31,71 @@ namespace Milk_Bakery.Controllers
 		{
 			try
 			{
-				ViewBag.pendingverify = _context.PurchaseOrder.Where(a => a.verifyflag == 0 && a.processflag == 0).ToList().Count();
-				ViewBag.pendingprocess = _context.PurchaseOrder.Where(a => a.verifyflag == 1 && a.processflag == 0).ToList().Count();
-				ViewBag.totalprocess = _context.PurchaseOrder.Where(a => a.verifyflag == 1 && a.processflag == 1).ToList().Count();
-				ViewBag.totalmoney = "₹" + _context.ProductDetails.Sum(a => a.Price);
-				
-				// Get dealer count for the logged-in customer
-				if (HttpContext.Session.GetString("role") == "Customer")
-				{
-					var customer = await _context.Customer_Master
-						.FirstOrDefaultAsync(c => c.phoneno == HttpContext.Session.GetString("UserName"));
-					
-					if (customer != null)
-					{
-						ViewBag.dealerCount = await _context.DealerMasters
-							.CountAsync(d => d.DistributorId == customer.Id);
-					}
-					else
-					{
-						ViewBag.dealerCount = 0;
-					}
-				}
-				else
-				{
-					ViewBag.dealerCount = await _context.DealerMasters.CountAsync();
-				}
-				
-				var purchase = await _context.PurchaseOrder.AsNoTracking().OrderByDescending(a => a.Id).Take(100).ToListAsync();
+				// Use CountAsync() instead of ToList().Count() - much more efficient
+				ViewBag.pendingverify = await _context.PurchaseOrder
+					.AsNoTracking()
+					.CountAsync(a => a.verifyflag == 0 && a.processflag == 0);
+
+				ViewBag.pendingprocess = await _context.PurchaseOrder
+					.AsNoTracking()
+					.CountAsync(a => a.verifyflag == 1 && a.processflag == 0);
+
+				ViewBag.totalprocess = await _context.PurchaseOrder
+					.AsNoTracking()
+					.CountAsync(a => a.verifyflag == 1 && a.processflag == 1);
+
+				// Use SumAsync() instead of loading all entities
+				ViewBag.totalmoney = "₹" + await _context.ProductDetails
+					.AsNoTracking()
+					.SumAsync(a => a.Price);
+
+				// Execute dealer count query in parallel with other queries
+				var dealerCountTask = GetDealerCountAsync();
+				var purchaseTask = GetRecentPurchasesAsync();
+
+				// Wait for both tasks to complete
+				await Task.WhenAll(dealerCountTask, purchaseTask);
+
+				ViewBag.dealerCount = await dealerCountTask;
+				var purchase = await purchaseTask;
+
 				return View(purchase);
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine(ex.ToString());
-				return View();
+				return View(new List<PurchaseOrder>());
+			}
+		}
+
+		private async Task<int> GetDealerCountAsync()
+		{
+			if (HttpContext.Session.GetString("role") == "Customer")
+			{
+				var userName = HttpContext.Session.GetString("UserName");
+				var customer = await _context.Customer_Master
+					.AsNoTracking()
+					.FirstOrDefaultAsync(c => c.phoneno == userName);
+
+				return customer != null
+					? await _context.DealerMasters
+						.AsNoTracking()
+						.CountAsync(d => d.DistributorId == customer.Id)
+					: 0;
 			}
 
+			return await _context.DealerMasters
+				.AsNoTracking()
+				.CountAsync();
+		}
 
+		private async Task<List<PurchaseOrder>> GetRecentPurchasesAsync()
+		{
+			return await _context.PurchaseOrder
+				.AsNoTracking()
+				.OrderByDescending(a => a.Id)
+				.Take(100)
+				.ToListAsync();
 		}
 
 		public IActionResult Privacy()
@@ -106,7 +135,7 @@ namespace Milk_Bakery.Controllers
 			}
 		}
 
-	
+
 
 		public IActionResult change(User user)
 		{

@@ -1,15 +1,13 @@
-﻿﻿﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
 
 $(function () {
-  //$('.select2').select2();
-  //$('#CodesTable').DataTable();
-  //$('.select2').select2();
-  $("#myDropdown1").select2();
-  $("#dropcust").select2();
-
+    // Initialize select2
+    if ($.fn.select2) {
+        $(".select2").select2();
+    }
   // Initialize dataTable_table only if not already initialized
   if (!$.fn.DataTable.isDataTable("#dataTable_table")) {
     $("#dataTable_table").DataTable();

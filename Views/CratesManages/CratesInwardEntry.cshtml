@@ -15,7 +15,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="distributorId" class="control-label">Distributor</label>
-                            <select name="distributorId" id="distributorId" class="form-control" required>
+                            <select name="distributorId" id="distributorId" class="form-control select2" required>
                                 @foreach (var distributor in ViewBag.Distributors)
                                 {
                                     <option value="@distributor.Value">@distributor.Text</option>

@@ -11,27 +11,12 @@
             <div class="d-flex align-items-baseline">
                 <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
                 <h5 class="mx-auto text-white text-2xl font-semibold">Crates Management</h5>
-                <a asp-action="Overview" class="btn btn-info text-white"><i class="fa fa-list"></i> Overview</a>
-                <a asp-action="CratesInwardEntry" class="btn btn-success text-white"><i class="fa fa-plus"></i> Crates Inward Entry</a>
-                <a asp-action="Create" class="btn btn-default text-white"><i class="fa fa-plus"></i> Add New</a>
+                @* <a asp-action="Overview" class="btn btn-info text-white"><i class="fa fa-list"></i> Overview</a> *@
+                <a asp-action="CratesInwardEntry" class="btn btn-success text-white"><i class="fa fa-plus"></i> Inward Entry</a>
+                <a asp-action="Create" class="btn btn-primary text-white"><i class="fa fa-plus"></i> Add New</a>
             </div>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="form-group col-sm-6">
-                    <label for="customerDropdown">Customer:</label>
-                    <select id="customerDropdown" class="form-control" asp-items="ViewBag.CustomerList">
-                        <option value="">All Customers</option>
-                    </select>
-                </div>
-                <div class="form-group col-sm-6">
-                    <label for="segmentDropdown">Segment:</label>
-                    <select id="segmentDropdown" class="form-control" asp-items="ViewBag.SegmentList">
-                        <option value="">All Segments</option>
-                    </select>
-                </div>
-            </div>
-
             <div id="cratesTable">
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped" id="dataTable" width="100%" cellspacing="0">
@@ -97,9 +82,9 @@
                                         @Html.DisplayFor(modelItem => item.CratesType.Cratestype)
                                     </td>
                                     <td>
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
-                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Details</a>
-                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm" title="Edit"><i class="fa fa-edit"></i></a>
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm" title="Details"><i class="fa fa-info-circle"></i> </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" title="Delete"><i class="fa fa-trash"></i> </a>
                                     </td>
                                 </tr>
                             }

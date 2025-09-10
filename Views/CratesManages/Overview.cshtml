@@ -54,6 +54,13 @@
     .segment-column {
         background-color: #e9ecef;
     }
+    
+    /* Loading spinner */
+    .spinner-border {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.2em;
+    }
 </style>
 
 <div class="mt-3">
@@ -74,7 +81,6 @@
             else
             {
                 <form asp-action="SaveOverview" method="post" id="cratesOverviewForm">
-
                     <div class="table-container table-responsive-sm">
                         <table class="table table-bordered table-striped table-hover table-fixed-header mb-0" id="overviewTable">
                             <thead>
@@ -107,7 +113,8 @@
                                         <td class="align-middle">
                                             <input asp-for="CratesEntries[i].Opening"
                                                    min="0"
-                                                   class="form-control form-control-sm text-end"
+                                                   class="form-control form-control-sm text-end opening-input"
+                                                   data-index="@i"
                                                    style="min-width: 80px;" />
                                             <input type="hidden" asp-for="CratesEntries[i].Outward" />
                                             <input type="hidden" asp-for="CratesEntries[i].Inward" />
@@ -120,7 +127,7 @@
                     </div>
                     <div class="px-4 text-right py-2 mt-3">
                         <a asp-action="Index" class="btn hover:bg-red-700 bg-red-600 rounded-sm shadow-md text-white">Back</a>
-                        <input type="submit" value="Save All Records" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" id="saveButton" />
+                        <input type="button" value="Save All Records" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" id="saveButton" />
                     </div>
                 </form>
             }
@@ -131,11 +138,67 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Form submission handling
-            $('#cratesOverviewForm').on('submit', function(e) {
-                // Disable submit button to prevent double submission
-                $('#saveButton').prop('disabled', true).val('Saving...');
+            // Handle Enter key press to move to next row
+            $('.opening-input').on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var currentIndex = parseInt($(this).data('index'));
+                    var nextIndex = currentIndex + 1;
+                    var nextInput = $('.opening-input[data-index="' + nextIndex + '"]');
+                    
+                    if (nextInput.length > 0) {
+                        nextInput.focus();
+                    } else {
+                        // If this is the last row, focus on the save button
+                        $('#saveButton').focus();
+                    }
+                }
             });
+            
+            // Prevent form submission when pressing Enter in input fields
+            $('.opening-input').on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // Handle save button click
+            $('#saveButton').on('click', function() {
+                saveCratesData();
+            });
+            
+            // Function to save crates data using AJAX
+            function saveCratesData() {
+                // Disable save button and show loading state
+                $('#saveButton').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+                
+                // Serialize form data
+                var formData = $('#cratesOverviewForm').serialize();
+                
+                // Send AJAX request
+                $.ajax({
+                    url: '@Url.Action("SaveOverview", "CratesManages")',
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        // Show success message
+                        alert('Records saved successfully!');
+                        // Redirect to index page
+                        window.location.href = '@Url.Action("Index", "CratesManages")';
+                    },
+                    error: function(xhr, status, error) {
+                        // Show error message
+                        alert('An error occurred while saving records: ' + error);
+                        // Re-enable save button
+                        $('#saveButton').prop('disabled', false).val('Save All Records');
+                    },
+                    complete: function() {
+                        // Re-enable save button in case of success or error
+                        $('#saveButton').prop('disabled', false).html('Save All Records');
+                    }
+                });
+            }
         });
     </script>
 }

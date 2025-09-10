@@ -1,119 +1,159 @@
 ﻿@model Milk_Bakery.Models.Customer_Master
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Customer Master";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-
-<div class="w-full bg-white shadow-lg rounded-lg overflow-hidden mt-2">
-        <div class="bg-blue-500 px-2 py-2 flex items-center justify-between">
-            <h2 class="text-white text-2xl font-semibold">Customer Master</h2>
-        <a asp-action="Upload" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"><i class="fa fa-upload"></i>Upload</a>
+<div class="mt-3">
+    <div class="card mb-3">
+        <div class="card-header text-white p-1" style="background-color:#FC2947;">
+            <div class="d-flex align-items-baseline">
+                <a asp-action="Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                <h5 class="mx-auto text-white text-2xl font-semibold">@(Model.Id == 0 ? "Create Customer" : "Edit Customer")</h5>
+            </div>
         </div>
 
         <div class="card-body">
             <form asp-action="AddOrEdit">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <div class="md:grid grid-cols-12 flex flex-col md:items-center gap-4 p-2">
+                <input type="hidden" asp-for="Id" />
 
-                    <div class="col-span-1 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Id</span>
-                        <input asp-for="Id" class="text-[12px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="shortname" class="control-label font-weight-bold">Short Name <span class="text-danger">*</span></label>
+                            <input asp-for="shortname" class="form-control" />
+                            <span asp-validation-for="shortname" class="text-danger"></span>
+                        </div>
                     </div>
-
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Short  Name<span class="text-red-500">*</span></span>
-                        <input asp-for="shortname" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
-                        <span asp-validation-for="shortname" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-8 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Name<span class="text-red-500">*</span></span>
-                        <input asp-for="Name" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
-                        <span asp-validation-for="Name" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-4 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Contact Person<span class="text-red-500">*</span></span>
-                        <input asp-for="ContactPerson" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
-                        <span asp-validation-for="ContactPerson" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-2 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Division<span class="text-red-500">*</span></span>
-                    <select asp-for="Division" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.segement"></select>
-                        <span asp-validation-for="Division" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Account Type<span class="text-red-500">*</span></span>
-                        <select asp-for="accounttype" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm">
-                            <option>Super Stokiest</option>
-                            <option>Distrubuter</option>
-                            <option>c</option>
-                        </select>
-                        <span asp-validation-for="accounttype" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Route<span class="text-red-500">*</span></span>
-                        <select asp-for="route" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.route"></select>
-                        <span asp-validation-for="route" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-6 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Address<span class="text-red-500">*</span></span>
-                        <input asp-for="address" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
-                        <span asp-validation-for="address" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">City<span class="text-red-500">*</span></span>
-                        <input asp-for="city" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
-                        <span asp-validation-for="city" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Pincode<span class="text-red-500">*</span></span>
-                        <input asp-for="PostalCode" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
-                        <span asp-validation-for="PostalCode" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Country<span class="text-red-500">*</span></span>
-                        <select asp-for="country" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm">
-                            <option>India</option>
-                            <option>Berlin</option>
-                            <option>USA</option>
-                        </select>
-                        <span asp-validation-for="country" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">State<span class="text-red-500">*</span></span>
-                        <input asp-for="state" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
-                        <span asp-validation-for="state" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Register No<span class="text-red-500">*</span></span>
-                        <input asp-for="phoneno" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
-                        <span asp-validation-for="phoneno" class="text-danger"></span>
-                    </div>
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Email<span class="text-red-500"></span></span>
-                        <input asp-for="email" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" value="NA" />
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label font-weight-bold">Name <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
                     </div>
                 </div>
 
-            <div class="px-4 text-right py-2">
-                <input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
-                <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
-            </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="ContactPerson" class="control-label font-weight-bold">Contact Person <span class="text-danger">*</span></label>
+                            <input asp-for="ContactPerson" class="form-control" />
+                            <span asp-validation-for="ContactPerson" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Division" class="control-label font-weight-bold">Division <span class="text-danger">*</span></label>
+                            <select asp-for="Division" class="form-control select2" asp-items="@ViewBag.segement">
+                                <option value="">-- Select Division --</option>
+                            </select>
+                            <span asp-validation-for="Division" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="accounttype" class="control-label font-weight-bold">Account Type <span class="text-danger">*</span></label>
+                            <select asp-for="accounttype" class="form-control">
+                                <option value="">-- Select Account Type --</option>
+                                <option>Super Stokiest</option>
+                                <option>Distrubuter</option>
+                                <option>c</option>
+                            </select>
+                            <span asp-validation-for="accounttype" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="route" class="control-label font-weight-bold">Route <span class="text-danger">*</span></label>
+                            <select asp-for="route" class="form-control select2" asp-items="@ViewBag.route">
+                                <option value="">-- Select Route --</option>
+                            </select>
+                            <span asp-validation-for="route" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="form-group">
+                    <label asp-for="address" class="control-label font-weight-bold">Address <span class="text-danger">*</span></label>
+                    <input asp-for="address" class="form-control" />
+                    <span asp-validation-for="address" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="city" class="control-label font-weight-bold">City <span class="text-danger">*</span></label>
+                            <input asp-for="city" class="form-control" />
+                            <span asp-validation-for="city" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="PostalCode" class="control-label font-weight-bold">Pincode <span class="text-danger">*</span></label>
+                            <input asp-for="PostalCode" class="form-control" />
+                            <span asp-validation-for="PostalCode" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="state" class="control-label font-weight-bold">State <span class="text-danger">*</span></label>
+                            <input asp-for="state" class="form-control" />
+                            <span asp-validation-for="state" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="country" class="control-label font-weight-bold">Country <span class="text-danger">*</span></label>
+                            <select asp-for="country" class="form-control">
+                                <option value="">-- Select Country --</option>
+                                <option>India</option>
+                                <option>Berlin</option>
+                                <option>USA</option>
+                            </select>
+                            <span asp-validation-for="country" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="phoneno" class="control-label font-weight-bold">Phone Number <span class="text-danger">*</span></label>
+                            <input asp-for="phoneno" class="form-control" />
+                            <span asp-validation-for="phoneno" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="email" class="control-label font-weight-bold">Email</label>
+                    <input asp-for="email" class="form-control" value="NA" />
+                    <span asp-validation-for="email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group text-right">
+                    <input type="submit" value="Save" class="btn btn-success" />
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
             </form>
-
-
-
         </div>
     </div>
-
-
+</div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2
+            $('.select2').select2();
+        });
+    </script>
 }
