@@ -1,4 +1,4 @@
-﻿﻿@{
+﻿﻿﻿﻿﻿﻿@{
 
 	string role = Context.Request.HttpContext.Session.GetString("role");
 	string user = Context.Request.HttpContext.Session.GetString("UserName");
@@ -20,6 +20,10 @@
 	<link href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" rel="stylesheet" />
 	<link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" rel="stylesheet" />
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+	
+	<!-- MDB CSS -->
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.2/mdb.min.css" rel="stylesheet" />
+	
 	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 	<link href="~/SelectJs/sumoselect.css" rel="stylesheet" />
 
@@ -31,7 +35,6 @@
 	<link href="~/css/Styless.css" rel="stylesheet" />
 
 	<link href="~/css/site.css" rel="stylesheet" />
-	<link href="~/sweetalert/sweetalert.css" rel="stylesheet" />
 	<link href="~/vendor/date-picker/css/datepicker.min.css" rel="stylesheet" />
 
 
@@ -307,43 +310,44 @@
 						<span>Home</span>
 					</a>
 				</li>
-				@*  <li class="nav-item dropdown">
-			<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-			<i class="fas fa-fw fa-tasks"></i>
-			<span>Master</span>
-			</a>
-			<div class="dropdown-menu" aria-labelledby="pagesDropdown">
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<i class="fas fa-fw fa-tasks"></i>
+						<span>Master</span>
+					</a>
+					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
 
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CategoryMasters/Index">Category</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Sub_CategoryMaster/Index">Sub-Category</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CompanyMasters/Index">Company Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Customer_Master/Index">Customer Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/EmployeeMasters/Index">Employee Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/MaterialMasters/Index">Material Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/SegementMasters/Index">Segement Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Company_SegementMap/Index">Comp-Sege_Mapp</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustomerSegementMaps/Index">Cust_Sege_Mapp</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Cust2CustMap/Index">Customer Map</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DepartmentMasters/Index">Department Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DesignationMasters/Index">Designation Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GradeMasters/Index">Grade Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PlantMasters/Index">Plant Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteMasters/Index">Route Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/UnitMasters/Index">Unit Master</a>
-			</div>
-			</li>*@
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CategoryMasters/Index">Category</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Sub_CategoryMaster/Index">Sub-Category</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CompanyMasters/Index">Company Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Customer_Master/Index">Customer Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/EmployeeMasters/Index">Employee Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/MaterialMasters/Index">Material Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/SegementMasters/Index">Segement Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Company_SegementMap/Index">Comp-Sege_Mapp</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustomerSegementMaps/Index">Cust_Sege_Mapp</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Cust2CustMap/Index">Customer Map</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DepartmentMasters/Index">Department Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DesignationMasters/Index">Designation Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GradeMasters/Index">Grade Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PlantMasters/Index">Plant Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteMasters/Index">Route Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/UnitMasters/Index">Unit Master</a>
+                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesManages/Index">Crates Manage</a>
+					</div>
+				</li>
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-fw fa-barcode"></i>
 						<span>Operation</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
-						@*<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Create">Place Order</a>*@
-						@*<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Index">Order View</a>*@
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Create">Place Order</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Index">Order View</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/OrderProcessFile/Index">File Generation</a>
-						@*<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RepeatOrder/Index">Order Repeat</a>*@
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RepeatOrder/Index">Order Repeat</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/ReProcess/Index">Order Re-Process</a>
-
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DealerOrders/Index">Dealer Order Entry</a>
 					</div>
 				</li>
 				<li class="nav-item dropdown">
@@ -364,6 +368,7 @@
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Outstanding/Index">Bill Summary</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteReport/Index">Route Summary Report</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/VisitReport/Index">Tracking Report</a>
+                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesTrackingReport/Index">Crates Tracking Report</a>
 					</div>
 				</li>
 			</ul>
@@ -482,41 +487,42 @@
 						<span>Home</span>
 					</a>
 				</li>
-				@*  <li class="nav-item dropdown">
-			<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-			<i class="fas fa-fw fa-tasks"></i>
-			<span>Master</span>
-			</a>
-			<div class="dropdown-menu" aria-labelledby="pagesDropdown">
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<i class="fas fa-fw fa-tasks"></i>
+						<span>Master</span>
+					</a>
+					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
 
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CategoryMasters/Index">Category</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Sub_CategoryMaster/Index">Sub-Category</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CompanyMasters/Index">Company Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Customer_Master/Index">Customer Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/EmployeeMasters/Index">Employee Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/MaterialMasters/Index">Material Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/SegementMasters/Index">Segement Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Company_SegementMap/Index">Comp-Sege_Mapp</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustomerSegementMaps/Index">Cust_Sege_Mapp</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Cust2CustMap/Index">Customer Map</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DepartmentMasters/Index">Department Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DesignationMasters/Index">Designation Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GradeMasters/Index">Grade Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PlantMasters/Index">Plant Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteMasters/Index">Route Master</a>
-			<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/UnitMasters/Index">Unit Master</a>
-			</div>
-			</li>*@
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CategoryMasters/Index">Category</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Sub_CategoryMaster/Index">Sub-Category</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CompanyMasters/Index">Company Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Customer_Master/Index">Customer Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/EmployeeMasters/Index">Employee Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/MaterialMasters/Index">Material Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/SegementMasters/Index">Segement Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Company_SegementMap/Index">Comp-Sege_Mapp</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustomerSegementMaps/Index">Cust_Sege_Mapp</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Cust2CustMap/Index">Customer Map</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DepartmentMasters/Index">Department Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DesignationMasters/Index">Designation Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GradeMasters/Index">Grade Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PlantMasters/Index">Plant Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteMasters/Index">Route Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/UnitMasters/Index">Unit Master</a>
+                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesManages/Index">Crates Manage</a>
+					</div>
+				</li>
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-fw fa-barcode"></i>
 						<span>Operation</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
-						@*<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Create">Place Order</a>*@
-						@*<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Index">Order View</a>*@
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Create">Place Order</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Index">Order View</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/OrderProcessFile/Index">File Generation</a>
-						@*<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RepeatOrder/Index">Order Repeat</a>*@
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RepeatOrder/Index">Order Repeat</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/ReProcess/Index">Order Re-Process</a>
 
 					</div>
@@ -671,7 +677,7 @@
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
 
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CategoryMasters/Index">Category</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white hover:bg-blue-700 hover:text-white" href="/Sub_CategoryMaster/Index">Sub-Category</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Sub_CategoryMaster/Index">Sub-Category</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CompanyMasters/Index">Company Master</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Customer_Master/Index">Customer Master</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/EmployeeMasters/Index">Employee Master</a>
@@ -690,6 +696,7 @@
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/UnitMasters/Index">Unit Master</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Users/Index">User Manage</a>
                         <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DealerMasters/Index">Dealer Master</a>
+                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesManages/Index">Crates Manage</a>
 					</div>
 				</li>
 				<li class="nav-item dropdown">
@@ -703,7 +710,7 @@
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/OrderProcessFile/Index">File Generation</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RepeatOrder/Index">Order Repeat</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/ReProcess/Index">Order Re-Process</a>
-
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DealerOrders/Index">Dealer Order Entry</a>
 					</div>
 				</li>
 				<li class="nav-item dropdown">
@@ -724,6 +731,7 @@
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Outstanding/Index">Bill Summary</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteReport/Index">Route Summary Report</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/VisitReport/Index">Tracking Report</a>
+                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesTrackingReport/Index">Crates Tracking Report</a>
 					</div>
 				</li>
 			</ul>
@@ -774,18 +782,16 @@
 		<!-- Bootstrap core JavaScript-->
 	}
 
-
-
-
 	<script src="~/vendor/jquery/jquery.min.js"></script>
-
 	<script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 	<script src="~/SelectJs/jquery.sumoselect.min.js"></script>
 	<script src="~/vendor/bootstrap/js/bootstrap.min.js"></script>
+	
+	<!-- MDB JavaScript -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.2/mdb.min.js"></script>
+	
 	<!-- Core plugin JavaScript-->
-
 	<script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
 			integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
@@ -794,8 +800,6 @@
 	<!-- Page level plugin JavaScript-->
 	<script src="~/js/demo/datatables-demo.js"></script>
 	<script src="~/vendor/chart.js/chart.min.js"></script>
-
-
 
 	<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
 	<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
@@ -806,18 +810,10 @@
 	<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
 	<!-- Custom scripts for all pages-->
-
 	<script src="~/js/sb-admin.min.js"></script>
-
 	<script src="~/selectjs/select2.min.js"></script>
-
-
-
-
-
-
 	<script src="~/vendor/date-picker/js/datepicker.js"></script>
-	<script src="~/sweetalert/sweetalert.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<script src="~/js/site.js" asp-append-version="true"></script>
 	@await Component.InvokeAsync("Notyf")
 	@await RenderSectionAsync("Scripts", required: false)

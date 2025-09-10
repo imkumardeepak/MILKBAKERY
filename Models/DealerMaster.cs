@@ -46,8 +46,9 @@ namespace Milk_Bakery.Models
 		[Display(Name = "Email")]
 		public string? Email { get; set; } = "";
 
-		// Navigation property for related orders
+		// Navigation property for related basic orders
 		public virtual ICollection<DealerBasicOrder> DealerBasicOrders { get; set; } = new List<DealerBasicOrder>();
-
+		
+		
 	}
 }

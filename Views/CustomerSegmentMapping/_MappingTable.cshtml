@@ -1,0 +1,41 @@
+@model IEnumerable<Milk_Bakery.Models.CustomerSegementMap>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped" id="dataTable" width="100%" cellspacing="0">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Customername)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SegementName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.custsegementcode)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.segementcode3party)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Customername)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.SegementName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.custsegementcode)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.segementcode3party)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

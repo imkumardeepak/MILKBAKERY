@@ -5,6 +5,7 @@ using Milk_Bakery.Data;
 using Milk_Bakery.Models;
 using Milk_Bakery.Services;
 using System.Configuration;
+using Milk_Bakery.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,10 @@ if (!app.Environment.IsDevelopment())
 	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	app.UseHsts();
 }
+
+// Add global exception handling middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 app.UseNotyf();
 app.UseSession();
 app.UseHttpsRedirection();

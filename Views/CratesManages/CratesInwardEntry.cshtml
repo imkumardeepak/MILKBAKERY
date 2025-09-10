@@ -1,0 +1,123 @@
+@{
+    ViewData["Title"] = "Crates Inward Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Crates Inward Entry</h6>
+        </div>
+        <div class="card-body">
+            <form asp-action="CratesInwardEntry" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="distributorId" class="control-label">Distributor</label>
+                            <select name="distributorId" id="distributorId" class="form-control" required>
+                                @foreach (var distributor in ViewBag.Distributors)
+                                {
+                                    <option value="@distributor.Value">@distributor.Text</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="segmentCode" class="control-label">Segment</label>
+                            <select name="segmentCode" id="segmentDropdown" class="form-control" required>
+                                <option value="">----Select Distributor First----</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="font-weight-bold">Crate Quantities</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Crate Type</th>
+                                        <th>Inward Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var crateType in ViewBag.CrateTypes)
+                                    {
+                                        <tr>
+                                            <td>@crateType.Text</td>
+                                            <td>
+                                                <input type="number" name="crateQuantities[@crateType.Value]" class="form-control" min="0" value="0" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="entryDate" class="control-label">Entry Date</label>
+                            <input type="date" name="entryDate" id="entryDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Save Entry" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Set today as default date
+        document.addEventListener('DOMContentLoaded', function() {
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById('entryDate').value = today;
+        });
+        
+        $(document).ready(function () {
+            // Handle distributor dropdown change to load segments
+            $('#distributorId').change(function () {
+                var customerId = $(this).val();
+                if (customerId) {
+                    loadSegmentsForCustomer(customerId);
+                } else {
+                    $('#segmentDropdown').empty();
+                    $('#segmentDropdown').append('<option value="">----Select Distributor First----</option>');
+                }
+            });
+        });
+
+        function loadSegmentsForCustomer(customerId) {
+            $.ajax({
+                url: '@Url.Action("GetSegmentsForCustomer", "CratesManages")',
+                type: 'GET',
+                data: { customerId: customerId },
+                success: function (result) {
+                    $('#segmentDropdown').empty();
+                    $('#segmentDropdown').append('<option value="">----Select Segment----</option>');
+                    $.each(result, function (i, segment) {
+                        $('#segmentDropdown').append($('<option></option>').val(segment.value).html(segment.text));
+                    });
+                },
+                error: function () {
+                    console.log('Error loading segments for customer');
+                    $('#segmentDropdown').empty();
+                    $('#segmentDropdown').append('<option value="">----Error Loading Segments----</option>');
+                }
+            });
+        }
+    </script>
+}

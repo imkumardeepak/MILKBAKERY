@@ -1,0 +1,64 @@
+@{
+    ViewData["Title"] = "Dealer Order Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dealer Order Entry</h1>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Select Distributor/Customer</h6>
+                </div>
+                <div class="card-body">
+                    <form id="dealerOrderForm">
+                        <div class="form-group">
+                            <label for="distributorSelect" class="font-weight-bold">Select Distributor/Customer:</label>
+                            <select id="distributorSelect" class="form-control form-control-lg" asp-items="@(new SelectList(Model.AvailableDistributors, "Id", "Name"))">
+                                <option value="">-- Select Distributor --</option>
+                            </select>
+                            <small class="form-text text-muted">Please select a distributor to view associated dealers and their order details.</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="dealerOrdersContainer">
+        <!-- Dealer orders will be loaded here via AJAX -->
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Handle distributor selection
+            $('#distributorSelect').on('change', function () {
+                var distributorId = $(this).val();
+                if (distributorId) {
+                    // Show loading indicator
+                    $('#dealerOrdersContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p>Loading dealers and order details...</p></div>');
+                    
+                    $.ajax({
+                        url: '@Url.Action("LoadDealers", "DealerOrders")',
+                        type: 'POST',
+                        data: { distributorId: distributorId },
+                        success: function (result) {
+                            $('#dealerOrdersContainer').html(result);
+                        },
+                        error: function () {
+                            $('#dealerOrdersContainer').html('<div class="alert alert-danger" role="alert">Error loading dealers. Please try again.</div>');
+                        }
+                    });
+                } else {
+                    $('#dealerOrdersContainer').html('');
+                }
+            });
+        });
+    </script>
+}

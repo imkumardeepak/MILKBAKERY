@@ -1,0 +1,141 @@
+@model Milk_Bakery.ViewModels.CratesOverviewViewModel
+
+@{
+    ViewData["Title"] = "Crates Overview";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .table-fixed-header {
+        position: relative;
+    }
+    
+    .table-fixed-header thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #343a40;
+        color: white;
+    }
+    
+    .table-fixed-header th {
+        position: sticky;
+        top: 0;
+    }
+    
+    /* Ensure input fields have consistent height */
+    .form-control-sm {
+        height: calc(1.5em + 0.5rem + 2px);
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+    
+    /* Improve the appearance of the table container */
+    .table-container {
+        max-height: 70vh;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    /* Ensure proper alignment of table cells */
+    .table td, .table th {
+        vertical-align: middle;
+    }
+    
+    /* Customer and segment column styling */
+    .customer-column {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+    
+    .segment-column {
+        background-color: #e9ecef;
+    }
+</style>
+
+<div class="mt-3">
+    <div class="card mb-3">
+        <div class="card-header text-white p-1" style="background-color:#FC2947;">
+            <div class="d-flex align-items-baseline">
+                <a asp-action="Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                <h5 class="mx-auto text-white text-2xl font-semibold">Crates Management Overview</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (Model.CratesEntries.Count == 0)
+            {
+                <div class="alert alert-warning" role="alert">
+                    No crate entries found. Please contact administrator.
+                </div>
+            }
+            else
+            {
+                <form asp-action="SaveOverview" method="post" id="cratesOverviewForm">
+
+                    <div class="table-container table-responsive-sm">
+                        <table class="table table-bordered table-striped table-hover table-fixed-header mb-0" id="overviewTable">
+                            <thead>
+                                <tr>
+                                    <th class="align-middle">Customer</th>
+                                    <th class="align-middle">Segment</th>
+                                    <th class="align-middle">Crate Type</th>
+                                    <th class="align-middle text-end">Opening</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.CratesEntries.Count; i++)
+                                {
+                                    <tr>
+                                        <td class="align-middle customer-column">
+                                            @Model.CratesEntries[i].CustomerName
+                                            <input type="hidden" asp-for="CratesEntries[i].CustomerId" />
+                                            <input type="hidden" asp-for="CratesEntries[i].CustomerName" />
+                                            <input type="hidden" asp-for="CratesEntries[i].SegmentCode" />
+                                            <input type="hidden" asp-for="CratesEntries[i].SegmentName" />
+                                            <input type="hidden" asp-for="CratesEntries[i].CrateTypeId" />
+                                            <input type="hidden" asp-for="CratesEntries[i].CrateTypeName" />
+                                        </td>
+                                        <td class="align-middle segment-column">
+                                            @Model.CratesEntries[i].SegmentName
+                                        </td>
+                                        <td class="align-middle">
+                                            @Model.CratesEntries[i].CrateTypeName
+                                        </td>
+                                        <td class="align-middle">
+                                            <input asp-for="CratesEntries[i].Opening"
+                                                   min="0"
+                                                   class="form-control form-control-sm text-end"
+                                                   style="min-width: 80px;" />
+                                            <input type="hidden" asp-for="CratesEntries[i].Outward" />
+                                            <input type="hidden" asp-for="CratesEntries[i].Inward" />
+                                            <input type="hidden" asp-for="CratesEntries[i].Balance" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-4 text-right py-2 mt-3">
+                        <a asp-action="Index" class="btn hover:bg-red-700 bg-red-600 rounded-sm shadow-md text-white">Back</a>
+                        <input type="submit" value="Save All Records" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" id="saveButton" />
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Form submission handling
+            $('#cratesOverviewForm').on('submit', function(e) {
+                // Disable submit button to prevent double submission
+                $('#saveButton').prop('disabled', true).val('Saving...');
+            });
+        });
+    </script>
+}

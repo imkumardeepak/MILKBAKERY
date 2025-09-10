@@ -1,0 +1,305 @@
+@model Milk_Bakery.ViewModels.DealerOrdersViewModel
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h4 mb-0 text-gray-800">Dealers for Selected Distributor</h1>
+            <span class="badge badge-primary badge-pill">@Model.Dealers.Count Dealers</span>
+        </div>
+        
+        @if (Model.Dealers.Any())
+        {
+            <form id="saveOrdersForm">
+                <input type="hidden" id="SelectedDistributorId" name="SelectedDistributorId" value="@Model.SelectedDistributorId" />
+                <div class="accordion" id="dealersAccordion">
+                    @{ int index = 0; }
+                    @foreach (var dealer in Model.Dealers)
+                    {
+                        <div class="card shadow mb-4 border-left-primary">
+                            <div class="card-header py-3 d-flex justify-content-between align-items-center" id="heading@(dealer.Id)">
+                                <h6 class="m-0 font-weight-bold text-primary">@dealer.Name</h6>
+                                <button class="btn btn-link text-primary accordion-toggle" type="button" data-dealer-id="@dealer.Id">
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </button>
+                            </div>
+                            
+                            <div id="collapse@(dealer.Id)" class="dealer-collapse-content @(index == 0 ? "" : "d-none")">
+                                <div class="card-body">
+                                    <div class="row">
+                                        
+                                        <div class="col-md-12">
+                                            <h6 class="font-weight-bold text-primary">Order Details</h6>
+                                            @if (Model.DealerBasicOrders.ContainsKey(dealer.Id) && Model.DealerBasicOrders[dealer.Id].Any())
+                                            {
+                                                decimal dealerTotal = 0; // Variable to store dealer total
+                                                
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-hover">
+                                                        <thead class="thead-dark">
+                                                            <tr>
+                                                                <th class="d-none d-md-table-cell">Material Name</th>
+                                                                <th>Short Code</th>
+                                                                <th class="text-center">Rate</th>
+                                                                <th class="text-center">Order Qty</th>
+                                                                <th class="text-center">Price</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var basicOrder in Model.DealerBasicOrders[dealer.Id])
+                                                            {
+                                                                // Calculate rate and price
+                                                                decimal rate = basicOrder.Quantity > 0 ? basicOrder.BasicAmount / basicOrder.Quantity : 0;
+                                                                decimal price = rate * basicOrder.Quantity;
+                                                                dealerTotal += price;
+                                                                
+                                                                <tr>
+                                                                    <td class="d-none d-md-table-cell">@basicOrder.MaterialName</td>
+                                                                    <td>@basicOrder.ShortCode</td>
+                                                                    <td class="text-center">@rate.ToString("F2")</td>
+                                                                    <td>
+                                                                        <input type="number" 
+                                                                               name="DealerOrderItemQuantities[@dealer.Id][@basicOrder.Id]" 
+                                                                               class="form-control form-control-sm text-center quantity-input" 
+                                                                               value="@basicOrder.Quantity" 
+                                                                               min="0" 
+                                                                               data-dealer-id="@dealer.Id"
+                                                                               data-basic-order-id="@basicOrder.Id"
+                                                                               data-rate="@rate" />
+                                                                    </td>
+                                                                    <td class="text-center price-cell">@price.ToString("F2")</td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                
+                                                // Display dealer total
+                                                <div class="row mt-2">
+                                                    <div class="col-md-12 text-right">
+                                                        <strong>Dealer Total: ₹@dealerTotal.ToString("F2")</strong>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="alert alert-info" role="alert">
+                                                    <i class="fas fa-info-circle"></i> No basic orders found for this dealer.
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        index++;
+                    }
+                </div>
+                
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        @{
+                            // Calculate overall distributor total
+                            decimal distributorTotal = 0;
+                            foreach (var dealer in Model.Dealers)
+                            {
+                                if (Model.DealerBasicOrders.ContainsKey(dealer.Id))
+                                {
+                                    foreach (var basicOrder in Model.DealerBasicOrders[dealer.Id])
+                                    {
+                                        decimal rate = basicOrder.Quantity > 0 ? basicOrder.BasicAmount / basicOrder.Quantity : 0;
+                                        decimal price = rate * basicOrder.Quantity;
+                                        distributorTotal += price;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12 text-right">
+                                <h5><strong>Distributor Total: ₹@distributorTotal.ToString("F2")</strong></h5>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group text-center">
+                            <button type="button" id="saveAllOrdersBtn" class="btn btn-success btn-lg">
+                                <i class="fas fa-save"></i> Save All Orders
+                            </button>
+                            <button type="button" id="resetFormBtn" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-redo"></i> Reset Form
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        }
+        else
+        {
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="alert alert-warning text-center" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> No dealers found for the selected distributor.
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Function to reset button state
+        function resetButtonState(button, originalText) {
+            button.html(originalText);
+            button.prop('disabled', false);
+        }
+        
+        // Handle quantity input changes to update price
+        $(document).on('input', '.quantity-input', function() {
+            var quantity = parseFloat($(this).val()) || 0;
+            var rate = parseFloat($(this).data('rate')) || 0;
+            var price = quantity * rate;
+            
+            // Update the price cell in the same row
+            $(this).closest('tr').find('.price-cell').text(price.toFixed(2));
+            
+            // Recalculate dealer total
+            var dealerId = $(this).data('dealer-id');
+            recalculateDealerTotal(dealerId);
+            
+            // Recalculate distributor total
+            recalculateDistributorTotal();
+        });
+        
+        // Function to recalculate dealer total
+        function recalculateDealerTotal(dealerId) {
+            var dealerTotal = 0;
+            $('#collapse' + dealerId).find('.price-cell').each(function() {
+                dealerTotal += parseFloat($(this).text()) || 0;
+            });
+            
+            // Update dealer total display
+            $('#collapse' + dealerId).find('.dealer-total').text('₹' + dealerTotal.toFixed(2));
+        }
+        
+        // Function to recalculate distributor total
+        function recalculateDistributorTotal() {
+            var distributorTotal = 0;
+            $('.price-cell').each(function() {
+                distributorTotal += parseFloat($(this).text()) || 0;
+            });
+            
+            // Update distributor total display
+            $('.distributor-total').text('₹' + distributorTotal.toFixed(2));
+        }
+        
+        // Handle save all orders button click
+        $('#saveAllOrdersBtn').on('click', function () {
+            // Show loading indicator
+            var button = $(this);
+            var originalText = button.html();
+            button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+            button.prop('disabled', true);
+            
+            // Prepare form data
+            var formData = $('#saveOrdersForm').serialize();
+            
+            // Debug: Log the form data
+            console.log('Form data being sent:', formData);
+            
+            $.ajax({
+                url: '@Url.Action("SaveOrders", "DealerOrders")',
+                type: 'POST',
+                data: formData,
+                success: function (result) {
+                    console.log('Success response:', result);
+                    if (result.success) {
+                        // Show success message with SweetAlert and redirect to home index
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'All orders saved successfully!',
+                            confirmButtonText: 'OK'
+                        }).then((r) => {
+                            // Redirect to Home Index after successful save
+                            window.location.href = '@Url.Action("Index", "Home")';
+                        });
+                    } else {
+                        // Show error message with SweetAlert
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error saving orders: ' + result.message,
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log('Error response:', xhr, status, error);
+                    // Show error message with SweetAlert
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error saving orders. Please try again. ' + error,
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function() {
+                    // Always reset button state when AJAX call completes
+                    console.log('AJAX call completed, resetting button state');
+                    resetButtonState(button, originalText);
+                }
+            });
+        });
+        
+        // Handle reset form button
+        $('#resetFormBtn').on('click', function () {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'All unsaved changes will be lost.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, reset it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('input.quantity-input').each(function() {
+                        var defaultValue = $(this).attr('value');
+                        $(this).val(defaultValue);
+                        
+                        // Trigger input event to recalculate prices
+                        $(this).trigger('input');
+                    });
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Reset',
+                        text: 'Form has been reset to default values.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        });
+        
+        // Custom accordion toggle implementation to avoid conflicts
+        $('.accordion-toggle').on('click', function(e) {
+            e.preventDefault();
+            
+            var dealerId = $(this).data('dealer-id');
+            var content = $('#collapse' + dealerId);
+            var icon = $(this).find('.toggle-icon');
+            
+            // Toggle the content
+            if (content.hasClass('d-none')) {
+                // Show content
+                content.removeClass('d-none');
+                icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+            } else {
+                // Hide content
+                content.addClass('d-none');
+                icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+            }
+        });
+        
+        // Initialize the first accordion as open
+        $('.accordion-toggle').first().find('.toggle-icon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+    });
+</script>
