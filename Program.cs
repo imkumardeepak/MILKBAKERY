@@ -1,22 +1,24 @@
 using AspNetCoreHero.ToastNotification;
 using AspNetCoreHero.ToastNotification.Extensions;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Data;
+using Milk_Bakery.Middleware;
 using Milk_Bakery.Models;
 using Milk_Bakery.Services;
 using System.Configuration;
-using Milk_Bakery.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddDbContext<MilkDbContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbContextConnection"),
-	sqlServerOptions => sqlServerOptions.CommandTimeout(500))); 
+	sqlServerOptions => sqlServerOptions.CommandTimeout(500)));
+
 
 //builder.Services.AddDbContext<MilkDbContext>(options =>
 //   options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
+builder.Services.AddMemoryCache();
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.AddSession();
 builder.Services.AddNotyf(config => { config.DurationInSeconds = 5; config.IsDismissable = true; config.Position = NotyfPosition.TopRight; });

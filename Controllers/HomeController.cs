@@ -17,13 +17,15 @@ namespace Milk_Bakery.Controllers
 	{
 		private readonly ILogger<HomeController> _logger;
 		private readonly MilkDbContext _context;
+		private readonly IMemoryCache _memoryCache;
 		public INotyfService _notifyService { get; }
 
-		public HomeController(ILogger<HomeController> logger, MilkDbContext milkDb, INotyfService notyf)
+		public HomeController(ILogger<HomeController> logger, MilkDbContext milkDb, INotyfService notyf, IMemoryCache memoryCache)
 		{
 			_logger = logger;
 			_context = milkDb;
 			_notifyService = notyf;
+			_memoryCache = memoryCache;
 		}
 
 		[Authentication]
@@ -31,34 +33,21 @@ namespace Milk_Bakery.Controllers
 		{
 			try
 			{
-				// Use CountAsync() instead of ToList().Count() - much more efficient
-				ViewBag.pendingverify = await _context.PurchaseOrder
-					.AsNoTracking()
-					.CountAsync(a => a.verifyflag == 0 && a.processflag == 0);
+				var cacheKey = $"DashboardStats_{HttpContext.Session.GetString("role")}_{HttpContext.Session.GetString("UserName")}";
 
-				ViewBag.pendingprocess = await _context.PurchaseOrder
-					.AsNoTracking()
-					.CountAsync(a => a.verifyflag == 1 && a.processflag == 0);
+				if (!_memoryCache.TryGetValue(cacheKey, out DashboardStats stats))
+				{
+					stats = await GetDashboardStatsAsync();
+					_memoryCache.Set(cacheKey, stats, TimeSpan.FromMinutes(5));
+				}
 
-				ViewBag.totalprocess = await _context.PurchaseOrder
-					.AsNoTracking()
-					.CountAsync(a => a.verifyflag == 1 && a.processflag == 1);
+				ViewBag.pendingverify = stats.PendingVerify;
+				ViewBag.pendingprocess = stats.PendingProcess;
+				ViewBag.totalprocess = stats.TotalProcess;
+				ViewBag.totalmoney = stats.TotalMoney;
+				ViewBag.dealerCount = stats.DealerCount;
 
-				// Use SumAsync() instead of loading all entities
-				ViewBag.totalmoney = "₹" + await _context.ProductDetails
-					.AsNoTracking()
-					.SumAsync(a => a.Price);
-
-				// Execute dealer count query in parallel with other queries
-				var dealerCountTask = GetDealerCountAsync();
-				var purchaseTask = GetRecentPurchasesAsync();
-
-				// Wait for both tasks to complete
-				await Task.WhenAll(dealerCountTask, purchaseTask);
-
-				ViewBag.dealerCount = await dealerCountTask;
-				var purchase = await purchaseTask;
-
+				var purchase = await GetRecentPurchasesAsync();
 				return View(purchase);
 			}
 			catch (Exception ex)
@@ -66,6 +55,33 @@ namespace Milk_Bakery.Controllers
 				Console.WriteLine(ex.ToString());
 				return View(new List<PurchaseOrder>());
 			}
+		}
+
+		private async Task<DashboardStats> GetDashboardStatsAsync()
+		{
+			// Execute sequentially to avoid DbContext threading issues
+			var pendingVerify = await _context.PurchaseOrder.AsNoTracking()
+				.CountAsync(a => a.verifyflag == 0 && a.processflag == 0);
+
+			var pendingProcess = await _context.PurchaseOrder.AsNoTracking()
+				.CountAsync(a => a.verifyflag == 1 && a.processflag == 0);
+
+			var totalProcess = await _context.PurchaseOrder.AsNoTracking()
+				.CountAsync(a => a.verifyflag == 1 && a.processflag == 1);
+
+			var totalMoney = await _context.ProductDetails.AsNoTracking()
+				.SumAsync(a => a.Price);
+
+			var dealerCount = await GetDealerCountAsync();
+
+			return new DashboardStats
+			{
+				PendingVerify = pendingVerify,
+				PendingProcess = pendingProcess,
+				TotalProcess = totalProcess,
+				TotalMoney = "₹" + totalMoney,
+				DealerCount = dealerCount
+			};
 		}
 
 		private async Task<int> GetDealerCountAsync()
