@@ -49,7 +49,9 @@ namespace Milk_Bakery.Models
 			[MaxLength(50)]
 			public string VehicleNo { get; set; }
 
-		
+			// Adding setflag column with default value 0 and allowing null
+			public int? setflag { get; set; } = 0;
+
 			public List<InvoiceMaterialDetail> InvoiceMaterials { get; set; }
 		}
 

@@ -22,41 +22,6 @@ namespace Milk_Bakery.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CratesType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CratesCode")
-                        .IsRequired()
-                        .HasMaxLength(1)
-                        .HasColumnType("nvarchar(1)");
-
-                    b.Property<string>("Cratestype")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Height")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Length")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Width")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CratesTypes");
-                });
-
             modelBuilder.Entity("Milk_Bakery.Models.CategoryMaster", b =>
                 {
                     b.Property<int>("Id")
@@ -211,6 +176,41 @@ namespace Milk_Bakery.Migrations
                     b.HasIndex("CustomerId");
 
                     b.ToTable("CratesManages");
+                });
+
+            modelBuilder.Entity("Milk_Bakery.Models.CratesType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CratesCode")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)");
+
+                    b.Property<string>("Cratestype")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Height")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Length")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Width")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CratesTypes");
                 });
 
             modelBuilder.Entity("Milk_Bakery.Models.Cust2CustMap", b =>
@@ -805,6 +805,9 @@ namespace Milk_Bakery.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int?>("setflag")
+                        .HasColumnType("int");
+
                     b.HasKey("InvoiceId");
 
                     b.HasIndex("InvoiceId", "ShipToCode", "BillToCode", "InvoiceDate", "VehicleNo");
@@ -1251,7 +1254,7 @@ namespace Milk_Bakery.Migrations
 
             modelBuilder.Entity("Milk_Bakery.Models.CratesManage", b =>
                 {
-                    b.HasOne("CratesType", "CratesType")
+                    b.HasOne("Milk_Bakery.Models.CratesType", "CratesType")
                         .WithMany()
                         .HasForeignKey("CratesTypeId");
 
