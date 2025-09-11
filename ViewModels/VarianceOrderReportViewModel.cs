@@ -8,6 +8,7 @@ namespace Milk_Bakery.ViewModels
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
         public string CustomerName { get; set; }
+        public int? CustomerId { get; set; } // Keep this for consistency
         public List<string> AvailableCustomers { get; set; } = new List<string>();
         public bool ShowOnlyVariance { get; set; } = false;
     }
@@ -16,7 +17,8 @@ namespace Milk_Bakery.ViewModels
     {
         public string CustomerName { get; set; }
         public string MaterialName { get; set; }
-        public string MaterialCode { get; set; }
+        // Changed name from MaterialCode to ShortCode to better reflect the data
+        public string ShortCode { get; set; }
         public int OrderedQuantity { get; set; }
         public int InvoicedQuantity { get; set; }
         public int QuantityVariance { get; set; }

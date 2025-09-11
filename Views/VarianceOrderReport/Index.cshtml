@@ -36,17 +36,13 @@
                                             <input type="date" class="form-control" asp-for="ToDate" />
                                         </div>
                                     </div>
-                                    @if (role != "Customer")
-                                    {
-                                        <div class="col-md-4">
-                                            <div class="form-group">
-                                                <label for="CustomerName" class="font-weight-bold">Customer:</label>
-                                                <select class="form-control select2" asp-for="CustomerName" asp-items="@(new SelectList(Model.AvailableCustomers))">
-                                                    <option value="">-- All Customers --</option>
-                                                </select>
-                                            </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="CustomerName" class="font-weight-bold">Customer:</label>
+                                            <select class="form-control select2" asp-for="CustomerName" asp-items="ViewBag.Customers">
+                                            </select>
                                         </div>
-                                    }
+                                    </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4">
@@ -85,13 +81,13 @@
                                             <tr>
                                                 <th>Customer Name</th>
                                                 <th>Material Name</th>
-                                                <th>Material Code</th>
+                                                <th>Short Code</th>
                                                 <th>Ordered Qty</th>
                                                 <th>Invoiced Qty</th>
                                                 <th>Qty Variance</th>
-                                                <th>Ordered Amount</th>
+                                                @* <th>Ordered Amount</th>
                                                 <th>Invoiced Amount</th>
-                                                <th>Amount Variance</th>
+                                                <th>Amount Variance</th> *@
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -100,17 +96,17 @@
                                                 <tr>
                                                     <td>@item.CustomerName</td>
                                                     <td>@item.MaterialName</td>
-                                                    <td>@item.MaterialCode</td>
+                                                    <td>@item.ShortCode</td>
                                                     <td class="text-right">@item.OrderedQuantity</td>
                                                     <td class="text-right">@item.InvoicedQuantity</td>
                                                     <td class="text-right @(item.QuantityVariance != 0 ? "font-weight-bold" : "") @(item.QuantityVariance > 0 ? "text-danger" : "text-success")">@item.QuantityVariance</td>
-                                                    <td class="text-right">@item.OrderedAmount.ToString("F2")</td>
+                                                    @* <td class="text-right">@item.OrderedAmount.ToString("F2")</td>
                                                     <td class="text-right">@item.InvoicedAmount.ToString("F2")</td>
-                                                    <td class="text-right @(item.AmountVariance != 0 ? "font-weight-bold" : "") @(item.AmountVariance > 0 ? "text-danger" : "text-success")">@item.AmountVariance.ToString("F2")</td>
+                                                    <td class="text-right @(item.AmountVariance != 0 ? "font-weight-bold" : "") @(item.AmountVariance > 0 ? "text-danger" : "text-success")">@item.AmountVariance.ToString("F2")</td> *@
                                                 </tr>
                                             }
                                         </tbody>
-                                        <tfoot class="thead-dark">
+                                        @* <tfoot class="thead-dark">
                                             <tr>
                                                 <th colspan="3" class="text-right">Total:</th>
                                                 <th class="text-right">@Model.ReportItems.Sum(i => i.OrderedQuantity)</th>
@@ -120,7 +116,7 @@
                                                 <th class="text-right">@Model.ReportItems.Sum(i => i.InvoicedAmount).ToString("F2")</th>
                                                 <th class="text-right">@Model.ReportItems.Sum(i => i.AmountVariance).ToString("F2")</th>
                                             </tr>
-                                        </tfoot>
+                                        </tfoot> *@
                                     </table>
                                 </div>
                             </div>

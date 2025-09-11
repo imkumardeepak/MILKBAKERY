@@ -1089,3 +1089,4 @@ D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\refint\Milk&Bakery.
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bakery.pdb
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\Milk&Bakery.genruntimeconfig.cache
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\ref\Milk&Bakery.dll
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
