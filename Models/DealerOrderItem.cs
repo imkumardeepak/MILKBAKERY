@@ -37,10 +37,9 @@ namespace Milk_Bakery.Models
 		[Display(Name = "Rate")]
 		public decimal Rate { get; set; }
 
-		[Required]
-		[Column(TypeName = "decimal(18,2)")]
-		[Display(Name = "Price")]
-		public decimal Price { get; set; }
+		[Display(Name = "Deliver Quantity")]
+		public int DeliverQnty { get; set; } = 0;
+
 
 		// Navigation property to DealerOrder
 		[ForeignKey("DealerOrderId")]

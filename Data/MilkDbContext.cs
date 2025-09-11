@@ -71,6 +71,10 @@ namespace Milk_Bakery.Data
 				.HasForeignKey(doi => doi.DealerOrderId)
 				.OnDelete(DeleteBehavior.Cascade);
 
+			modelBuilder.Entity<DealerOrderItem>()
+			.Property(e => e.DeliverQnty)
+			.HasDefaultValue(0);
+
 			// Composite index on OrderDate, DealerId, DistributorId, and ProcessFlag
 			modelBuilder.Entity<DealerOrder>()
 			   .HasIndex(a => new { a.OrderDate, a.DealerId, a.DistributorId, a.ProcessFlag });
@@ -89,12 +93,12 @@ namespace Milk_Bakery.Data
 
 			modelBuilder.Entity<Invoice>()
 				.HasIndex(m => new { m.InvoiceId, m.ShipToCode, m.BillToCode, m.InvoiceDate, m.VehicleNo });
-				
+
 			// Configure default value for setflag column
 			modelBuilder.Entity<Invoice>()
 				.Property(e => e.setflag)
 				.HasDefaultValue(0);
-				
+
 			// Create index for setflag column
 			modelBuilder.Entity<Invoice>()
 				.HasIndex(e => e.setflag)

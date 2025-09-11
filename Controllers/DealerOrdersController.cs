@@ -99,7 +99,7 @@ namespace Milk_Bakery.Controllers
 					// 2. "123" (just the ID)
 					var key = dealerEntry.Key;
 					int dealerId = 0;
-					
+
 					// First try to match the bracketed format
 					var dealerIdMatch = System.Text.RegularExpressions.Regex.Match(key, @"\[(\d+)\]");
 					if (dealerIdMatch.Success && int.TryParse(dealerIdMatch.Groups[1].Value, out dealerId))
@@ -122,8 +122,8 @@ namespace Milk_Bakery.Controllers
 						// Handle format: "7" = "10" (basicOrderId = 7, quantity = 10)
 						var basicOrderIdStr = itemEntry.Key;
 						var quantityStr = itemEntry.Value;
-						
-						if (int.TryParse(basicOrderIdStr, out int basicOrderId) && 
+
+						if (int.TryParse(basicOrderIdStr, out int basicOrderId) &&
 							int.TryParse(quantityStr, out int quantity))
 						{
 							// Only add quantities > 0
@@ -136,8 +136,8 @@ namespace Milk_Bakery.Controllers
 						{
 							// Try alternative parsing for bracketed format
 							var itemMatch = System.Text.RegularExpressions.Regex.Match(basicOrderIdStr, @"\[(\d+)\]\[(\d+)\]");
-							if (itemMatch.Success && 
-								int.TryParse(itemMatch.Groups[1].Value, out int extractedDealerId) && 
+							if (itemMatch.Success &&
+								int.TryParse(itemMatch.Groups[1].Value, out int extractedDealerId) &&
 								int.TryParse(itemMatch.Groups[2].Value, out basicOrderId) &&
 								int.TryParse(quantityStr, out quantity))
 							{
@@ -165,7 +165,7 @@ namespace Milk_Bakery.Controllers
 							}
 						}
 					}
-						
+
 					if (orderItems.Count > 0)
 					{
 						intQuantities[dealerId] = orderItems;
@@ -222,8 +222,8 @@ namespace Milk_Bakery.Controllers
 											ShortCode = basicOrder.ShortCode,
 											SapCode = basicOrder.SapCode,
 											Qty = quantity,
-											Rate = basicOrder.Quantity > 0 ? basicOrder.BasicAmount / basicOrder.Quantity : 0, // Calculate rate
-											Price = quantity * (basicOrder.Quantity > 0 ? basicOrder.BasicAmount / basicOrder.Quantity : 0) // Calculate price
+											Rate = basicOrder.Quantity > 0 ? basicOrder.BasicAmount / basicOrder.Quantity : 0, // 
+											DeliverQnty = 0
 										};
 
 										_context.DealerOrderItems.Add(orderItem);
@@ -235,7 +235,7 @@ namespace Milk_Bakery.Controllers
 				}
 
 				await _context.SaveChangesAsync();
-				
+
 				if (hasSavedOrders)
 				{
 					_notifyService.Success("Dealer orders saved successfully.");
@@ -244,7 +244,7 @@ namespace Milk_Bakery.Controllers
 				{
 					_notifyService.Success("No orders with quantities greater than zero were found to save.");
 				}
-				
+
 				return Json(new { success = true });
 			}
 			catch (Exception ex)
