@@ -1,0 +1,71 @@
+@{
+    ViewData["Title"] = "Background Service Test";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>Background Service Test</h2>
+            <p>This page allows you to test the background service that runs every 2 minutes to process invoices with setflag=0.</p>
+            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Test Actions</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateSampleInvoices" method="post">
+                        <div class="mb-3">
+                            <label for="count" class="form-label">Number of Sample Invoices to Create:</label>
+                            <input type="number" class="form-control" id="count" name="count" value="5" min="1" max="20" />
+                            <div class="form-text">Creates sample invoices with setflag=0 for the background service to process</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Sample Invoices</button>
+                    </form>
+                    
+                    <hr />
+                    
+                    <a href="@Url.Action("ViewInvoicesWithSetFlagZero")" class="btn btn-info">View Invoices with setflag=0</a>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Background Service Information</h5>
+                </div>
+                <div class="card-body">
+                    <h6>How it works:</h6>
+                    <ul>
+                        <li>The background service runs every 2 minutes</li>
+                        <li>It queries the database for invoices where setflag=0</li>
+                        <li>It processes each invoice (you can add your custom logic)</li>
+                        <li>After processing, you can update setflag to indicate completion</li>
+                    </ul>
+                    
+                    <h6>To test:</h6>
+                    <ol>
+                        <li>Click "Create Sample Invoices" to generate test data</li>
+                        <li>Wait up to 2 minutes or check "View Invoices with setflag=0"</li>
+                        <li>Observe the application logs to see the background service in action</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -26,6 +26,9 @@ builder.Services.AddNotyf(config => { config.DurationInSeconds = 5; config.IsDis
 // Register services
 builder.Services.AddScoped<IInvoiceMappingService, InvoiceMappingService>();
 
+// Register background services
+builder.Services.AddHostedService<InvoiceBackgroundService>();
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddMvc();

@@ -1,14 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
+using DocumentFormat.OpenXml.InkML;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Data;
 using Milk_Bakery.Models;
 using Milk_Bakery.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Milk_Bakery.Controllers
 {
@@ -374,18 +375,22 @@ namespace Milk_Bakery.Controllers
 					// Only create record if quantity > 0
 					if (quantity > 0)
 					{
-						var cratesManage = new CratesManage
+						var topRecord = await _context.CratesManages.Where(a => a.CustomerId == distributor.Id && a.SegmentCode == segmentCode && a.CratesTypeId == crateTypeId)
+										.OrderByDescending(a => a.DispDate)
+										.FirstOrDefaultAsync();
+
+						if (topRecord != null)
 						{
-							CustomerId = distributorId,
-							SegmentCode = segmentCode, // Use the actual segment code from customer-segment mapping
-							DispDate = entryDate,
-							Opening = 0,
-							Outward = 0,
-							Inward = quantity,
-							Balance = quantity,
-							CratesTypeId = crateTypeId
-						};
-						_context.CratesManages.Add(cratesManage);
+							topRecord.Inward = quantity;
+							topRecord.Balance = topRecord.Balance - quantity;
+						}
+						else
+						{
+							_notifyService.Error("No Crates Found!!");
+							ViewBag.Distributors = GetDistributors();
+							ViewBag.CrateTypes = GetCrateTypes();
+							return View();
+						}
 					}
 				}
 

@@ -806,9 +806,14 @@ namespace Milk_Bakery.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<int?>("setflag")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.HasKey("InvoiceId");
+
+                    b.HasIndex("setflag")
+                        .HasDatabaseName("IX_Invoices_setflag");
 
                     b.HasIndex("InvoiceId", "ShipToCode", "BillToCode", "InvoiceDate", "VehicleNo");
 

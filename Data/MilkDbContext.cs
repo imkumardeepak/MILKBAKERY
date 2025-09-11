@@ -48,6 +48,16 @@ namespace Milk_Bakery.Data
 		{
 			base.OnModelCreating(modelBuilder);
 
+			// Configure default value for Sequence column in Customer_Master
+			modelBuilder.Entity<Customer_Master>()
+				.Property(e => e.Sequence)
+				.HasDefaultValue(0);
+
+			// Create index for Sequence column in Customer_Master
+			modelBuilder.Entity<Customer_Master>()
+				.HasIndex(e => e.Sequence)
+				.HasDatabaseName("IX_CustomerMaster_Sequence");
+
 			modelBuilder.Entity<DealerBasicOrder>()
 				.HasOne(dbo => dbo.DealerMaster)
 				.WithMany(dm => dm.DealerBasicOrders)
@@ -79,6 +89,16 @@ namespace Milk_Bakery.Data
 
 			modelBuilder.Entity<Invoice>()
 				.HasIndex(m => new { m.InvoiceId, m.ShipToCode, m.BillToCode, m.InvoiceDate, m.VehicleNo });
+				
+			// Configure default value for setflag column
+			modelBuilder.Entity<Invoice>()
+				.Property(e => e.setflag)
+				.HasDefaultValue(0);
+				
+			// Create index for setflag column
+			modelBuilder.Entity<Invoice>()
+				.HasIndex(e => e.setflag)
+				.HasDatabaseName("IX_Invoices_setflag");
 		}
 	}
 }

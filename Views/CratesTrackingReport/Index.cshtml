@@ -15,15 +15,15 @@
             <div class="row">
                 <div class="form-group col-sm-3">
                     <label for="customerDropdown">Customer:</label>
-                    <select id="customerDropdown" class="form-control" asp-items="@ViewBag.customer"></select>
+                    <select id="customerDropdown" class="form-control select2" asp-items="@ViewBag.customer"></select>
                 </div>
                 <div class="form-group col-sm-3">
                     <label for="fromDate">From Date:</label>
-                    <input type="date" id="fromDate" class="form-control" />
+                    <input type="date" id="fromDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" />
                 </div>
                 <div class="form-group col-sm-3">
                     <label for="toDate">To Date:</label>
-                    <input type="date" id="toDate" class="form-control" />
+                    <input type="date" id="toDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" />
                 </div>
                 <div class="form-group col-sm-3">
                     <label for="divisionDropdown">Division:</label>
