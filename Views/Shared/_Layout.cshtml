@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿@{
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿@{
 
 	string role = Context.Request.HttpContext.Session.GetString("role");
 	string user = Context.Request.HttpContext.Session.GetString("UserName");
@@ -732,6 +732,7 @@
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteReport/Index">Route Summary Report</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/VisitReport/Index">Tracking Report</a>
                         <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesTrackingReport/Index">Crates Tracking Report</a>
+                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GatePass/Index">Gate Pass</a>
 					</div>
 				</li>
 			</ul>
