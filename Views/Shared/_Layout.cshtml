@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿@{
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿@{
 
 	string role = Context.Request.HttpContext.Session.GetString("role");
 	string user = Context.Request.HttpContext.Session.GetString("UserName");
@@ -733,6 +733,7 @@
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/VisitReport/Index">Tracking Report</a>
                         <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesTrackingReport/Index">Crates Tracking Report</a>
                         <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GatePass/Index">Gate Pass</a>
+                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/VarianceOrderReport/Index">Variance Order Report</a>
 					</div>
 				</li>
 			</ul>
@@ -798,6 +799,15 @@
 			crossorigin="anonymous"></script>
 
 	<!-- Page level plugin JavaScript-->
+	<script src="~/vendor/datatables/jquery.dataTables.js"></script>
+	<script src="~/vendor/datatables/dataTables.bootstrap4.js"></script>
+	<script src="~/vendor/datatables/dataTables.buttons.min.js"></script>
+	<script src="~/vendor/datatables/buttons.html5.min.js"></script>
+	<script src="~/vendor/datatables/buttons.print.min.js"></script>
+	<script src="~/vendor/datatables/jszip.min.js"></script>
+	<script src="~/vendor/datatables/pdfmake.min.js"></script>
+	<script src="~/vendor/datatables/vfs_fonts.js"></script>
+    <script src="~/js/table2excel.js"></script>
 	<script src="~/js/demo/datatables-demo.js"></script>
     <script src="~/vendor/chart.js/chart.min.js"></script>
 	<!--select2-->
