@@ -60,138 +60,25 @@ namespace Milk_Bakery.Controllers
 		// GET: CratesManages/Create
 		public async Task<IActionResult> Create()
 		{
-			var viewModel = new ViewModels.CratesCreateViewModel();
+			// Populate dropdowns for the form
+			ViewBag.CustomerId = new SelectList(await _context.Customer_Master.ToListAsync(), "Id", "Name");
+			ViewBag.CratesTypeId = new SelectList(await _context.CratesTypes.ToListAsync(), "Id", "Cratestype");
+			ViewBag.SegmentCode = new SelectList(await _context.SegementMaster.ToListAsync(), "Segement_Code", "SegementName");
 			
-			// Get all segments for the filter dropdown
-			viewModel.Segments = GetSegment();
-			viewModel.ShowTable = false; // Don't show table initially
-			
-			return View(viewModel);
+			return View(new CratesManage());
 		}
 
 		// POST: CratesManages/Create
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Create(CratesCreateViewModel model, string action)
+		public async Task<IActionResult> Create(CratesManage cratesManage)
 		{
-			// Handle filter action
-			if (action == "Filter")
-			{
-				var viewModel = new ViewModels.CratesCreateViewModel();
-				
-				// Get all segments for the filter dropdown
-				viewModel.Segments = GetSegment();
-				viewModel.SelectedSegmentCode = model.SelectedSegmentCode;
-				
-				// If a segment is selected, load the data
-				if (!string.IsNullOrEmpty(model.SelectedSegmentCode))
-				{
-					// Get the selected segment name (text) from the dropdown
-					var selectedSegment = viewModel.Segments.FirstOrDefault(s => s.Value == model.SelectedSegmentCode);
-					var selectedSegmentName = selectedSegment?.Text ?? "";
-					
-					// Get all customers
-					var customers = await _context.Customer_Master.ToListAsync();
-					
-					// Get crate types for the selected segment
-					var crateTypes = await _context.CratesTypes
-						.Where(ct => ct.Division == selectedSegmentName)
-						.ToListAsync();
-					
-					// For each customer, check if they belong to the selected segment
-					foreach (var customer in customers)
-					{
-						// Get segments for this customer
-						var customerSegments = GetSegmentsForCustomerById(customer.Id);
-						
-						// Check if this customer belongs to the selected segment
-						// We match by segment name (Text property) since that's what's stored in CratesType.Division
-						var customerSegment = customerSegments.FirstOrDefault(s => s.Text == selectedSegmentName);
-						if (customerSegment != null && crateTypes.Any())
-						{
-							// For each crate type in this segment, create an entry
-							foreach (var crateType in crateTypes)
-							{
-								viewModel.CratesEntries.Add(new ViewModels.CratesEntryViewModel
-								{
-									CustomerId = customer.Id,
-									CustomerName = customer.Name ?? string.Empty,
-									SegmentCode = customerSegment.Value, // Use the segment code from customer mapping
-									SegmentName = selectedSegmentName,
-									CrateTypeId = crateType.Id,
-									CrateTypeName = crateType.Cratestype ?? string.Empty,
-									Opening = 0,
-									Outward = 0,
-									Inward = 0,
-									Balance = 0
-								});
-							}
-						}
-					}
-					
-					viewModel.ShowTable = true;
-				}
-				else
-				{
-					viewModel.ShowTable = false;
-				}
-				
-				return View(viewModel);
-			}
-			// Handle save action
-			else
-			{
-				if (model == null || model.CratesEntries == null)
-				{
-					_notifyService.Error("No data received. Please try again.");
-					return RedirectToAction(nameof(Create));
-				}
-
-				try
-				{
-					int savedCount = 0;
-
-					// Process each entry
-					foreach (var entry in model.CratesEntries)
-					{
-						// Only process entries with opening values > 0
-						if (entry.Opening > 0)
-						{
-							var cratesManage = new CratesManage
-							{
-								CustomerId = entry.CustomerId,
-								SegmentCode = entry.SegmentCode,
-								DispDate = DateTime.Today,
-								Opening = entry.Opening,
-								Outward = entry.Outward,
-								Inward = entry.Inward,
-								Balance = entry.Opening + entry.Inward - entry.Outward,
-								CratesTypeId = entry.CrateTypeId
-							};
-
-							_context.CratesManages.Add(cratesManage);
-							savedCount++;
-						}
-					}
-
-					if (savedCount > 0)
-					{
-						await _context.SaveChangesAsync();
-						_notifyService.Success($"Successfully saved {savedCount} opening records.");
-					}
-					else
-					{
-						_notifyService.Info("No records were saved as all opening balances were zero.");
-					}
-					
-					return RedirectToAction(nameof(Index));
-				}
-				catch (Exception ex)
-				{
-					_notifyService.Error("An error occurred while processing the form: " + ex.Message);
-					return RedirectToAction(nameof(Create));
-				}
-			}
+			// Simply add the model to the context and save
+			_context.Add(cratesManage);
+			await _context.SaveChangesAsync();
+			
+			_notifyService.Success("Record successfully saved.");
+			return RedirectToAction(nameof(Index));
 		}
 
 		// GET: CratesManages/Details/5
