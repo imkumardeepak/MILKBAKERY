@@ -121,7 +121,7 @@ namespace Milk_Bakery.Controllers
 				material3partycode = m.material3partycode,
 				price = m.price,
 				isactive = m.isactive,
-				CratesCode = m.CratesCode
+				CratesCode = m.CratesTypes
 			}).ToList();
 
 			// Get customers for dropdown using the same logic as RepeatOrderController
@@ -129,7 +129,12 @@ namespace Milk_Bakery.Controllers
 
 			if (id == 0 || id == null)
 			{
-				// Creating new dealer
+				// Creating new dealer - set default rate of 1 for all materials
+				foreach (var material in viewModel.AvailableMaterials)
+				{
+					viewModel.MaterialRates[material.Id] = 1;
+				}
+				
 				viewDataForView(viewModel);
 				return View(viewModel);
 			}
@@ -148,9 +153,9 @@ namespace Milk_Bakery.Controllers
 				viewModel.DealerMaster = dealerMaster;
 
 				// Populate the existing orders and selected materials
-				viewModel.DealerBasicOrders = dealerMaster.DealerBasicOrders.ToList();
+                viewModel.DealerBasicOrders = dealerMaster.DealerBasicOrders.ToList();
 
-				// Populate the quantities and selected materials
+                // Populate the quantities and rates
 				foreach (var order in dealerMaster.DealerBasicOrders)
 				{
 					// Find the corresponding material in AvailableMaterials
@@ -159,6 +164,9 @@ namespace Milk_Bakery.Controllers
 					{
 						viewModel.SelectedMaterialIds.Add(material.Id);
 						viewModel.MaterialQuantities[material.Id] = order.Quantity;
+						
+						// Store the rate directly from the DealerBasicOrder
+						viewModel.MaterialRates[material.Id] = order.Rate;
 					}
 				}
 
@@ -170,7 +178,7 @@ namespace Milk_Bakery.Controllers
 		// POST: DealerMasters/AddOrEdit/5
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> AddOrEdit(int id, DealerOrderViewModel viewModel, string submit)
+		public async Task<IActionResult> AddOrEdit(int id, DealerOrderViewModel viewModel, string submit, Dictionary<int, decimal> MaterialRates = null)
 		{
 			// Get customers for dropdown (needed in both GET and POST)
 			ViewBag.Customers = GetCustomer();
@@ -187,32 +195,24 @@ namespace Milk_Bakery.Controllers
 				}
 			}
 
-			// Validate that at least one material is selected
-			if (viewModel.SelectedMaterialIds == null || viewModel.SelectedMaterialIds.Count == 0)
+			// Validate that at least one material has quantity > 0
+			bool hasValidQuantity = false;
+			if (viewModel.MaterialQuantities != null)
 			{
-				_notifyService.Error("Please select at least one material.");
-				ModelState.AddModelError("", "Please select at least one material.");
-			}
-			else
-			{
-				// Check if all selected materials have valid quantities (> 0)
-				bool hasValidQuantity = false;
-				foreach (var materialId in viewModel.SelectedMaterialIds)
+				foreach (var kvp in viewModel.MaterialQuantities)
 				{
-					if (viewModel.MaterialQuantities != null && 
-						viewModel.MaterialQuantities.ContainsKey(materialId) && 
-						viewModel.MaterialQuantities[materialId] > 0)
+					if (kvp.Value > 0)
 					{
 						hasValidQuantity = true;
 						break;
 					}
 				}
-				
-				if (!hasValidQuantity)
-				{
-					_notifyService.Error("At least one selected material must have a quantity greater than 0.");
-					ModelState.AddModelError("", "At least one selected material must have a quantity greater than 0.");
-				}
+			}
+
+			if (!hasValidQuantity)
+			{
+				_notifyService.Error("At least one material must have a quantity greater than 0.");
+				ModelState.AddModelError("", "At least one material must have a quantity greater than 0.");
 			}
 
 			// Validate that quantities are not less than 0
@@ -239,39 +239,39 @@ namespace Milk_Bakery.Controllers
 						_context.Add(viewModel.DealerMaster);
 						await _context.SaveChangesAsync();
 
-						// Process materials if any are selected
-						if (viewModel.SelectedMaterialIds != null && viewModel.SelectedMaterialIds.Count > 0)
+						// Process materials - only save those with quantity > 0
+						if (viewModel.MaterialQuantities != null)
 						{
-							// Create Dealer Basic Orders for selected materials
-							// Remove materials with 0 or negative quantities
-							var validMaterialIds = new List<int>();
-							foreach (var materialId in viewModel.SelectedMaterialIds)
+							foreach (var kvp in viewModel.MaterialQuantities)
 							{
-								if (viewModel.MaterialQuantities != null &&
-									viewModel.MaterialQuantities.ContainsKey(materialId) &&
-									viewModel.MaterialQuantities[materialId] > 0)
+								var materialId = kvp.Key;
+								var quantity = kvp.Value;
+								
+								// Only process materials with quantity > 0
+								if (quantity > 0)
 								{
-									validMaterialIds.Add(materialId);
-								}
-							}
-
-							// Create Dealer Basic Orders for valid materials
-							foreach (var materialId in validMaterialIds)
-							{
-								var material = await _context.MaterialMaster.FindAsync(materialId);
-								if (material != null)
-								{
-									var dealerBasicOrder = new DealerBasicOrder
+									var material = await _context.MaterialMaster.FindAsync(materialId);
+									if (material != null)
 									{
-										DealerId = viewModel.DealerMaster.Id,
-										MaterialName = material.Materialname,
-										SapCode = material.material3partycode,
-										ShortCode = material.ShortName,
-										Quantity = viewModel.MaterialQuantities[materialId],
-										BasicAmount = material.price * viewModel.MaterialQuantities[materialId]
-									};
+										// Get the rate from MaterialRates or use default rate of 1
+										decimal rate = 1;
+										if (MaterialRates != null && MaterialRates.ContainsKey(materialId))
+										{
+											rate = MaterialRates[materialId];
+										}
+										
+										var dealerBasicOrder = new DealerBasicOrder
+										{
+											DealerId = viewModel.DealerMaster.Id,
+											MaterialName = material.Materialname,
+											SapCode = material.material3partycode,
+											ShortCode = material.ShortName,
+											Quantity = quantity,
+											Rate = rate  // Changed from BasicAmount to Rate
+										};
 
-									_context.Add(dealerBasicOrder);
+										_context.Add(dealerBasicOrder);
+									}
 								}
 							}
 						}
@@ -315,38 +315,48 @@ namespace Milk_Bakery.Controllers
 							_context.DealerBasicOrders.Remove(order);
 						}
 
-						// Process materials if any are selected
-						if (viewModel.SelectedMaterialIds != null && viewModel.SelectedMaterialIds.Count > 0)
+						// Process materials - only save those with quantity > 0
+						if (viewModel.MaterialQuantities != null)
 						{
-							// Remove materials with 0 or negative quantities
-							var validMaterialIds = new List<int>();
-							foreach (var materialId in viewModel.SelectedMaterialIds)
+							foreach (var kvp in viewModel.MaterialQuantities)
 							{
-								if (viewModel.MaterialQuantities != null &&
-									viewModel.MaterialQuantities.ContainsKey(materialId) &&
-									viewModel.MaterialQuantities[materialId] > 0)
+								var materialId = kvp.Key;
+								var quantity = kvp.Value;
+								
+								// Only process materials with quantity > 0
+								if (quantity > 0)
 								{
-									validMaterialIds.Add(materialId);
-								}
-							}
-
-							// Create new Dealer Basic Orders for valid materials
-							foreach (var materialId in validMaterialIds)
-							{
-								var material = await _context.MaterialMaster.FindAsync(materialId);
-								if (material != null)
-								{
-									var dealerBasicOrder = new DealerBasicOrder
+									var material = await _context.MaterialMaster.FindAsync(materialId);
+									if (material != null)
 									{
-										DealerId = viewModel.DealerMaster.Id,
-										MaterialName = material.Materialname,
-										SapCode = material.material3partycode,
-										ShortCode = material.ShortName,
-										Quantity = viewModel.MaterialQuantities[materialId],
-										BasicAmount = material.price * viewModel.MaterialQuantities[materialId]
-									};
+										// Get the rate from MaterialRates or use material price as fallback
+										decimal rate = 1;
+										if (MaterialRates != null && MaterialRates.ContainsKey(materialId))
+										{
+											rate = MaterialRates[materialId];
+										}
+										else
+										{
+											// For existing orders, try to preserve the existing rate
+											var existingOrder = viewModel.DealerBasicOrders.FirstOrDefault(o => o.MaterialName == material.Materialname);
+											if (existingOrder != null && existingOrder.Quantity > 0)
+											{
+												rate = existingOrder.Rate;  // Changed from BasicAmount calculation to Rate
+											}
+										}
+										
+										var dealerBasicOrder = new DealerBasicOrder
+										{
+											DealerId = viewModel.DealerMaster.Id,
+											MaterialName = material.Materialname,
+											SapCode = material.material3partycode,
+											ShortCode = material.ShortName,
+											Quantity = quantity,
+											Rate = rate  // Changed from BasicAmount to Rate
+										};
 
-									_context.Add(dealerBasicOrder);
+										_context.Add(dealerBasicOrder);
+									}
 								}
 							}
 						}
@@ -393,7 +403,7 @@ namespace Milk_Bakery.Controllers
 				material3partycode = m.material3partycode,
 				price = m.price,
 				isactive = m.isactive,
-				CratesCode = m.CratesCode
+				CratesCode = m.CratesTypes
 			}).ToList();
 
 			return View(viewModel);
@@ -457,7 +467,7 @@ namespace Milk_Bakery.Controllers
 		// POST: Add Dealer Basic Order
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> AddBasicOrder([Bind("DealerId,MaterialName,SapCode,ShortCode,Quantity,BasicAmount")] DealerBasicOrder dealerBasicOrder)
+		public async Task<IActionResult> AddBasicOrder([Bind("DealerId,MaterialName,SapCode,ShortCode,Quantity,Rate")] DealerBasicOrder dealerBasicOrder)
 		{
 			if (ModelState.IsValid)
 			{
@@ -475,7 +485,7 @@ namespace Milk_Bakery.Controllers
 		// POST: Edit Dealer Basic Order
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> EditBasicOrder([Bind("Id,DealerId,MaterialName,SapCode,ShortCode,Quantity,BasicAmount")] DealerBasicOrder dealerBasicOrder)
+		public async Task<IActionResult> EditBasicOrder([Bind("Id,DealerId,MaterialName,SapCode,ShortCode,Quantity,Rate")] DealerBasicOrder dealerBasicOrder)
 		{
 			if (ModelState.IsValid)
 			{
@@ -665,7 +675,7 @@ namespace Milk_Bakery.Controllers
 					material3partycode = m.material3partycode,
 					price = m.price,
 					isactive = m.isactive,
-					CratesCode = m.CratesCode
+					CratesCode = m.CratesTypes
 				}).ToList();
 			}
 

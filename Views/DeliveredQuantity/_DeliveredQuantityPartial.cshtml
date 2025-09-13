@@ -1,0 +1,399 @@
+@model Milk_Bakery.ViewModels.DeliveredQuantityEntryViewModel
+
+<div class="row">
+    <div class="col-md-12">
+        <!-- AddAntiForgeryToken for AJAX requests -->
+        @Html.AntiForgeryToken()
+
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h1 class="h4 mb-0 text-gray-800">Dealers for Selected Distributor</h1>
+            <span class="badge badge-primary badge-pill">@Model.Dealers.Count Dealers</span>
+        </div>
+
+        @if (Model.Dealers.Any())
+        {
+            <div class="accordion" id="dealersAccordion">
+                @{
+                    int index = 0;
+                }
+                @foreach (var dealer in Model.Dealers)
+                {
+                    <div class="card shadow mb-3 border-left-primary">
+                        <div class="card-header py-2 d-flex justify-content-between align-items-center"
+                            id="heading@(dealer.Id)">
+                            <h6 class="m-0 font-weight-bold text-primary">@dealer.Name</h6>
+                            <button class="btn btn-link text-primary p-1 accordion-toggle" type="button"
+                                data-dealer-id="@dealer.Id">
+                                <i class="fas fa-chevron-down toggle-icon"></i>
+                            </button>
+                        </div>
+
+                        <div id="collapse@(dealer.Id)" class="dealer-collapse-content @(index == 0 ? "" : "d-none")">
+                            <div class="card-body p-2">
+                                <h6 class="font-weight-bold text-primary mb-2">Orders</h6>
+                                @if (Model.DealerOrders.ContainsKey(dealer.Id) && Model.DealerOrders[dealer.Id].Any())
+                                {
+                                    // Calculate dealer totals
+                                    var dealerTotalOrdered = 0 ;
+                                    var dealerTotalDelivered = 0;
+                                    var dealerTotalAmountVariance = 0m;
+
+                                    foreach (var order in Model.DealerOrders[dealer.Id])
+                                    {
+                                        foreach (var item in order.DealerOrderItems)
+                                        {
+                                            dealerTotalOrdered += item.Qty;
+                                            dealerTotalDelivered += item.DeliverQnty;
+                                            var orderedAmount = item.Qty * item.Rate;
+                                            var deliveredAmount = item.DeliverQnty * item.Rate;
+                                            dealerTotalAmountVariance += (orderedAmount - deliveredAmount);
+                                        }
+                                    }
+
+                                    // Display dealer summary
+                                    <div class="alert alert-info py-2 px-3 mb-3" role="alert">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <strong>Total Ordered Quantity:</strong> @dealerTotalOrdered
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Total Delivered Quantity:</strong> @dealerTotalDelivered
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Total Amount Variance:</strong>
+                                                <span
+                                                    class="@(dealerTotalAmountVariance == 0 ? "text-success" : dealerTotalAmountVariance > 0 ? "text-warning" : "text-danger")">
+                                                    <strong>₹@dealerTotalAmountVariance.ToString("F2")</strong>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @foreach (var order in Model.DealerOrders[dealer.Id])
+                                    {
+                                        <div class="card mb-2">
+                                            <div class="card-body p-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <strong>Order ID:</strong> @order.Id
+                                                        <br />
+                                                        <strong>Date:</strong> @order.OrderDate.ToString("dd/MM/yyyy")
+                                                    </div>
+                                                    <button class="btn btn-success btn-sm save-delivery-btn" data-order-id="@order.Id">
+                                                        <i class="fas fa-save"></i> Save Delivered Quantity
+                                                    </button>
+                                                </div>
+
+                                                @if (order.DealerOrderItems.Any())
+                                                {
+                                                    <div class="table-responsive mt-2">
+                                                        <table class="table table-bordered table-hover table-sm mb-0 delivery-table"
+                                                            data-order-id="@order.Id">
+                                                            <thead class="thead-dark">
+                                                                <tr>
+                                                                    <th>Short Code</th>
+                                                                    <th class="d-none d-md-table-cell">Material</th>
+                                                                    <th class="text-center">Ordered Qty</th>
+                                                                    <th class="text-center">Rate (₹)</th>
+                                                                    <th class="text-center">Delivered Qty</th>
+                                                                    <th class="text-center">Variance</th>
+                                                                    <th class="text-center">Order Amount (₹)</th>
+                                                                    <th class="text-center">Delivered Amount (₹)</th>
+                                                                    <th class="text-center">Amount Variance (₹)</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var item in order.DealerOrderItems)
+                                                                {
+                                                                    var orderedAmount = item.Qty * item.Rate;
+                                                                    var deliveredAmount = item.DeliverQnty * item.Rate;
+                                                                    var amountVariance = orderedAmount - deliveredAmount;
+                                                                    var variance = item.Qty - item.DeliverQnty;
+                                                                    <tr data-item-id="@item.Id" data-unit-price="@item.Rate">
+                                                                        <td><strong>@item.ShortCode</strong></td>
+                                                                        <td class="d-none d-md-table-cell">@item.MaterialName</td>
+                                                                        <td class="text-center ordered-qty"><strong>@item.Qty</strong></td>
+                                                                        <td class="text-center unit-price">@item.Rate.ToString("F2")</td>
+                                                                        <td class="text-center">
+                                                                            <input type="number"
+                                                                                class="form-control form-control-sm delivered-qty text-center"
+                                                                                data-item-id="@item.Id" value="@item.Qty" min="0" step="1"
+                                                                                style="width: 100px; margin: 0 auto;" />
+                                                                        </td>
+                                                                        <td
+                                                                            class="text-center variance @(variance == 0 ? "text-success" : variance > 0 ? "text-warning" : "text-danger")">
+                                                                            <strong><span class="variance-value">@variance</span></strong>
+                                                                        </td>
+                                                                        <td class="text-center ordered-amount">@orderedAmount.ToString("F2")
+                                                                        </td>
+                                                                        <td class="text-center delivered-amount">@deliveredAmount.ToString("F2")
+                                                                        </td>
+                                                                        <td
+                                                                            class="text-center amount-variance @(amountVariance == 0 ? "text-success" : amountVariance > 0 ? "text-warning" : "text-danger")">
+                                                                            <strong><span
+                                                                                    class="amount-variance-value">@amountVariance.ToString("F2")</span></strong>
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="alert alert-info py-1 px-2 mb-0 mt-2" role="alert">
+                                                        <i class="fas fa-info-circle"></i> No items found for this order.
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="alert alert-info py-1 px-2 mb-2" role="alert">
+                                        <i class="fas fa-info-circle"></i> No orders found for this dealer.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    index++;
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning text-center" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> No dealers found for the selected distributor.
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Custom accordion toggle implementation to avoid conflicts
+        $('.accordion-toggle').on('click', function (e) {
+            e.preventDefault();
+
+            var dealerId = $(this).data('dealer-id');
+            var content = $('#collapse' + dealerId);
+            var icon = $(this).find('.toggle-icon');
+
+            // Toggle the content
+            if (content.hasClass('d-none')) {
+                // Show content
+                content.removeClass('d-none');
+                icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+            } else {
+                // Hide content
+                content.addClass('d-none');
+                icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+            }
+        });
+
+        // Initialize the first accordion as open
+        $('.accordion-toggle').first().find('.toggle-icon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+
+        // Function to calculate and update row values
+        function updateRowValues(row) {
+            var unitPrice = parseFloat(row.data('unit-price'));
+            var deliveredQty = parseInt(row.find('.delivered-qty').val()) || 0;
+            var orderedQty = parseInt(row.find('.ordered-qty').text()) || 0;
+
+            // Validate input - cannot be negative
+            if (deliveredQty < 0) {
+                row.find('.delivered-qty').addClass('is-invalid');
+                return;
+            } else {
+                row.find('.delivered-qty').removeClass('is-invalid');
+            }
+
+            // Calculate amounts
+            var deliveredAmount = (deliveredQty * unitPrice);
+            var variance = orderedQty - deliveredQty;
+            var orderedAmount = orderedQty * unitPrice;
+            var amountVariance = orderedAmount - deliveredAmount;
+
+            // Update row values
+            row.find('.delivered-amount').text(deliveredAmount.toFixed(2));
+            row.find('.variance-value').text(variance);
+            row.find('.amount-variance-value').text(amountVariance.toFixed(2));
+
+            // Apply color coding to variance
+            var varianceCell = row.find('.variance');
+            if (variance === 0) {
+                // Fully delivered - green
+                varianceCell.removeClass('text-warning text-danger').addClass('text-success');
+            } else if (variance > 0) {
+                // Partial delivery - orange
+                varianceCell.removeClass('text-success text-danger').addClass('text-warning');
+            } else {
+                // Over delivery - red
+                varianceCell.removeClass('text-success text-warning').addClass('text-danger');
+            }
+
+            // Apply color coding to amount variance
+            var amountVarianceCell = row.find('.amount-variance');
+            if (amountVariance === 0) {
+                // No amount variance - green
+                amountVarianceCell.removeClass('text-warning text-danger').addClass('text-success');
+            } else if (amountVariance > 0) {
+                // Positive amount variance (loss) - orange
+                amountVarianceCell.removeClass('text-success text-danger').addClass('text-warning');
+            } else {
+                // Negative amount variance (gain) - red
+                amountVarianceCell.removeClass('text-success text-warning').addClass('text-danger');
+            }
+        }
+
+        // Function to update dealer summary totals
+        function updateDealerSummary(dealerId) {
+            var dealerContainer = $('#collapse' + dealerId);
+            var totalOrdered = 0;
+            var totalDelivered = 0;
+            var totalAmountVariance = 0;
+
+            // Calculate totals for all orders of this dealer
+            dealerContainer.find('.delivery-table tbody tr').each(function () {
+                var orderedQty = parseInt($(this).find('.ordered-qty').text()) || 0;
+                var deliveredQty = parseInt($(this).find('.delivered-qty').val()) || 0;
+                var unitPrice = parseFloat($(this).data('unit-price')) || 0;
+
+                totalOrdered += orderedQty;
+                totalDelivered += deliveredQty;
+
+                var orderedAmount = orderedQty * unitPrice;
+                var deliveredAmount = deliveredQty * unitPrice;
+                var amountVariance = orderedAmount - deliveredAmount;
+                totalAmountVariance += amountVariance;
+            });
+
+            // Update the summary display
+            var summaryContainer = dealerContainer.find('.alert-info').first();
+            summaryContainer.find('.col-md-4').eq(0).html('<strong>Total Ordered Quantity:</strong> ' + totalOrdered);
+            summaryContainer.find('.col-md-4').eq(1).html('<strong>Total Delivered Quantity:</strong> ' + totalDelivered);
+
+            var amountVarianceElement = summaryContainer.find('.col-md-4').eq(2).find('span');
+            amountVarianceElement.html('<strong>₹' + totalAmountVariance.toFixed(2) + '</strong>');
+
+            // Apply color coding to amount variance
+            if (totalAmountVariance === 0) {
+                amountVarianceElement.removeClass('text-warning text-danger').addClass('text-success');
+            } else if (totalAmountVariance > 0) {
+                amountVarianceElement.removeClass('text-success text-danger').addClass('text-warning');
+            } else {
+                amountVarianceElement.removeClass('text-success text-warning').addClass('text-danger');
+            }
+        }
+
+        // Initialize delivered amounts for all rows on page load
+        $('.delivery-table tbody tr').each(function () {
+            updateRowValues($(this));
+        });
+
+        // Initialize dealer summaries
+        $('.dealer-collapse-content').each(function () {
+            var dealerId = $(this).attr('id').replace('collapse', '');
+            updateDealerSummary(dealerId);
+        });
+
+        // Handle delivered quantity changes
+        $(document).on('input', '.delivered-qty', function () {
+            var row = $(this).closest('tr');
+            updateRowValues(row);
+
+            // Update the dealer summary
+            var dealerId = $(this).closest('.dealer-collapse-content').attr('id').replace('collapse', '');
+            updateDealerSummary(dealerId);
+        });
+
+        // Handle save button click
+        $('.save-delivery-btn').on('click', function () {
+            var button = $(this);
+            var originalText = button.html();
+            var orderId = button.data('order-id');
+            var table = button.closest('.card').find('.delivery-table');
+
+            // Show loading indicator
+            button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+            button.prop('disabled', true);
+
+            // Prepare form data
+            var items = [];
+
+            table.find('tbody tr').each(function () {
+                var itemId = $(this).data('item-id');
+                var quantity = parseInt($(this).find('.delivered-qty').val()) || 0;
+                items.push({
+                    itemId: itemId,
+                    deliveredQuantity: quantity
+                });
+            });
+
+            var saveData = {
+                orderId: orderId,
+                items: items
+            };
+
+            // Send AJAX request
+            $.ajax({
+                url: '@Url.Action("Save", "DeliveredQuantity")',
+                type: 'POST',
+                data: JSON.stringify(saveData),
+                contentType: 'application/json; charset=utf-8',
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function (result) {
+                    if (result.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Delivered quantities saved successfully!',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Error saving delivered quantities. Please try again.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    var errorMessage = 'Error saving delivered quantities. Please try again.';
+
+                    // Try to parse the response for a more detailed error message
+                    if (xhr.responseText) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.message) {
+                                errorMessage = response.message;
+                            }
+                        } catch (e) {
+                            // If parsing fails, use the raw response text if it's not too long
+                            if (xhr.responseText.length < 200) {
+                                errorMessage = xhr.responseText;
+                            }
+                        }
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage,
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function () {
+                    // Reset button state
+                    button.html(originalText);
+                    button.prop('disabled', false);
+                }
+            });
+        });
+    });
+</script>

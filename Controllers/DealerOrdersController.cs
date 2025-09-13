@@ -185,6 +185,17 @@ namespace Milk_Bakery.Controllers
 					if (intQuantities.ContainsKey(dealer.Id) && intQuantities[dealer.Id].Count > 0)
 					{
 						hasSavedOrders = true;
+						//FIND EXISTNG ORDER
+						var order = await _context.DealerOrders
+							.FirstOrDefaultAsync(d => d.DealerId == dealer.Id && d.DistributorId == SelectedDistributorId && d.OrderDate == orderDate);
+
+
+						if (order != null)
+						{
+							_notifyService.Error("Dealer order already exists. Please send order on Next Day.");
+							return Json(new { success = false, message = "Dealer order already exists. Please send order on Next Day." });
+						}	
+
 						// Create DealerOrder
 						var dealerOrder = new DealerOrder
 						{
@@ -222,7 +233,7 @@ namespace Milk_Bakery.Controllers
 											ShortCode = basicOrder.ShortCode,
 											SapCode = basicOrder.SapCode,
 											Qty = quantity,
-											Rate = basicOrder.Quantity > 0 ? basicOrder.BasicAmount / basicOrder.Quantity : 0, // 
+											Rate = basicOrder.Rate,
 											DeliverQnty = 0
 										};
 

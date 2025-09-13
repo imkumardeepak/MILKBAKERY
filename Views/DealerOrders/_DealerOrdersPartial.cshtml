@@ -44,7 +44,7 @@
                                                 @foreach (var basicOrder in Model.DealerBasicOrders[dealer.Id])
                                                 {
                                                     // Calculate rate and price
-                                                    decimal rate = basicOrder.Quantity > 0 ? basicOrder.BasicAmount / basicOrder.Quantity : 0;
+                                                    decimal rate = basicOrder.Rate;
                                                     decimal price = rate * basicOrder.Quantity;
                                                     dealerTotal += price;
                                                     
@@ -69,7 +69,7 @@
                                     </div>
                                     
                                     <div class="text-right">
-                                        <strong>Dealer Total: ₹@dealerTotal.ToString("F2")</strong>
+                                        <strong class="dealer-total">Dealer Total: ₹@dealerTotal.ToString("F2")</strong>
                                     </div>
                                 }
                                 else
@@ -95,8 +95,8 @@
                                 {
                                     foreach (var basicOrder in Model.DealerBasicOrders[dealer.Id])
                                     {
-                                        decimal rate = basicOrder.Quantity > 0 ? basicOrder.BasicAmount / basicOrder.Quantity : 0;
-                                        decimal price = rate * basicOrder.Quantity;
+                                        // Fixed: Rate is already the rate per item, no need to divide by quantity
+                                        decimal price = basicOrder.Rate * basicOrder.Quantity;
                                         distributorTotal += price;
                                     }
                                 }
@@ -160,8 +160,8 @@
                 dealerTotal += parseFloat($(this).text()) || 0;
             });
             
-            // Update dealer total display
-            $('#collapse' + dealerId).find('.dealer-total').text('₹' + dealerTotal.toFixed(2));
+            // Update dealer total display using the correct selector
+            $('#collapse' + dealerId).find('.dealer-total').text('Dealer Total: ₹' + dealerTotal.toFixed(2));
         }
         
         // Function to recalculate distributor total
@@ -171,8 +171,8 @@
                 distributorTotal += parseFloat($(this).text()) || 0;
             });
             
-            // Update distributor total display
-            $('.distributor-total').text('₹' + distributorTotal.toFixed(2));
+            // Update distributor total display - targeting the correct element
+            $('.card-body.p-3 .text-right h5 strong').text('Distributor Total: ₹' + distributorTotal.toFixed(2));
         }
         
         // Handle save all orders button click

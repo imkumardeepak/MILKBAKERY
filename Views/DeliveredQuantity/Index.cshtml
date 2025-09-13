@@ -1,0 +1,77 @@
+@model Milk_Bakery.ViewModels.DeliveredQuantityEntryViewModel
+@{
+    ViewData["Title"] = "Delivered Quantity Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-3">
+    <div class="card mb-3">
+        <div class="card-header text-white p-1" style="background-color:#FC2947;">
+            <div class="d-flex align-items-baseline">
+                <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                <h5 class="mx-auto text-white text-2xl font-semibold">Delivered Quantity Entry</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Select Distributor/Customer</h6>
+                        </div>
+                        <div class="card-body">
+                            <form id="deliveredQuantityForm">
+                                <div class="form-group">
+                                    <label for="distributorSelect" class="font-weight-bold">Select
+                                        Distributor/Customer:</label>
+                                    <select id="distributorSelect" class="form-control form-control-lg select2"
+                                        asp-items="@(new SelectList(Model.AvailableDistributors, "Id", "Name"))">
+                                        <option value="">-- Select Distributor --</option>
+                                    </select>
+                                    <small class="form-text text-muted">Please select a distributor to view associated
+                                        dealers and their orders.</small>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="deliveredQuantityContainer">
+                <!-- Dealer orders will be loaded here via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2
+            $('.select2').select2();
+
+            // Handle distributor selection
+            $('#distributorSelect').on('change', function () {
+                var distributorId = $(this).val();
+                if (distributorId) {
+                    // Show loading indicator
+                    $('#deliveredQuantityContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p>Loading dealers and order details...</p></div>');
+
+                    $.ajax({
+                        url: '@Url.Action("LoadDealers", "DeliveredQuantity")',
+                        type: 'POST',
+                        data: { distributorId: distributorId },
+                        success: function (result) {
+                            $('#deliveredQuantityContainer').html(result);
+                        },
+                        error: function () {
+                            $('#deliveredQuantityContainer').html('<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation-triangle"></i> Error loading dealers. Please try again.</div>');
+                        }
+                    });
+                } else {
+                    $('#deliveredQuantityContainer').html('');
+                }
+            });
+        });
+    </script>
+}

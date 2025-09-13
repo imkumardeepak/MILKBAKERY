@@ -164,6 +164,14 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3JkZXJzXF9EZWFsZXJPcmRlcnNQYXJ0aWFsLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DeliveredQuantity/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVsaXZlcmVkUXVhbnRpdHlcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DeliveredQuantity/_DeliveredQuantityPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVsaXZlcmVkUXVhbnRpdHlcX0RlbGl2ZXJlZFF1YW50aXR5UGFydGlhbC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DepartmentMasters/AddOrEdit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVwYXJ0bWVudE1hc3RlcnNcQWRkT3JFZGl0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

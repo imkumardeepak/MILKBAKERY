@@ -38,6 +38,7 @@ namespace Milk_Bakery.Models
 		public decimal Rate { get; set; }
 
 		[Display(Name = "Deliver Quantity")]
+		[Range(0, int.MaxValue, ErrorMessage = "Delivered quantity cannot be negative")]
 		public int DeliverQnty { get; set; } = 0;
 
 

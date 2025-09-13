@@ -9,7 +9,7 @@
     .table-fixed-header {
         position: relative;
     }
-    
+
     .table-fixed-header thead {
         position: sticky;
         top: 0;
@@ -17,12 +17,12 @@
         background-color: #343a40;
         color: white;
     }
-    
+
     .table-fixed-header th {
         position: sticky;
         top: 0;
     }
-    
+
     /* Ensure input fields have consistent height */
     .form-control-sm {
         height: calc(1.5em + 0.5rem + 2px);
@@ -30,7 +30,7 @@
         font-size: 0.875rem;
         line-height: 1.5;
     }
-    
+
     /* Improve the appearance of the table container */
     .table-container {
         max-height: 70vh;
@@ -39,27 +39,38 @@
         border-radius: 0.375rem;
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
-    
+
     /* Ensure proper alignment of table cells */
-    .table td, .table th {
+    .table td,
+    .table th {
         vertical-align: middle;
     }
-    
+
     /* Customer and segment column styling */
     .customer-column {
         background-color: #f8f9fa;
         font-weight: bold;
     }
-    
+
     .segment-column {
         background-color: #e9ecef;
+        font-weight: bold;
     }
-    
+
+    .crate-type-column {
+        background-color: #fff3cd;
+    }
+
     /* Loading spinner */
     .spinner-border {
         width: 1rem;
         height: 1rem;
         border-width: 0.2em;
+    }
+
+    /* Segment grouping */
+    .segment-group {
+        border-left: 3px solid #007bff;
     }
 </style>
 
@@ -68,7 +79,8 @@
         <div class="card-header text-white p-1" style="background-color:#FC2947;">
             <div class="d-flex align-items-baseline">
                 <a asp-action="Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
-                <h5 class="mx-auto text-white text-2xl font-semibold">Crates Management Overview</h5>
+                <h5 class="mx-auto text-white text-2xl font-semibold">Crates Management Overview (Crate Types per
+                    Segment)</h5>
             </div>
         </div>
         <div class="card-body">
@@ -82,12 +94,13 @@
             {
                 <form asp-action="SaveOverview" method="post" id="cratesOverviewForm">
                     <div class="table-container table-responsive-sm">
-                        <table class="table table-bordered table-striped table-hover table-fixed-header mb-0" id="overviewTable">
+                        <table class="table table-bordered table-striped table-hover table-fixed-header mb-0"
+                            id="overviewTable">
                             <thead>
                                 <tr>
                                     <th class="align-middle">Customer</th>
                                     <th class="align-middle">Segment</th>
-                                    <th class="align-middle">Crate Type</th>
+                                    <th class="align-middle">Crate Type (per Segment)</th>
                                     <th class="align-middle text-end">Opening</th>
                                 </tr>
                             </thead>
@@ -104,18 +117,16 @@
                                             <input type="hidden" asp-for="CratesEntries[i].CrateTypeId" />
                                             <input type="hidden" asp-for="CratesEntries[i].CrateTypeName" />
                                         </td>
-                                        <td class="align-middle segment-column">
+                                        <td class="align-middle segment-column segment-group">
                                             @Model.CratesEntries[i].SegmentName
                                         </td>
-                                        <td class="align-middle">
+                                        <td class="align-middle crate-type-column">
                                             @Model.CratesEntries[i].CrateTypeName
                                         </td>
                                         <td class="align-middle">
-                                            <input asp-for="CratesEntries[i].Opening"
-                                                   min="0"
-                                                   class="form-control form-control-sm text-end opening-input"
-                                                   data-index="@i"
-                                                   style="min-width: 80px;" />
+                                            <input asp-for="CratesEntries[i].Opening" min="0"
+                                                class="form-control form-control-sm text-end opening-input" data-index="@i"
+                                                style="min-width: 80px;" />
                                             <input type="hidden" asp-for="CratesEntries[i].Outward" />
                                             <input type="hidden" asp-for="CratesEntries[i].Inward" />
                                             <input type="hidden" asp-for="CratesEntries[i].Balance" />
@@ -126,8 +137,10 @@
                         </table>
                     </div>
                     <div class="px-4 text-right py-2 mt-3">
-                        <a asp-action="Index" class="btn hover:bg-red-700 bg-red-600 rounded-sm shadow-md text-white">Back</a>
-                        <input type="button" value="Save All Records" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" id="saveButton" />
+                        <a asp-action="Index"
+                            class="btn hover:bg-red-700 bg-red-600 rounded-sm shadow-md text-white">Back</a>
+                        <input type="button" value="Save All Records"
+                            class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" id="saveButton" />
                     </div>
                 </form>
             }
@@ -139,13 +152,13 @@
     <script>
         $(document).ready(function () {
             // Handle Enter key press to move to next row
-            $('.opening-input').on('keydown', function(e) {
+            $('.opening-input').on('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     var currentIndex = parseInt($(this).data('index'));
                     var nextIndex = currentIndex + 1;
                     var nextInput = $('.opening-input[data-index="' + nextIndex + '"]');
-                    
+
                     if (nextInput.length > 0) {
                         nextInput.focus();
                     } else {
@@ -154,46 +167,46 @@
                     }
                 }
             });
-            
+
             // Prevent form submission when pressing Enter in input fields
-            $('.opening-input').on('keypress', function(e) {
+            $('.opening-input').on('keypress', function (e) {
                 if (e.which === 13) {
                     e.preventDefault();
                     return false;
                 }
             });
-            
+
             // Handle save button click
-            $('#saveButton').on('click', function() {
+            $('#saveButton').on('click', function () {
                 saveCratesData();
             });
-            
+
             // Function to save crates data using AJAX
             function saveCratesData() {
                 // Disable save button and show loading state
                 $('#saveButton').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
-                
+
                 // Serialize form data
                 var formData = $('#cratesOverviewForm').serialize();
-                
+
                 // Send AJAX request
                 $.ajax({
                     url: '@Url.Action("SaveOverview", "CratesManages")',
                     type: 'POST',
                     data: formData,
-                    success: function(response) {
+                    success: function (response) {
                         // Show success message
                         alert('Records saved successfully!');
                         // Redirect to index page
                         window.location.href = '@Url.Action("Index", "CratesManages")';
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         // Show error message
                         alert('An error occurred while saving records: ' + error);
                         // Re-enable save button
                         $('#saveButton').prop('disabled', false).val('Save All Records');
                     },
-                    complete: function() {
+                    complete: function () {
                         // Re-enable save button in case of success or error
                         $('#saveButton').prop('disabled', false).html('Save All Records');
                     }

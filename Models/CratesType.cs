@@ -11,11 +11,6 @@ namespace Milk_Bakery.Models
         [Display(Name = "Crates Type Name")]
         public string Cratestype { get; set; }
 
-        [Required(ErrorMessage = "A Crates Code is required.")]
-        [Display(Name = "Crates Code")]
-        [StringLength(1, MinimumLength = 1, ErrorMessage = "Crates Code must be exactly 1 character.")]
-        public string CratesCode { get; set; }
-
         [Required(ErrorMessage = "Width is required.")]
         [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "Please enter a valid width (e.g., 10 or 10.50).")]
         [Display(Name = "Width (in cm)")]
@@ -30,5 +25,10 @@ namespace Milk_Bakery.Models
         [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "Please enter a valid length (e.g., 10 or 10.50).")]
         [Display(Name = "Length (in cm)")]
         public string Length { get; set; }
+
+        [Required(ErrorMessage = "Segment is required.")]
+        [Display(Name = "Segment")]
+        // Note: This field represents the Segment that this crate type belongs to, not a division
+        public string Division { get; set; }
     }
 }

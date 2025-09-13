@@ -21,7 +21,8 @@
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 <label asp-for="CustomerId" class="control-label"></label>
-                                <select asp-for="CustomerId" class="form-control select2" asp-items="@ViewBag.customer" id="customerDropdown"></select>
+                                <select asp-for="CustomerId" class="form-control select2" asp-items="@ViewBag.customer"
+                                    id="customerDropdown"></select>
                                 <span asp-validation-for="CustomerId" class="text-danger"></span>
                             </div>
                             <div class="form-group col-sm-6">
@@ -35,12 +36,15 @@
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 <label asp-for="DispDate" class="control-label"></label>
-                                <input asp-for="DispDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly />
+                                <input asp-for="DispDate" class="form-control"
+                                    value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly />
                                 <span asp-validation-for="DispDate" class="text-danger"></span>
                             </div>
                             <div class="form-group col-sm-6">
                                 <label asp-for="CratesTypeId" class="control-label"></label>
-                                <select asp-for="CratesTypeId" class="form-control" asp-items="@ViewBag.cratesType"></select>
+                                <select asp-for="CratesTypeId" class="form-control" id="crateTypeDropdown">
+                                    <option value="">----Select Crates Type----</option>
+                                </select>
                                 <span asp-validation-for="CratesTypeId" class="text-danger"></span>
                             </div>
                         </div>
@@ -69,8 +73,10 @@
                             </div>
                         </div>
                         <div class="px-4 text-right py-2">
-                            <a asp-action="Index" class="btn hover:bg-red-700 bg-red-600 rounded-sm shadow-md text-white">Back</a>
-                            <input type="submit" value="Save Record" class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" />
+                            <a asp-action="Index"
+                                class="btn hover:bg-red-700 bg-red-600 rounded-sm shadow-md text-white">Back</a>
+                            <input type="submit" value="Save Record"
+                                class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" />
                         </div>
                     </form>
                 </div>
@@ -80,7 +86,9 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <script>
         // Calculate balance when opening, inward, or outward values change
         $(document).ready(function () {
@@ -96,6 +104,20 @@
                 } else {
                     $('#segmentDropdown').empty();
                     $('#segmentDropdown').append('<option value="">----Select Segment----</option>');
+                    // Clear crate types when no customer is selected
+                    $('#crateTypeDropdown').empty();
+                    $('#crateTypeDropdown').append('<option value="">----Select Crates Type----</option>');
+                }
+            });
+
+            // Handle segment dropdown change to load crate types
+            $('#segmentDropdown').change(function () {
+                var segment = $(this).find('option:selected').text();
+                if (segment && segment !== "----Select Segment----") {
+                    loadCrateTypesForSegment(segment);
+                } else {
+                    $('#crateTypeDropdown').empty();
+                    $('#crateTypeDropdown').append('<option value="">----Select Crates Type----</option>');
                 }
             });
         });
@@ -119,9 +141,29 @@
                     $.each(result, function (i, segment) {
                         $('#segmentDropdown').append($('<option></option>').val(segment.value).html(segment.text));
                     });
+                    // Clear crate types when segments are loaded
+                    $('#crateTypeDropdown').empty();
+                    $('#crateTypeDropdown').append('<option value="">----Select Crates Type----</option>');
                 },
                 error: function () {
                     console.log('Error loading segments for customer');
+                }
+            });
+        }
+
+        function loadCrateTypesForSegment(segment) {
+            $.ajax({
+                url: '@Url.Action("GetCrateTypesForSegment", "CratesManages")',
+                type: 'GET',
+                data: { segment: segment },
+                success: function (result) {
+                    $('#crateTypeDropdown').empty();
+                    $.each(result, function (i, crateType) {
+                        $('#crateTypeDropdown').append($('<option></option>').val(crateType.value).html(crateType.text));
+                    });
+                },
+                error: function () {
+                    console.log('Error loading crate types for segment');
                 }
             });
         }

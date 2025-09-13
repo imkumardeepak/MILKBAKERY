@@ -81,7 +81,7 @@ namespace Milk_Bakery.Controllers
 		public IActionResult Create()
 		{
 			ViewBag.customer = GetCustomer();
-			ViewBag.cratesType = GetCratesType();
+			// No need to populate crate types here as they will be loaded dynamically
 			// No need to populate segments here as they will be loaded dynamically
 			return View();
 		}
@@ -100,7 +100,6 @@ namespace Milk_Bakery.Controllers
 				if (cratesManages.Any())
 				{
 					ViewBag.customer = GetCustomer();
-					ViewBag.cratesType = GetCratesType();
 					_notifyService.Error("Crates record already exists for this customer, segment and crates type.");
 					return View(cratesManage);
 				}
@@ -114,8 +113,6 @@ namespace Milk_Bakery.Controllers
 				return RedirectToAction(nameof(Index));
 			}
 			ViewBag.customer = GetCustomer();
-			ViewBag.cratesType = GetCratesType();
-			ViewBag.segment = GetSegment();
 			return View(cratesManage);
 		}
 
@@ -133,7 +130,7 @@ namespace Milk_Bakery.Controllers
 				return NotFound();
 			}
 			ViewBag.customer = GetCustomer();
-			ViewBag.cratesType = GetCratesType();
+			// No need to populate crate types here as they will be loaded dynamically
 			// No need to populate segments here as they will be loaded dynamically
 			return View(cratesManage);
 		}
@@ -173,8 +170,6 @@ namespace Milk_Bakery.Controllers
 				return RedirectToAction(nameof(Index));
 			}
 			ViewBag.customer = GetCustomer();
-			ViewBag.cratesType = GetCratesType();
-			ViewBag.segment = GetSegment();
 			return View(cratesManage);
 		}
 
@@ -334,6 +329,33 @@ namespace Milk_Bakery.Controllers
 			return Json(segments);
 		}
 
+		[HttpGet]
+		public IActionResult GetCrateTypesForSegment(string segment)
+		{
+			if (string.IsNullOrEmpty(segment))
+			{
+				return Json(new List<SelectListItem>());
+			}
+
+			var crateTypes = _context.CratesTypes
+				.Where(ct => ct.Division == segment)
+				.Select(ct => new SelectListItem
+				{
+					Value = ct.Id.ToString(),
+					Text = ct.Cratestype
+				})
+				.ToList();
+
+			// Add default option
+			crateTypes.Insert(0, new SelectListItem
+			{
+				Value = "",
+				Text = "----Select Crates Type----"
+			});
+
+			return Json(crateTypes);
+		}
+
 		// GET: CratesInwardEntry
 		public IActionResult CratesInwardEntry()
 		{
@@ -343,8 +365,8 @@ namespace Milk_Bakery.Controllers
 			// Get divisions
 			ViewBag.Divisions = GetDivisions();
 
-			// Get crate types
-			ViewBag.CrateTypes = GetCrateTypes();
+			// No need to pre-load crate types since they will be loaded dynamically based on segment selection
+			// ViewBag.CrateTypes is no longer needed
 
 			return View();
 		}
@@ -362,9 +384,27 @@ namespace Milk_Bakery.Controllers
 				{
 					_notifyService.Error("Invalid distributor selected.");
 					ViewBag.Distributors = GetDistributors();
-					ViewBag.CrateTypes = GetCrateTypes();
+					// No need to load crate types here since they're loaded dynamically
 					return View();
 				}
+
+				// Check if segment is selected
+				if (string.IsNullOrEmpty(segmentCode))
+				{
+					_notifyService.Error("Please select a segment.");
+					ViewBag.Distributors = GetDistributors();
+					return View();
+				}
+
+				// Check if any crate quantities are provided
+				if (crateQuantities == null || !crateQuantities.Any(cq => cq.Value > 0))
+				{
+					_notifyService.Error("Please enter at least one crate quantity.");
+					ViewBag.Distributors = GetDistributors();
+					return View();
+				}
+
+				int recordsUpdated = 0;
 
 				// Create crate records for each crate type
 				foreach (var kvp in crateQuantities)
@@ -381,26 +421,47 @@ namespace Milk_Bakery.Controllers
 
 						if (topRecord != null)
 						{
-							topRecord.Inward = quantity;
-							topRecord.Balance = topRecord.Balance - quantity;
+							topRecord.Inward += quantity;
+							topRecord.Balance = topRecord.Opening + topRecord.Outward - topRecord.Inward;
+							topRecord.DispDate = DateTime.Today;
+							_context.CratesManages.Update(topRecord);
+							recordsUpdated++;
 						}
 						else
 						{
-							_notifyService.Error("No Crates Found!!");
-							ViewBag.Distributors = GetDistributors();
-							ViewBag.CrateTypes = GetCrateTypes();
-							return View();
+							// If no record exists, create a new one with default values
+							var cratesManage = new CratesManage
+							{
+								CustomerId = distributor.Id,
+								SegmentCode = segmentCode,
+								CratesTypeId = crateTypeId,
+								Opening = 0,
+								Outward = 0,
+								Inward = quantity,
+								Balance = quantity, // Since Opening=0 and Outward=0
+								DispDate = DateTime.Today
+							};
+							_context.CratesManages.Add(cratesManage);
+							recordsUpdated++;
 						}
 					}
 				}
 
-				await _context.SaveChangesAsync();
-				_notifyService.Success("Crates inward entry recorded successfully.");
+				if (recordsUpdated > 0)
+				{
+					await _context.SaveChangesAsync();
+					_notifyService.Success($"Successfully updated {recordsUpdated} crate records.");
+				}
+				else
+				{
+					_notifyService.Warning("No crate records were updated.");
+				}
+
 				return RedirectToAction(nameof(Index));
 			}
 
 			ViewBag.Distributors = GetDistributors();
-			ViewBag.CrateTypes = GetCrateTypes();
+			// No need to load crate types here since they're loaded dynamically
 			return View();
 		}
 
@@ -417,7 +478,11 @@ namespace Milk_Bakery.Controllers
 				// Get all crate types
 				var crateTypes = await _context.CratesTypes.ToListAsync();
 
-				// For each customer and each crate type, create an entry
+				// Group crate types by division (segment)
+				var crateTypesByDivision = crateTypes.GroupBy(ct => ct.Division)
+											.ToDictionary(g => g.Key, g => g.ToList());
+
+				// For each customer and each segment they belong to, show relevant crate types
 				foreach (var customer in customers)
 				{
 					// Get segments for this customer
@@ -425,21 +490,27 @@ namespace Milk_Bakery.Controllers
 
 					foreach (var segment in segments)
 					{
-						foreach (var crateType in crateTypes)
+						// Get crate types that belong to this segment (division)
+						if (crateTypesByDivision.ContainsKey(segment.Text))
 						{
-							viewModel.CratesEntries.Add(new ViewModels.CratesEntryViewModel
+							var relevantCrateTypes = crateTypesByDivision[segment.Text];
+
+							foreach (var crateType in relevantCrateTypes)
 							{
-								CustomerId = customer.Id,
-								CustomerName = customer.Name ?? string.Empty,
-								SegmentCode = segment.Value ?? string.Empty,
-								SegmentName = segment.Text ?? string.Empty,
-								CrateTypeId = crateType.Id,
-								CrateTypeName = crateType.Cratestype ?? string.Empty,
-								Opening = 0,
-								Outward = 0,
-								Inward = 0,
-								Balance = 0
-							});
+								viewModel.CratesEntries.Add(new ViewModels.CratesEntryViewModel
+								{
+									CustomerId = customer.Id,
+									CustomerName = customer.Name ?? string.Empty,
+									SegmentCode = segment.Value ?? string.Empty,
+									SegmentName = segment.Text ?? string.Empty,
+									CrateTypeId = crateType.Id,
+									CrateTypeName = crateType.Cratestype ?? string.Empty,
+									Opening = 0,
+									Outward = 0,
+									Inward = 0,
+									Balance = 0
+								});
+							}
 						}
 					}
 				}

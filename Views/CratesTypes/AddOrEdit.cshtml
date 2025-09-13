@@ -21,16 +21,19 @@
                         <input type="hidden" asp-for="Id" />
                         <div class="row">
                             <div class="form-group col-sm-6">
+                                <label asp-for="Division" class="control-label"></label>
+                                <select asp-for="Division" class="form-control" asp-items="@(new SelectList(ViewBag.Divisions))">
+                                    <option value="">-- Select Segment --</option>
+                                </select>
+                                <span asp-validation-for="Division" class="text-danger"></span>
+                            </div>
+                            <div class="form-group col-sm-6">
                                 <label asp-for="Cratestype" class="control-label"></label>
                                 <input asp-for="Cratestype" class="form-control" />
                                 <span asp-validation-for="Cratestype" class="text-danger"></span>
                             </div>
-                            <div class="form-group col-sm-6">
-                                <label asp-for="CratesCode" class="control-label"></label>
-                                <input asp-for="CratesCode" class="form-control" />
-                                <span asp-validation-for="CratesCode" class="text-danger"></span>
-                            </div>
                         </div>
+                      
                         <div class="row">
                             <div class="form-group col-sm-4">
                                 <label asp-for="Width" class="control-label"></label>

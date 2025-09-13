@@ -32,39 +32,32 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-12">
                         <h6 class="font-weight-bold">Crate Quantities</h6>
                         <div class="table-responsive">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered" id="crateQuantitiesTable">
                                 <thead>
                                     <tr>
                                         <th>Crate Type</th>
                                         <th>Inward Quantity</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    @foreach (var crateType in ViewBag.CrateTypes)
-                                    {
-                                        <tr>
-                                            <td>@crateType.Text</td>
-                                            <td>
-                                                <input type="number" name="crateQuantities[@crateType.Value]" class="form-control" min="0" value="0" />
-                                            </td>
-                                        </tr>
-                                    }
+                                <tbody id="crateQuantitiesBody">
+                                    <!-- Crate types will be loaded dynamically here -->
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="entryDate" class="control-label">Entry Date</label>
-                            <input type="date" name="entryDate" id="entryDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly />
+                            <input type="date" name="entryDate" id="entryDate" class="form-control"
+                                value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly />
                         </div>
                     </div>
                 </div>
@@ -78,15 +71,17 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
     <script>
         // Set today as default date
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             var today = new Date().toISOString().split('T')[0];
             document.getElementById('entryDate').value = today;
         });
-        
+
         $(document).ready(function () {
             // Handle distributor dropdown change to load segments
             $('#distributorId').change(function () {
@@ -96,6 +91,18 @@
                 } else {
                     $('#segmentDropdown').empty();
                     $('#segmentDropdown').append('<option value="">----Select Distributor First----</option>');
+                    // Clear crate types when no distributor is selected
+                    $('#crateQuantitiesBody').empty();
+                }
+            });
+
+            // Handle segment dropdown change to load crate types
+            $('#segmentDropdown').change(function () {
+                var segment = $(this).find('option:selected').text();
+                if (segment && segment !== "----Select Segment----") {
+                    loadCrateTypesForSegment(segment);
+                } else {
+                    $('#crateQuantitiesBody').empty();
                 }
             });
         });
@@ -111,11 +118,41 @@
                     $.each(result, function (i, segment) {
                         $('#segmentDropdown').append($('<option></option>').val(segment.value).html(segment.text));
                     });
+                    // Clear crate types when segments are loaded
+                    $('#crateQuantitiesBody').empty();
                 },
                 error: function () {
                     console.log('Error loading segments for customer');
                     $('#segmentDropdown').empty();
                     $('#segmentDropdown').append('<option value="">----Error Loading Segments----</option>');
+                    // Clear crate types when there's an error
+                    $('#crateQuantitiesBody').empty();
+                }
+            });
+        }
+
+        function loadCrateTypesForSegment(segment) {
+            $.ajax({
+                url: '@Url.Action("GetCrateTypesForSegment", "CratesManages")',
+                type: 'GET',
+                data: { segment: segment },
+                success: function (result) {
+                    $('#crateQuantitiesBody').empty();
+                    $.each(result, function (i, crateType) {
+                        // Skip the default option
+                        if (crateType.value !== "") {
+                            var row = '<tr>' +
+                                '<td>' + crateType.text + '</td>' +
+                                '<td><input type="number" name="crateQuantities[' + crateType.value + ']" class="form-control" min="0" value="0" /></td>' +
+                                '</tr>';
+                            $('#crateQuantitiesBody').append(row);
+                        }
+                    });
+                },
+                error: function () {
+                    console.log('Error loading crate types for segment');
+                    $('#crateQuantitiesBody').empty();
+                    $('#crateQuantitiesBody').append('<tr><td colspan="2">Error loading crate types</td></tr>');
                 }
             });
         }

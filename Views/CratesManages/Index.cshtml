@@ -11,8 +11,9 @@
             <div class="d-flex align-items-baseline">
                 <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
                 <h5 class="mx-auto text-white text-2xl font-semibold">Crates Management</h5>
-                @* <a asp-action="Overview" class="btn btn-info text-white"><i class="fa fa-list"></i> Overview</a> *@
-                <a asp-action="CratesInwardEntry" class="btn btn-success text-white"><i class="fa fa-plus"></i> Inward Entry</a>
+                <a asp-action="Overview" class="btn btn-info text-white"><i class="fa fa-list"></i> Overview</a>
+                <a asp-action="CratesInwardEntry" class="btn btn-success text-white"><i class="fa fa-plus"></i> Inward
+                    Entry</a>
                 <a asp-action="Create" class="btn btn-primary text-white"><i class="fa fa-plus"></i> Add New</a>
             </div>
         </div>
@@ -82,9 +83,12 @@
                                         @Html.DisplayFor(modelItem => item.CratesType.Cratestype)
                                     </td>
                                     <td>
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm" title="Edit"><i class="fa fa-edit"></i></a>
-                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm" title="Details"><i class="fa fa-info-circle"></i> </a>
-                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" title="Delete"><i class="fa fa-trash"></i> </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm"
+                                            title="Edit"><i class="fa fa-edit"></i></a>
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm"
+                                            title="Details"><i class="fa fa-info-circle"></i> </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm"
+                                            title="Delete"><i class="fa fa-trash"></i> </a>
                                     </td>
                                 </tr>
                             }

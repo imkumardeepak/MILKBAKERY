@@ -62,11 +62,28 @@ namespace Milk_Bakery.Controllers
 
 				// Get all material masters to map crates codes
 				var materialMasters = await _context.MaterialMaster.ToListAsync();
-				
+
 				// Create a dictionary for quick lookup of crates codes by material SAP code
 				var materialCratesMap = materialMasters
-					.Where(m => !string.IsNullOrEmpty(m.CratesCode))
-					.ToDictionary(m => m.material3partycode, m => m.CratesCode);
+					.Where(m => !string.IsNullOrEmpty(m.CratesTypes))
+					.ToDictionary(m => m.material3partycode, m => m.CratesTypes);
+
+				// Create dictionaries to store crate type classifications
+				var smallCratesTypes = new Dictionary<string, bool>();
+				var largeCratesTypes = new Dictionary<string, bool>();
+
+				// Populate dictionaries based on crate type names
+				foreach (var crateType in materialCratesMap.Values.Distinct())
+				{
+					if (crateType.Contains("Small", StringComparison.OrdinalIgnoreCase))
+					{
+						smallCratesTypes[crateType] = true;
+					}
+					else if (crateType.Contains("Large", StringComparison.OrdinalIgnoreCase))
+					{
+						largeCratesTypes[crateType] = true;
+					}
+				}
 
 				// Group by customer and sum quantities for small and large crates
 				var customerDetails = invoiceData
@@ -75,12 +92,12 @@ namespace Milk_Bakery.Controllers
 					{
 						CustomerName = g.Key.ShipToName,
 						SmallCrates = g.SelectMany(i => i.InvoiceMaterials)
-									  .Where(m => materialCratesMap.ContainsKey(m.MaterialSapCode) && 
-												  materialCratesMap[m.MaterialSapCode] == "S")
+									  .Where(m => materialCratesMap.ContainsKey(m.MaterialSapCode) &&
+												  smallCratesTypes.ContainsKey(materialCratesMap[m.MaterialSapCode]))
 									  .Sum(m => m.QuantityCases),
 						LargeCrates = g.SelectMany(i => i.InvoiceMaterials)
-									  .Where(m => materialCratesMap.ContainsKey(m.MaterialSapCode) && 
-												  materialCratesMap[m.MaterialSapCode] == "L")
+									  .Where(m => materialCratesMap.ContainsKey(m.MaterialSapCode) &&
+												  largeCratesTypes.ContainsKey(materialCratesMap[m.MaterialSapCode]))
 									  .Sum(m => m.QuantityCases)
 					})
 					.ToList();

@@ -73,28 +73,30 @@
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
                         <h3 class="text-lg font-semibold">Basic Orders</h3>
                         <div class="flex flex-wrap gap-2">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                <span class="mr-1">Selected:</span>
-                                <span id="selectedCount" class="font-bold">0</span>
-                            </span>
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                 <span class="mr-1">Total Quantity:</span>
                                 <span id="totalQuantity" class="font-bold">0</span>
                             </span>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                <span class="mr-1">Total Amount:</span>
+                                <span id="totalAmount" class="font-bold">0.00</span>
+                            </span>
                         </div>
                     </div>
                     
-                    <!-- Materials Table (removed mobile cards, keeping only table) -->
+                    <!-- Materials Table -->
                     <div class="table-responsive">
                         <div class="max-h-96 overflow-y-auto">
-                            <table class="w-full divide-y divide-gray-200">
+                            <table class="w-full divide-y divide-gray-200 text-sm" id="materialsTable">
                                 <thead class="bg-gray-200 sticky top-0">
                                     <tr>
-                                        <th scope="col" class="px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Select</th>
-                                        <!-- Removed Material Name column for small screens -->
-                                        <th scope="col" class="px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider hidden sm:table-cell">Material Name</th>
-                                        <th scope="col" class="px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Short Name</th>
-                                        <th scope="col" class="px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Quantity</th>
+                                        <!-- Material name column hidden on small screens -->
+                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider hidden sm:table-cell">Material</th>
+                                        <!-- Short Code column with fixed width and wrapping on small screens -->
+                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider w-24 sm:w-auto">Short</th>
+                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">Rate</th>
+                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">Qty</th>
+                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -103,31 +105,42 @@
                                         var material = Model.AvailableMaterials[i];
                                         var isSelected = Model.SelectedMaterialIds != null && Model.SelectedMaterialIds.Contains(material.Id);
                                         var quantity = isSelected && Model.MaterialQuantities.ContainsKey(material.Id) ? Model.MaterialQuantities[material.Id] : 0;
+                                        // Get existing rate if editing, otherwise default to 1
+                                        var rate = 1m;
+                                        if (isSelected && Model.MaterialRates.ContainsKey(material.Id))
+                                        {
+                                            rate = Model.MaterialRates[material.Id];
+                                        }
                                         
                                         <tr>
-                                            <td class="px-2 py-2 whitespace-nowrap">
-                                                <input type="checkbox" 
-                                                       name="SelectedMaterialIds" 
-                                                       value="@material.Id" 
-                                                       @(isSelected ? "checked" : "") 
-                                                       class="material-checkbox" 
-                                                       data-material-id="@material.Id" />
-                                            </td>
-                                            <!-- Removed Material Name column for small screens -->
-                                            <td class="px-2 py-2 whitespace-nowrap hidden sm:table-cell">
+                                            <!-- Material name cell hidden on small screens -->
+                                            <td class="px-2 py-1 whitespace-nowrap hidden sm:table-cell">
                                                 @material.Materialname
                                                 <input type="hidden" name="AvailableMaterials[@i].Id" value="@material.Id" />
                                                 <input type="hidden" name="AvailableMaterials[@i].Materialname" value="@material.Materialname" />
                                                 <input type="hidden" name="AvailableMaterials[@i].ShortName" value="@material.ShortName" />
                                             </td>
-                                            <td class="px-2 py-2 whitespace-nowrap">@material.ShortName</td>
-                                            <td class="px-2 py-2 whitespace-nowrap">
+                                            <!-- Short Code cell with fixed width and wrapping on small screens -->
+                                            <td class="px-2 py-1 w-24 sm:w-auto">@material.ShortName</td>
+                                            <td class="px-2 py-1 whitespace-nowrap">
+                                                <input type="number" 
+                                                       name="MaterialRates[@material.Id]" 
+                                                       value="@rate.ToString("F2")" 
+                                                       min="0" 
+                                                       step="0.01"
+                                                       class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-rate" 
+                                                       data-material-id="@material.Id" />
+                                            </td>
+                                            <td class="px-2 py-1 whitespace-nowrap">
                                                 <input type="number" 
                                                        name="MaterialQuantities[@material.Id]" 
                                                        value="@quantity" 
                                                        min="0" 
-                                                       class="text-[13px] h-8 text-gray-700 w-20 border-2 px-2 rounded-sm material-quantity" 
+                                                       class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-quantity" 
                                                        data-material-id="@material.Id" />
+                                            </td>
+                                            <td class="px-2 py-1 whitespace-nowrap">
+                                                <span class="material-amount text-[12px]" data-material-id="@material.Id">@((rate * quantity).ToString("F2"))</span>
                                             </td>
                                         </tr>
                                     }
@@ -148,5 +161,227 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    <script src="~/js/dealer-masters.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize variables
+            const customerSelect = document.getElementById("customerSelect");
+            const routeCodeInput = document.getElementById("routeCode");
+            const dealerForm = document.getElementById("dealerForm");
+            const totalQuantityElement = document.getElementById("totalQuantity");
+            const totalAmountElement = document.getElementById("totalAmount");
+            
+            // Add event listeners to all material inputs
+            setTimeout(function() {
+                attachEventListeners();
+                // Update counts on page load after event listeners are attached
+                updateCounts();
+            }, 100);
+            
+            // Customer selection change event
+            if (customerSelect) {
+                customerSelect.addEventListener("change", function () {
+                    const customerId = this.value;
+                    
+                    if (customerId) {
+                        // Make AJAX call to get route code
+                        fetch(`/DealerMasters/GetRouteCode?customerId=${customerId}`)
+                        .then((response) => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then((data) => {
+                            if (routeCodeInput) {
+                                routeCodeInput.value = data.routeCode || "";
+                            }
+                        })
+                        .catch((error) => {
+                            console.error("Error fetching route code:", error);
+                            if (routeCodeInput) {
+                                routeCodeInput.value = "";
+                            }
+                        });
+                    } else {
+                        if (routeCodeInput) {
+                            routeCodeInput.value = "";
+                        }
+                    }
+                });
+            }
+            
+            // Function to attach event listeners to all material inputs
+            function attachEventListeners() {
+                // Add event listeners to quantity inputs
+                const quantityInputs = document.querySelectorAll(".material-quantity");
+                quantityInputs.forEach(function(input) {
+                    input.addEventListener("input", function() {
+                        const materialId = this.getAttribute("data-material-id");
+                        handleQuantityChange(this, materialId);
+                    });
+                });
+                
+                // Add event listeners to rate inputs
+                const rateInputs = document.querySelectorAll(".material-rate");
+                rateInputs.forEach(function(input) {
+                    input.addEventListener("input", function() {
+                        const materialId = this.getAttribute("data-material-id");
+                        handleRateChange(this, materialId);
+                    });
+                });
+            }
+            
+            // Function to handle quantity changes
+            function handleQuantityChange(quantityInput, materialId) {
+                if (!quantityInput) return;
+                
+                let value = parseInt(quantityInput.value) || 0;
+                
+                // Ensure value is not negative
+                if (value < 0) {
+                    quantityInput.value = 0;
+                    value = 0;
+                }
+                
+                updateAmount(materialId);
+                updateCounts();
+            }
+            
+            // Function to handle rate changes
+            function handleRateChange(rateInput, materialId) {
+                if (!rateInput) return;
+                
+                let value = parseFloat(rateInput.value) || 0;
+                
+                // Ensure value is not negative
+                if (value < 0) {
+                    rateInput.value = 0;
+                    value = 0;
+                }
+                
+                updateAmount(materialId);
+                updateCounts();
+            }
+            
+            // Function to update the amount display
+            function updateAmount(materialId) {
+                const quantityInput = document.querySelector(
+                    `input[name="MaterialQuantities[${materialId}]"]`
+                );
+                const rateInput = document.querySelector(
+                    `input[name="MaterialRates[${materialId}]"]`
+                );
+                const amountElement = document.querySelector(
+                    `.material-amount[data-material-id="${materialId}"]`
+                );
+                
+                if (quantityInput && rateInput && amountElement) {
+                    const quantity = parseInt(quantityInput.value) || 0;
+                    const rate = parseFloat(rateInput.value) || 0;
+                    const amount = (rate * quantity).toFixed(2);
+                    amountElement.textContent = amount;
+                }
+            }
+            
+            // Function to update total quantity and total amount
+            function updateCounts() {
+                try {
+                    let totalQuantity = 0;
+                    let totalAmount = 0;
+                    const quantityInputs = document.querySelectorAll(".material-quantity");
+                    const amountElements = document.querySelectorAll(".material-amount");
+                    
+                    // Calculate total quantity
+                    quantityInputs.forEach(function (input) {
+                        const quantity = parseInt(input.value) || 0;
+                        totalQuantity += quantity;
+                    });
+                    
+                    // Calculate total amount by summing individual amounts
+                    amountElements.forEach(function (element) {
+                        const amount = parseFloat(element.textContent) || 0;
+                        totalAmount += amount;
+                    });
+                    
+                    // Update the display elements
+                    if (totalQuantityElement) {
+                        totalQuantityElement.textContent = totalQuantity;
+                    }
+                    
+                    if (totalAmountElement) {
+                        totalAmountElement.textContent = totalAmount.toFixed(2);
+                    }
+                } catch (error) {
+                    console.error("Error updating counts:", error);
+                }
+            }
+            
+            // Handle focus event for quantity inputs to clear value when user focuses on a non-zero field
+            document.addEventListener("focus", function (e) {
+                if (e.target && e.target.classList.contains("material-quantity")) {
+                    // If the field has a value and user focuses on it, clear it for easy re-entry
+                    if (e.target.value !== "" && parseInt(e.target.value) > 0) {
+                        // Clear the value when user focuses on a field with existing value
+                        e.target.value = "";
+                    }
+                }
+            }, true); // Using capture phase to ensure we catch the focus event
+            
+            // Handle keydown events for quantity inputs (Enter)
+            document.addEventListener("keydown", function (e) {
+                if (e.target && e.target.classList.contains("material-quantity")) {
+                    // Prevent form submission and move to next field when Enter is pressed
+                    if (e.key === "Enter") {
+                        e.preventDefault(); // Prevent form submission
+                        
+                        // Find all quantity inputs
+                        const quantityInputs = Array.from(
+                            document.querySelectorAll(".material-quantity")
+                        );
+                        
+                        // Find current input index
+                        const currentIndex = quantityInputs.indexOf(e.target);
+                        
+                        // Move to next input if available, otherwise remove focus
+                        if (currentIndex < quantityInputs.length - 1) {
+                            // Move to next quantity input
+                            const nextInput = quantityInputs[currentIndex + 1];
+                            setTimeout(() => {
+                                nextInput.focus();
+                            }, 10);
+                        } else {
+                            // If this is the last input, remove focus
+                            setTimeout(() => {
+                                e.target.blur(); // Remove focus from the input
+                            }, 10);
+                        }
+                    }
+                }
+            });
+            
+            // Form validation before submit
+            if (dealerForm) {
+                dealerForm.addEventListener("submit", function (e) {
+                    try {
+                        // Check if at least one material has quantity > 0
+                        let hasValidQuantity = false;
+                        const quantityInputs = document.querySelectorAll(".material-quantity");
+                        quantityInputs.forEach(function (input) {
+                            const quantity = parseInt(input.value) || 0;
+                            if (quantity > 0) {
+                                hasValidQuantity = true;
+                            }
+                        });
+                        
+                        // Allow form submission to proceed
+                        return true;
+                    } catch (error) {
+                        console.error("Error during form submission:", error);
+                        // Allow form submission to proceed in case of script error
+                        return true;
+                    }
+                });
+            }
+        });
+    </script>
 }

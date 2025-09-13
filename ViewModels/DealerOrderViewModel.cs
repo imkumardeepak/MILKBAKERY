@@ -16,5 +16,8 @@ namespace Milk_Bakery.ViewModels
         
         // This will hold which materials are selected
         public HashSet<int> SelectedMaterialIds { get; set; } = new HashSet<int>();
+        
+        // This will hold the rates entered by the user for each material
+        public Dictionary<int, decimal> MaterialRates { get; set; } = new Dictionary<int, decimal>();
     }
 }

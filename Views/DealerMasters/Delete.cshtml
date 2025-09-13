@@ -108,8 +108,8 @@
                                 <tr>
                                     <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@order.MaterialName</td>
                                     <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@order.Quantity</td>
-                                    <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@order.BasicAmount.ToString("C")</td>
-                                    <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@(order.Quantity * order.BasicAmount)</td>
+                                    <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@order.Rate.ToString("C")</td>
+                                    <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@(order.Quantity * order.Rate)</td>
                                 </tr>
                             }
                         </tbody>

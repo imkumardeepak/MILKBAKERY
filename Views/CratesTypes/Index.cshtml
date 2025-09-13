@@ -23,7 +23,7 @@
                                 @Html.DisplayNameFor(model => model.Cratestype)
                             </th>
                             <th>
-                                @Html.DisplayNameFor(model => model.CratesCode)
+                                @Html.DisplayNameFor(model => model.Division)
                             </th>
                             <th>
                                 @Html.DisplayNameFor(model => model.Width)
@@ -45,7 +45,7 @@
                                     @Html.DisplayFor(modelItem => item.Cratestype)
                                 </td>
                                 <td>
-                                    @Html.DisplayFor(modelItem => item.CratesCode)
+                                    @Html.DisplayFor(modelItem => item.Division)
                                 </td>
                                 <td>
                                     @Html.DisplayFor(modelItem => item.Width)
@@ -57,8 +57,10 @@
                                     @Html.DisplayFor(modelItem => item.Length)
                                 </td>
                                 <td>
-                                    <a asp-action="AddOrEdit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" onclick="return confirmation(this);">Delete</a>
+                                    <a asp-action="AddOrEdit" asp-route-id="@item.Id"
+                                        class="btn btn-warning btn-sm">Edit</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm"
+                                        onclick="return confirmation(this);">Delete</a>
                                 </td>
                             </tr>
                         }

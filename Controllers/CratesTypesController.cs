@@ -4,6 +4,7 @@ using Milk_Bakery.Data;
 using Milk_Bakery.Models;
 using System.Threading.Tasks;
 using AspNetCoreHero.ToastNotification.Abstractions;
+using System.Linq;
 
 namespace Milk_Bakery.Controllers
 {
@@ -29,6 +30,14 @@ namespace Milk_Bakery.Controllers
         // GET: CratesTypes/AddOrEdit/5
         public async Task<IActionResult> AddOrEdit(int id = 0)
         {
+            // Get distinct segments from SegementMaster
+            ViewBag.Divisions = _context.SegementMaster
+                .Where(s => !string.IsNullOrEmpty(s.SegementName))
+                .Select(s => s.SegementName)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList();
+
             if (id == 0)
                 return View(new CratesType());
             else
@@ -47,11 +56,19 @@ namespace Milk_Bakery.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddOrEdit(int id, CratesType crate)
         {
+            // Get distinct segments from SegementMaster
+            ViewBag.Divisions = _context.SegementMaster
+                .Where(s => !string.IsNullOrEmpty(s.SegementName))
+                .Select(s => s.SegementName)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList();
+
             if (ModelState.IsValid)
             {
                 if (crate.Id == 0)
                 {
-                    var validate = _context.CratesTypes.Where(a => a.CratesCode == crate.CratesCode || a.Cratestype == crate.Cratestype).FirstOrDefault();
+                    var validate = _context.CratesTypes.Where(a => a.Cratestype == crate.Cratestype).FirstOrDefault();
                     if (validate != null)
                     {
                         ModelState.AddModelError("Name", "Crate type already exists.");
