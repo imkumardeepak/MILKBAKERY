@@ -1,171 +1,223 @@
-@model Milk_Bakery.Models.CratesManage
+@model Milk_Bakery.ViewModels.CratesCreateViewModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Opening Entry";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
+<style>
+    .table-fixed-header {
+        position: relative;
+    }
+
+    .table-fixed-header thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #343a40;
+        color: white;
+    }
+
+    .table-fixed-header th {
+        position: sticky;
+        top: 0;
+    }
+
+    /* Ensure input fields have consistent height */
+    .form-control-sm {
+        height: calc(1.5em + 0.5rem + 2px);
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    /* Improve the appearance of the table container */
+    .table-container {
+        max-height: 70vh;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    /* Ensure proper alignment of table cells */
+    .table td,
+    .table th {
+        vertical-align: middle;
+    }
+
+    /* Customer and segment column styling */
+    .customer-column {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+
+    .segment-column {
+        background-color: #e9ecef;
+        font-weight: bold;
+    }
+
+    .crate-type-column {
+        background-color: #fff3cd;
+    }
+
+    /* Loading spinner */
+    .spinner-border {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.2em;
+    }
+
+    /* Segment grouping */
+    .segment-group {
+        border-left: 3px solid #007bff;
+    }
+
+    /* Filter section */
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    /* Add some spacing between filter and table */
+    .results-section {
+        margin-top: 20px;
+    }
+</style>
 
 <div class="mt-3">
     <div class="card mb-3">
         <div class="card-header text-white p-1" style="background-color:#FC2947;">
             <div class="d-flex align-items-baseline">
                 <a asp-action="Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
-                <h5 class="mx-auto text-white text-2xl font-semibold">Crates Management</h5>
+                <h5 class="mx-auto text-white text-2xl font-semibold">Opening Entry - Set Initial Crate Balances</h5>
             </div>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-12">
-                    <form asp-action="Create">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label asp-for="CustomerId" class="control-label"></label>
-                                <select asp-for="CustomerId" class="form-control select2" asp-items="@ViewBag.customer"
-                                    id="customerDropdown"></select>
-                                <span asp-validation-for="CustomerId" class="text-danger"></span>
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label asp-for="SegmentCode" class="control-label"></label>
-                                <select asp-for="SegmentCode" class="form-control" id="segmentDropdown">
-                                    <option value="">----Select Segment----</option>
+            <div class="filter-section">
+                <form asp-action="Create" method="post" id="filterForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Select Segment</label>
+                                <select asp-for="SelectedSegmentCode" class="form-control select2"
+                                    asp-items="Model.Segments">
+                                    <option value="">-- Select Segment --</option>
                                 </select>
-                                <span asp-validation-for="SegmentCode" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label asp-for="DispDate" class="control-label"></label>
-                                <input asp-for="DispDate" class="form-control"
-                                    value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly />
-                                <span asp-validation-for="DispDate" class="text-danger"></span>
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label asp-for="CratesTypeId" class="control-label"></label>
-                                <select asp-for="CratesTypeId" class="form-control" id="crateTypeDropdown">
-                                    <option value="">----Select Crates Type----</option>
-                                </select>
-                                <span asp-validation-for="CratesTypeId" class="text-danger"></span>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-group">
+                                <input type="hidden" name="action" value="Filter" />
+                                <input type="submit" value="Show Customers & Crates" class="btn btn-primary" id="showCratesBtn" />
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label asp-for="Opening" class="control-label"></label>
-                                <input asp-for="Opening" class="form-control" />
-                                <span asp-validation-for="Opening" class="text-danger"></span>
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label asp-for="Outward" class="control-label"></label>
-                                <input asp-for="Outward" class="form-control" readonly value="0" />
-                                <span asp-validation-for="Outward" class="text-danger"></span>
-                            </div>
+                    </div>
+                </form>
+            </div>
+
+            @if (Model.ShowTable && Model.CratesEntries.Count > 0)
+            {
+                <div class="results-section">
+                    <form asp-action="Create" method="post" id="cratesForm">
+                        <input type="hidden" asp-for="SelectedSegmentCode" />
+                        <input type="hidden" name="action" value="Save" />
+                        <div class="table-container table-responsive-sm">
+                            <table class="table table-bordered table-striped table-hover table-fixed-header mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="align-middle">Customer</th>
+                                        <th class="align-middle">Segment</th>
+                                        <th class="align-middle">Crate Type</th>
+                                        <th class="align-middle text-end">Opening Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.CratesEntries.Count; i++)
+                                    {
+                                        <tr>
+                                            <td class="align-middle customer-column">
+                                                @Model.CratesEntries[i].CustomerName
+                                                <input type="hidden" asp-for="CratesEntries[i].CustomerId" />
+                                                <input type="hidden" asp-for="CratesEntries[i].CustomerName" />
+                                                <input type="hidden" asp-for="CratesEntries[i].SegmentCode" />
+                                                <input type="hidden" asp-for="CratesEntries[i].SegmentName" />
+                                                <input type="hidden" asp-for="CratesEntries[i].CrateTypeId" />
+                                                <input type="hidden" asp-for="CratesEntries[i].CrateTypeName" />
+                                            </td>
+                                            <td class="align-middle segment-column segment-group">
+                                                @Model.CratesEntries[i].SegmentName
+                                            </td>
+                                            <td class="align-middle crate-type-column">
+                                                @Model.CratesEntries[i].CrateTypeName
+                                            </td>
+                                            <td class="align-middle">
+                                                <input asp-for="CratesEntries[i].Opening" min="0"
+                                                    class="form-control form-control-sm text-end opening-input" 
+                                                    data-index="@i" style="min-width: 80px;" />
+                                                <input type="hidden" asp-for="CratesEntries[i].Outward" value="0" />
+                                                <input type="hidden" asp-for="CratesEntries[i].Inward" value="0" />
+                                                <input type="hidden" asp-for="CratesEntries[i].Balance" value="0" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label asp-for="Inward" class="control-label"></label>
-                                <input asp-for="Inward" class="form-control" readonly value="0" />
-                                <span asp-validation-for="Inward" class="text-danger"></span>
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label asp-for="Balance" class="control-label"></label>
-                                <input asp-for="Balance" class="form-control" readonly />
-                                <span asp-validation-for="Balance" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="px-4 text-right py-2">
+                        <div class="px-4 text-right py-2 mt-3">
                             <a asp-action="Index"
                                 class="btn hover:bg-red-700 bg-red-600 rounded-sm shadow-md text-white">Back</a>
-                            <input type="submit" value="Save Record"
-                                class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" />
+                            <input type="submit" value="Save All Opening Balances"
+                                class="btn hover:bg-blue-700 bg-blue-600 rounded-sm shadow-md text-white" id="saveButton" />
                         </div>
                     </form>
                 </div>
-            </div>
+            }
+            else if (Model.ShowTable)
+            {
+                <div class="alert alert-info" role="alert">
+                    No crate entries found for the selected segment.
+                </div>
+            }
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
     <script>
-        // Calculate balance when opening, inward, or outward values change
         $(document).ready(function () {
-            $('#Opening, #Inward, #Outward').on('input', function () {
-                calculateBalance();
-            });
+            // Handle Enter key press to move to next row
+            $('.opening-input').on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var currentIndex = parseInt($(this).data('index'));
+                    var nextIndex = currentIndex + 1;
+                    var nextInput = $('.opening-input[data-index="' + nextIndex + '"]');
 
-            // Handle customer dropdown change to load segments
-            $('#customerDropdown').change(function () {
-                var customerId = $(this).val();
-                if (customerId) {
-                    loadSegmentsForCustomer(customerId);
-                } else {
-                    $('#segmentDropdown').empty();
-                    $('#segmentDropdown').append('<option value="">----Select Segment----</option>');
-                    // Clear crate types when no customer is selected
-                    $('#crateTypeDropdown').empty();
-                    $('#crateTypeDropdown').append('<option value="">----Select Crates Type----</option>');
+                    if (nextInput.length > 0) {
+                        nextInput.focus();
+                    } else {
+                        // If this is the last row, focus on the save button
+                        $('#saveButton').focus();
+                    }
                 }
             });
 
-            // Handle segment dropdown change to load crate types
-            $('#segmentDropdown').change(function () {
-                var segment = $(this).find('option:selected').text();
-                if (segment && segment !== "----Select Segment----") {
-                    loadCrateTypesForSegment(segment);
-                } else {
-                    $('#crateTypeDropdown').empty();
-                    $('#crateTypeDropdown').append('<option value="">----Select Crates Type----</option>');
+            // Prevent form submission when pressing Enter in input fields
+            $('.opening-input').on('keypress', function (e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    return false;
                 }
+            });
+
+            // Handle save button click with loading state
+            $('#saveButton').on('click', function () {
+                var $btn = $(this);
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
             });
         });
-
-        function calculateBalance() {
-            var opening = parseInt($('#Opening').val()) || 0;
-            var inward = parseInt($('#Inward').val()) || 0;
-            var outward = parseInt($('#Outward').val()) || 0;
-            var balance = opening + inward - outward;
-            $('#Balance').val(balance);
-        }
-
-        function loadSegmentsForCustomer(customerId) {
-            $.ajax({
-                url: '@Url.Action("GetSegmentsForCustomer", "CratesManages")',
-                type: 'GET',
-                data: { customerId: customerId },
-                success: function (result) {
-                    $('#segmentDropdown').empty();
-                    $('#segmentDropdown').append('<option value="">----Select Segment----</option>');
-                    $.each(result, function (i, segment) {
-                        $('#segmentDropdown').append($('<option></option>').val(segment.value).html(segment.text));
-                    });
-                    // Clear crate types when segments are loaded
-                    $('#crateTypeDropdown').empty();
-                    $('#crateTypeDropdown').append('<option value="">----Select Crates Type----</option>');
-                },
-                error: function () {
-                    console.log('Error loading segments for customer');
-                }
-            });
-        }
-
-        function loadCrateTypesForSegment(segment) {
-            $.ajax({
-                url: '@Url.Action("GetCrateTypesForSegment", "CratesManages")',
-                type: 'GET',
-                data: { segment: segment },
-                success: function (result) {
-                    $('#crateTypeDropdown').empty();
-                    $.each(result, function (i, crateType) {
-                        $('#crateTypeDropdown').append($('<option></option>').val(crateType.value).html(crateType.text));
-                    });
-                },
-                error: function () {
-                    console.log('Error loading crate types for segment');
-                }
-            });
-        }
     </script>
 }

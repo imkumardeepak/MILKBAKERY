@@ -57,6 +57,143 @@ namespace Milk_Bakery.Controllers
 			return View(cratesManages);
 		}
 
+		// GET: CratesManages/Create
+		public async Task<IActionResult> Create()
+		{
+			var viewModel = new ViewModels.CratesCreateViewModel();
+			
+			// Get all segments for the filter dropdown
+			viewModel.Segments = GetSegment();
+			viewModel.ShowTable = false; // Don't show table initially
+			
+			return View(viewModel);
+		}
+
+		// POST: CratesManages/Create
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> Create(CratesCreateViewModel model, string action)
+		{
+			// Handle filter action
+			if (action == "Filter")
+			{
+				var viewModel = new ViewModels.CratesCreateViewModel();
+				
+				// Get all segments for the filter dropdown
+				viewModel.Segments = GetSegment();
+				viewModel.SelectedSegmentCode = model.SelectedSegmentCode;
+				
+				// If a segment is selected, load the data
+				if (!string.IsNullOrEmpty(model.SelectedSegmentCode))
+				{
+					// Get the selected segment name (text) from the dropdown
+					var selectedSegment = viewModel.Segments.FirstOrDefault(s => s.Value == model.SelectedSegmentCode);
+					var selectedSegmentName = selectedSegment?.Text ?? "";
+					
+					// Get all customers
+					var customers = await _context.Customer_Master.ToListAsync();
+					
+					// Get crate types for the selected segment
+					var crateTypes = await _context.CratesTypes
+						.Where(ct => ct.Division == selectedSegmentName)
+						.ToListAsync();
+					
+					// For each customer, check if they belong to the selected segment
+					foreach (var customer in customers)
+					{
+						// Get segments for this customer
+						var customerSegments = GetSegmentsForCustomerById(customer.Id);
+						
+						// Check if this customer belongs to the selected segment
+						// We match by segment name (Text property) since that's what's stored in CratesType.Division
+						var customerSegment = customerSegments.FirstOrDefault(s => s.Text == selectedSegmentName);
+						if (customerSegment != null && crateTypes.Any())
+						{
+							// For each crate type in this segment, create an entry
+							foreach (var crateType in crateTypes)
+							{
+								viewModel.CratesEntries.Add(new ViewModels.CratesEntryViewModel
+								{
+									CustomerId = customer.Id,
+									CustomerName = customer.Name ?? string.Empty,
+									SegmentCode = customerSegment.Value, // Use the segment code from customer mapping
+									SegmentName = selectedSegmentName,
+									CrateTypeId = crateType.Id,
+									CrateTypeName = crateType.Cratestype ?? string.Empty,
+									Opening = 0,
+									Outward = 0,
+									Inward = 0,
+									Balance = 0
+								});
+							}
+						}
+					}
+					
+					viewModel.ShowTable = true;
+				}
+				else
+				{
+					viewModel.ShowTable = false;
+				}
+				
+				return View(viewModel);
+			}
+			// Handle save action
+			else
+			{
+				if (model == null || model.CratesEntries == null)
+				{
+					_notifyService.Error("No data received. Please try again.");
+					return RedirectToAction(nameof(Create));
+				}
+
+				try
+				{
+					int savedCount = 0;
+
+					// Process each entry
+					foreach (var entry in model.CratesEntries)
+					{
+						// Only process entries with opening values > 0
+						if (entry.Opening > 0)
+						{
+							var cratesManage = new CratesManage
+							{
+								CustomerId = entry.CustomerId,
+								SegmentCode = entry.SegmentCode,
+								DispDate = DateTime.Today,
+								Opening = entry.Opening,
+								Outward = entry.Outward,
+								Inward = entry.Inward,
+								Balance = entry.Opening + entry.Inward - entry.Outward,
+								CratesTypeId = entry.CrateTypeId
+							};
+
+							_context.CratesManages.Add(cratesManage);
+							savedCount++;
+						}
+					}
+
+					if (savedCount > 0)
+					{
+						await _context.SaveChangesAsync();
+						_notifyService.Success($"Successfully saved {savedCount} opening records.");
+					}
+					else
+					{
+						_notifyService.Info("No records were saved as all opening balances were zero.");
+					}
+					
+					return RedirectToAction(nameof(Index));
+				}
+				catch (Exception ex)
+				{
+					_notifyService.Error("An error occurred while processing the form: " + ex.Message);
+					return RedirectToAction(nameof(Create));
+				}
+			}
+		}
+
 		// GET: CratesManages/Details/5
 		public async Task<IActionResult> Details(int? id)
 		{
@@ -75,136 +212,6 @@ namespace Milk_Bakery.Controllers
 			}
 
 			return View(cratesManage);
-		}
-
-		// GET: CratesManages/Create
-		public IActionResult Create()
-		{
-			ViewBag.customer = GetCustomer();
-			// No need to populate crate types here as they will be loaded dynamically
-			// No need to populate segments here as they will be loaded dynamically
-			return View();
-		}
-
-		// POST: CratesManages/Create
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Create(CratesManage cratesManage)
-		{
-			if (ModelState.IsValid)
-			{
-				var cratesManages = await _context.CratesManages
-					.Where(c => c.CustomerId == cratesManage.CustomerId && c.SegmentCode == cratesManage.SegmentCode && c.CratesTypeId == cratesManage.CratesTypeId)
-					.OrderByDescending(c => c.DispDate)
-					.ToListAsync();
-				if (cratesManages.Any())
-				{
-					ViewBag.customer = GetCustomer();
-					_notifyService.Error("Crates record already exists for this customer, segment and crates type.");
-					return View(cratesManage);
-				}
-
-				// Calculate balance: Opening + Inward - Outward
-				cratesManage.Balance = cratesManage.Opening + cratesManage.Inward - cratesManage.Outward;
-
-				_context.Add(cratesManage);
-				await _context.SaveChangesAsync();
-				_notifyService.Success("Crates record created successfully");
-				return RedirectToAction(nameof(Index));
-			}
-			ViewBag.customer = GetCustomer();
-			return View(cratesManage);
-		}
-
-		// GET: CratesManages/Edit/5
-		public async Task<IActionResult> Edit(int? id)
-		{
-			if (id == null)
-			{
-				return NotFound();
-			}
-
-			var cratesManage = await _context.CratesManages.FindAsync(id);
-			if (cratesManage == null)
-			{
-				return NotFound();
-			}
-			ViewBag.customer = GetCustomer();
-			// No need to populate crate types here as they will be loaded dynamically
-			// No need to populate segments here as they will be loaded dynamically
-			return View(cratesManage);
-		}
-
-		// POST: CratesManages/Edit/5
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Edit(int id, CratesManage cratesManage)
-		{
-			if (id != cratesManage.Id)
-			{
-				return NotFound();
-			}
-
-			if (ModelState.IsValid)
-			{
-				try
-				{
-					// Calculate balance: Opening + Inward - Outward
-					cratesManage.Balance = cratesManage.Opening + cratesManage.Inward - cratesManage.Outward;
-
-					_context.Update(cratesManage);
-					await _context.SaveChangesAsync();
-					_notifyService.Success("Crates record updated successfully");
-				}
-				catch (DbUpdateConcurrencyException)
-				{
-					if (!CratesManageExists(cratesManage.Id))
-					{
-						return NotFound();
-					}
-					else
-					{
-						throw;
-					}
-				}
-				return RedirectToAction(nameof(Index));
-			}
-			ViewBag.customer = GetCustomer();
-			return View(cratesManage);
-		}
-
-		// GET: CratesManages/Delete/5
-		public async Task<IActionResult> Delete(int? id)
-		{
-			if (id == null)
-			{
-				return NotFound();
-			}
-
-			var cratesManage = await _context.CratesManages
-				.Include(c => c.Customer)
-				.FirstOrDefaultAsync(m => m.Id == id);
-			if (cratesManage == null)
-			{
-				return NotFound();
-			}
-
-			return View(cratesManage);
-		}
-
-		// POST: CratesManages/Delete/5
-		[HttpPost, ActionName("Delete")]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> DeleteConfirmed(int id)
-		{
-			var cratesManage = await _context.CratesManages.FindAsync(id);
-			if (cratesManage != null)
-			{
-				_context.CratesManages.Remove(cratesManage);
-				await _context.SaveChangesAsync();
-				_notifyService.Success("Crates record deleted successfully");
-			}
-			return RedirectToAction(nameof(Index));
 		}
 
 		private bool CratesManageExists(int id)
@@ -330,6 +337,69 @@ namespace Milk_Bakery.Controllers
 		}
 
 		[HttpGet]
+		public IActionResult GetCustomersForSegment(string segmentCode)
+		{
+			if (string.IsNullOrEmpty(segmentCode))
+			{
+				return Json(new List<SelectListItem>());
+			}
+
+			// Get customer segment mappings for this segment
+			var customerMappings = _context.CustomerSegementMap
+				.Where(csm => csm.custsegementcode == segmentCode)
+				.ToList();
+
+			// Get customer IDs from the mappings
+			var customerIds = customerMappings.Select(csm => csm.Customername).ToList();
+
+			// Get customers that match these names
+			var customers = _context.Customer_Master
+				.Where(cm => customerIds.Contains(cm.Name))
+				.Select(cm => new SelectListItem
+				{
+					Value = cm.Id.ToString(),
+					Text = cm.Name
+				})
+				.ToList();
+
+			// Add default option
+			customers.Insert(0, new SelectListItem
+			{
+				Value = "",
+				Text = "----Select Customer----"
+			});
+
+			return Json(customers);
+		}
+
+		[HttpGet]
+		public IActionResult GetCrateTypesForDivision(string division)
+		{
+			if (string.IsNullOrEmpty(division))
+			{
+				return Json(new List<SelectListItem>());
+			}
+
+			var crateTypes = _context.CratesTypes
+				.Where(ct => ct.Division == division)
+				.Select(ct => new SelectListItem
+				{
+					Value = ct.Id.ToString(),
+					Text = ct.Cratestype
+				})
+				.ToList();
+
+			// Add default option
+			crateTypes.Insert(0, new SelectListItem
+			{
+				Value = "",
+				Text = "----Select Crates Type----"
+			});
+
+			return Json(crateTypes);
+		}
+
+		[HttpGet]
 		public IActionResult GetCrateTypesForSegment(string segment)
 		{
 			if (string.IsNullOrEmpty(segment))
@@ -422,7 +492,7 @@ namespace Milk_Bakery.Controllers
 						if (topRecord != null)
 						{
 							topRecord.Inward += quantity;
-							topRecord.Balance = topRecord.Opening + topRecord.Outward - topRecord.Inward;
+							topRecord.Balance = topRecord.Opening + topRecord.Inward - topRecord.Outward;
 							topRecord.DispDate = DateTime.Today;
 							_context.CratesManages.Update(topRecord);
 							recordsUpdated++;
