@@ -39,7 +39,8 @@
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="CustomerName" class="font-weight-bold">Customer:</label>
-                                            <select class="form-control select2" asp-for="CustomerName" asp-items="ViewBag.Customers">
+                                            <select class="form-control select2" asp-for="CustomerName"
+                                                asp-items="ViewBag.Customers">
                                             </select>
                                         </div>
                                     </div>
@@ -47,8 +48,10 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="form-group form-check">
-                                            <input type="checkbox" class="form-check-input" asp-for="ShowOnlyVariance" />
-                                            <label class="form-check-label font-weight-bold" asp-for="ShowOnlyVariance">Show Only Items with Variance</label>
+                                            <input type="checkbox" class="form-check-input"
+                                                asp-for="ShowOnlyVariance" />
+                                            <label class="form-check-label font-weight-bold"
+                                                asp-for="ShowOnlyVariance">Show Only Items with Variance</label>
                                         </div>
                                     </div>
                                 </div>
@@ -99,7 +102,9 @@
                                                     <td>@item.ShortCode</td>
                                                     <td class="text-right">@item.OrderedQuantity</td>
                                                     <td class="text-right">@item.InvoicedQuantity</td>
-                                                    <td class="text-right @(item.QuantityVariance != 0 ? "font-weight-bold" : "") @(item.QuantityVariance > 0 ? "text-danger" : "text-success")">@item.QuantityVariance</td>
+                                                    <td
+                                                        class="text-right @(item.QuantityVariance != 0 ? "font-weight-bold" : "") @(item.QuantityVariance > 0 ? "text-danger" : "text-success")">
+                                                        @item.QuantityVariance</td>
                                                     @* <td class="text-right">@item.OrderedAmount.ToString("F2")</td>
                                                     <td class="text-right">@item.InvoicedAmount.ToString("F2")</td>
                                                     <td class="text-right @(item.AmountVariance != 0 ? "font-weight-bold" : "") @(item.AmountVariance > 0 ? "text-danger" : "text-success")">@item.AmountVariance.ToString("F2")</td> *@

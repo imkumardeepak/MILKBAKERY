@@ -24,7 +24,7 @@ namespace Milk_Bakery.Controllers
 		{
 			var viewModel = new VarianceOrderReportViewModel
 			{
-				FromDate = DateTime.Now.AddDays(-30),
+				FromDate = DateTime.Now,
 				ToDate = DateTime.Now,
 				AvailableCustomers = await GetAvailableCustomers()
 			};
@@ -74,7 +74,7 @@ namespace Milk_Bakery.Controllers
 			var reportItems = new List<VarianceReportItem>();
 
 			// Get purchase orders within date range and customer filter
-			var purchaseOrdersQuery = _context.PurchaseOrder
+			var purchaseOrdersQuery = _context.PurchaseOrder.Where(a => a.verifyflag == 1 && a.processflag == 1)
 				.Include(po => po.ProductDetails)
 				.AsNoTracking()
 				.Where(po => po.OrderDate >= fromDate && po.OrderDate <= toDate);
@@ -116,7 +116,7 @@ namespace Milk_Bakery.Controllers
 			var invoicesQuery = _context.Invoices
 				.Include(i => i.InvoiceMaterials)
 				.AsNoTracking()
-				.Where(i => i.OrderDate >= fromDate && i.OrderDate <= toDate);
+				.Where(i => i.OrderDate >= fromDate && i.OrderDate <= toDate && i.setflag == 1);
 
 			// Apply customer filter based on role
 			if (role == "Customer")

@@ -244,7 +244,6 @@ namespace Milk_Bakery.Controllers
 							return View(viewModel);
 						}
 
-
 						// Add the dealer master
 						_context.Add(viewModel.DealerMaster);
 						await _context.SaveChangesAsync();
