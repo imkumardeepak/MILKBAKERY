@@ -1,0 +1,321 @@
+@model Milk_Bakery.ViewModels.BulkInwardEntryViewModel
+
+@{
+    ViewData["Title"] = "Bulk Inward Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card-header-custom {
+        background-color: #28a745;
+        /* Green color for inward */
+        color: white;
+        padding: 0.75rem 1rem;
+    }
+
+    .form-section {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .form-section-title {
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #495057;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 0.5rem;
+    }
+
+    .customer-list-container {
+        max-height: 60vh;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+
+    .customer-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .customer-item:last-child {
+        border-bottom: none;
+    }
+
+    .customer-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .customer-name {
+        font-weight: 500;
+        color: #212529;
+    }
+
+    .inward-input {
+        max-width: 120px;
+        text-align: right;
+    }
+
+    .sticky-footer {
+        position: sticky;
+        bottom: 0;
+        background-color: white;
+        padding: 1rem 0;
+        border-top: 1px solid #dee2e6;
+        z-index: 10;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .form-section {
+            padding: 0.75rem;
+        }
+
+        .customer-item {
+            padding: 0.75rem 0.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .customer-item .inward-input-group {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .inward-input {
+            max-width: 100%;
+            margin-top: 0.25rem;
+        }
+
+        .btn-group-responsive {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .btn-group-responsive .btn {
+            width: 100%;
+        }
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.2em;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #ced4da;
+    }
+
+    .input-group-text {
+        background-color: #e9ecef;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem 0 0 0.375rem;
+        font-weight: 500;
+    }
+
+    .input-group {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .input-group .form-control {
+        border-radius: 0 0.375rem 0.375rem 0;
+        border-left: none;
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <div class="card mb-3">
+        <div class="card-header card-header-custom p-2">
+            <div class="d-flex align-items-center">
+                <a asp-action="Index" class="btn btn-link text-white p-0 me-2">
+                    <i class="fas fa-arrow-left fa-lg"></i>
+                </a>
+                <h5 class="mb-0 text-white flex-grow-1 text-center">Bulk Inward Entry</h5>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <form asp-action="BulkInwardEntry" method="post" id="inwardEntryForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-filter me-2"></i>Entry Details
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4 col-12">
+                            <div class="form-group">
+                                <label asp-for="SegmentCode" class="form-label fw-bold">Segment</label>
+                                <select asp-for="SegmentCode" class="form-select form-control"
+                                    asp-items="ViewBag.DivisionId" id="segmentCode">
+                                    <option value="">-- Select Segment --</option>
+                                </select>
+                                <span asp-validation-for="SegmentCode" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-12">
+                            <div class="form-group">
+                                <label asp-for="CratesTypeId" class="form-label fw-bold">Crates Type</label>
+                                <select asp-for="CratesTypeId" class="form-select form-control"
+                                    asp-items="ViewBag.CratesTypeId">
+                                    <option value="">-- Select Crates Type --</option>
+                                </select>
+                                <span asp-validation-for="CratesTypeId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-12">
+                            <div class="form-group">
+                                <label asp-for="DispDate" class="form-label fw-bold">Dispatch Date</label>
+                                <input asp-for="DispDate" class="form-control" type="date" readonly />
+                                <span asp-validation-for="DispDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="form-section-title mb-0"><i class="fas fa-users me-2"></i>Customers</h5>
+                        <span id="customerCount" class="badge bg-secondary">0 Customers</span>
+                    </div>
+                    <div id="customerListPlaceholder" class="empty-state">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Select a segment to load customers.</p>
+                    </div>
+                    <div id="customerList" class="customer-list-container d-none">
+                        <!-- Customer items will be injected here by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="sticky-footer">
+                    <div class="container-fluid">
+                        <div class="d-grid gap-2 btn-group-responsive">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Save Inward Entries
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            const segmentDropdown = $('#segmentCode');
+            const cratesTypeDropdown = $('#CratesTypeId');
+            const customerList = $('#customerList');
+            const customerListPlaceholder = $('#customerListPlaceholder');
+            const customerCountBadge = $('#customerCount');
+            const form = $('#inwardEntryForm');
+
+            segmentDropdown.on('change', function () {
+                const segmentCode = $(this).val();
+                if (segmentCode) {
+                    loadCustomers(segmentCode);
+                    loadCrateTypes(segmentCode)
+                } else {
+                    resetCustomerList();
+                }
+            });
+
+            function loadCrateTypes(segmentCode) {
+                cratesTypeDropdown.html('<option value="">Loading...</option>');
+
+                $.ajax({
+                    url: '@Url.Action("GetCrateTypesForSegment", "CratesManages")',
+                    type: 'GET',
+                    data: { segment: segmentCode },
+                    success: function (crateTypes) {
+                        cratesTypeDropdown.empty();
+                        if (crateTypes && crateTypes.length > 0) {
+                            for (let i = 0; i < crateTypes.length; i++) {
+                                const crateType = crateTypes[i];
+                                cratesTypeDropdown.append(`<option value="${crateType.value}">${crateType.text}</option>`);
+                            }
+                        } else {
+                            cratesTypeDropdown.append('<option value="">No crate types found</option>');
+                        }
+                    },
+                    error: function () {
+                        cratesTypeDropdown.empty().append('<option value="">Error loading crate types</option>');
+                    }
+                });
+            }
+
+            function loadCustomers(segmentCode) {
+                customerList.html('<div class="text-center p-3"><div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+                customerList.removeClass('d-none');
+                customerListPlaceholder.addClass('d-none');
+
+                $.ajax({
+                    url: '@Url.Action("GetCustomersBySegment", "CratesManages")',
+                    type: 'GET',
+                    data: { segmentCode: segmentCode },
+                    success: function (customers) {
+                        customerList.empty();
+                        if (customers && customers.length > 0) {
+                            for (let i = 0; i < customers.length; i++) {
+                                const customer = customers[i];
+                                const row = `
+                                                                                                        <div class="customer-item">
+                                                                                                            <div class="customer-name">${customer.name}</div>
+                                                                                                            <div class="inward-input-group">
+                                                                                                                <div class="input-group">
+                                                                                                                    <span class="input-group-text">Qty</span>
+                                                                                                                    <input type="hidden" name="Customers[${i}].CustomerId" value="${customer.id}" />
+                                                                                                                        <input type="hidden" name="Customers[${i}].CustomerName" value="${customer.name}" />
+                                                                                                                        <input type="number" name="Customers[${i}].Inward" class="form-control form-control-sm opening-input"
+                                                                                                                               value="0" min="0" placeholder="0" />
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    `;
+                                customerList.append(row);
+                            }
+                            customerList.removeClass('d-none');
+                            customerListPlaceholder.addClass('d-none');
+                        } else {
+                            resetCustomerList('<p>No customers found for this segment.</p>');
+                        }
+                        updateCustomerCount(customers.length);
+                    },
+                    error: function () {
+                        resetCustomerList('<p class="text-danger">Error loading customers.</p>');
+                        updateCustomerCount(0);
+                    }
+                });
+            }
+
+            function resetCustomerList(message = '<p>Select a segment to load customers.</p>') {
+                customerList.empty().addClass('d-none');
+                customerListPlaceholder.html(message).removeClass('d-none');
+                updateCustomerCount(0);
+            }
+
+            function updateCustomerCount(count) {
+                customerCountBadge.text(count + (count === 1 ? ' Customer' : ' Customers'));
+            }
+        });
+    </script>
+}
