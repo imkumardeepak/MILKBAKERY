@@ -32,12 +32,12 @@ namespace Milk_Bakery.Controllers
 				// Get the logged-in customer
 				var loggedInCustomer = await _context.Customer_Master
 					.FirstOrDefaultAsync(c => c.phoneno == HttpContext.Session.GetString("UserName"));
-				
+
 				if (loggedInCustomer != null)
 				{
 					// Get mapped customers for dropdown
 					ViewBag.Customers = GetCustomer();
-					
+
 					// Determine which customer's dealers to show
 					int customerIdToShow = loggedInCustomer.Id;
 					if (!string.IsNullOrEmpty(selectedCustomerId))
@@ -48,36 +48,36 @@ namespace Milk_Bakery.Controllers
 						{
 							// Check if the selected customer is the logged-in customer or a mapped customer
 							bool isAllowed = customer.Id == loggedInCustomer.Id;
-							
+
 							// Check if it's a mapped customer
 							if (!isAllowed)
 							{
 								var mappedcusr = await _context.Cust2CustMap
 									.FirstOrDefaultAsync(a => a.phoneno == loggedInCustomer.phoneno);
-								
+
 								if (mappedcusr != null)
 								{
 									var mappedCustomers = await _context.mappedcusts
 										.Where(a => a.cust2custId == mappedcusr.id)
 										.ToListAsync();
-									
+
 									isAllowed = mappedCustomers.Any(mc => mc.customer == customer.Name);
 								}
 							}
-							
+
 							if (isAllowed)
 							{
 								customerIdToShow = customer.Id;
 							}
 						}
 					}
-					
+
 					// Show only dealers associated with the selected customer
 					var dealers = await _context.DealerMasters
 						.Include(d => d.DealerBasicOrders)
 						.Where(d => d.DistributorId == customerIdToShow)
 						.ToListAsync();
-					
+
 					ViewBag.SelectedCustomerId = customerIdToShow.ToString();
 					return View(dealers);
 				}
@@ -95,7 +95,7 @@ namespace Milk_Bakery.Controllers
 				var dealers = await _context.DealerMasters
 					.Include(d => d.DealerBasicOrders)
 					.ToListAsync();
-				
+
 				return View(dealers);
 			}
 		}
@@ -134,7 +134,7 @@ namespace Milk_Bakery.Controllers
 				{
 					viewModel.MaterialRates[material.Id] = 1;
 				}
-				
+
 				viewDataForView(viewModel);
 				return View(viewModel);
 			}
@@ -153,9 +153,9 @@ namespace Milk_Bakery.Controllers
 				viewModel.DealerMaster = dealerMaster;
 
 				// Populate the existing orders and selected materials
-                viewModel.DealerBasicOrders = dealerMaster.DealerBasicOrders.ToList();
+				viewModel.DealerBasicOrders = dealerMaster.DealerBasicOrders.ToList();
 
-                // Populate the quantities and rates
+				// Populate the quantities and rates
 				foreach (var order in dealerMaster.DealerBasicOrders)
 				{
 					// Find the corresponding material in AvailableMaterials
@@ -164,7 +164,7 @@ namespace Milk_Bakery.Controllers
 					{
 						viewModel.SelectedMaterialIds.Add(material.Id);
 						viewModel.MaterialQuantities[material.Id] = order.Quantity;
-						
+
 						// Store the rate directly from the DealerBasicOrder
 						viewModel.MaterialRates[material.Id] = order.Rate;
 					}
@@ -235,6 +235,16 @@ namespace Milk_Bakery.Controllers
 				{
 					try
 					{
+						//find the existing dealer master with same name and distributor
+						var existingDealerMaster = await _context.DealerMasters.FirstOrDefaultAsync(d => d.Name == viewModel.DealerMaster.Name && d.DistributorId == viewModel.DealerMaster.DistributorId);
+						if (existingDealerMaster != null)
+						{
+							_notifyService.Error("A dealer with the same name already exists for the selected customer.");
+							ModelState.AddModelError("", "A dealer with the same name already exists for the selected customer.");
+							return View(viewModel);
+						}
+
+
 						// Add the dealer master
 						_context.Add(viewModel.DealerMaster);
 						await _context.SaveChangesAsync();
@@ -246,7 +256,7 @@ namespace Milk_Bakery.Controllers
 							{
 								var materialId = kvp.Key;
 								var quantity = kvp.Value;
-								
+
 								// Only process materials with quantity > 0
 								if (quantity > 0)
 								{
@@ -259,7 +269,7 @@ namespace Milk_Bakery.Controllers
 										{
 											rate = MaterialRates[materialId];
 										}
-										
+
 										var dealerBasicOrder = new DealerBasicOrder
 										{
 											DealerId = viewModel.DealerMaster.Id,
@@ -322,7 +332,7 @@ namespace Milk_Bakery.Controllers
 							{
 								var materialId = kvp.Key;
 								var quantity = kvp.Value;
-								
+
 								// Only process materials with quantity > 0
 								if (quantity > 0)
 								{
@@ -344,7 +354,7 @@ namespace Milk_Bakery.Controllers
 												rate = existingOrder.Rate;  // Changed from BasicAmount calculation to Rate
 											}
 										}
-										
+
 										var dealerBasicOrder = new DealerBasicOrder
 										{
 											DealerId = viewModel.DealerMaster.Id,

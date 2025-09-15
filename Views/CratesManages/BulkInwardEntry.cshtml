@@ -139,6 +139,37 @@
         border-radius: 0 0.375rem 0.375rem 0;
         border-left: none;
     }
+
+    /* Search input styles */
+    #customerSearch {
+        border-radius: 0.375rem 0 0 0.375rem;
+        border: 1px solid #ced4da;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    #clearSearch {
+        border-radius: 0 0.375rem 0.375rem 0;
+        border: 1px solid #ced4da;
+        border-left: none;
+        padding: 0.25rem 0.5rem;
+        background-color: #e9ecef;
+    }
+
+    #clearSearch:hover {
+        background-color: #dee2e6;
+    }
+
+    /* Adjust the header layout for better spacing */
+    .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .search-container {
+        min-width: 250px;
+    }
 </style>
 
 <div class="container-fluid px-0">
@@ -193,7 +224,16 @@
                 <div class="form-section">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="form-section-title mb-0"><i class="fas fa-users me-2"></i>Customers</h5>
-                        <span id="customerCount" class="badge bg-secondary">0 Customers</span>
+                        <div class="header-controls">
+                            <span id="customerCount" class="badge bg-primary text-white me-2">0 Customers</span>
+                            <div class="input-group search-container">
+                                <input type="text" id="customerSearch" class="form-control form-control-sm"
+                                    placeholder="Search customers...">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" id="clearSearch">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div id="customerListPlaceholder" class="empty-state">
                         <i class="fas fa-info-circle"></i>
@@ -228,6 +268,9 @@
             const customerListPlaceholder = $('#customerListPlaceholder');
             const customerCountBadge = $('#customerCount');
             const form = $('#inwardEntryForm');
+            const customerSearch = $('#customerSearch');
+            const clearSearch = $('#clearSearch');
+            let allCustomers = []; // Store all customers for filtering
 
             segmentDropdown.on('change', function () {
                 const segmentCode = $(this).val();
@@ -237,6 +280,17 @@
                 } else {
                     resetCustomerList();
                 }
+            });
+
+            // Search functionality
+            customerSearch.on('input', function () {
+                filterCustomers();
+            });
+
+            // Clear search functionality
+            clearSearch.on('click', function () {
+                customerSearch.val('');
+                filterCustomers();
             });
 
             function loadCrateTypes(segmentCode) {
@@ -273,28 +327,10 @@
                     type: 'GET',
                     data: { segmentCode: segmentCode },
                     success: function (customers) {
+                        allCustomers = customers; // Store all customers
                         customerList.empty();
                         if (customers && customers.length > 0) {
-                            for (let i = 0; i < customers.length; i++) {
-                                const customer = customers[i];
-                                const row = `
-                                                                                                        <div class="customer-item">
-                                                                                                            <div class="customer-name">${customer.name}</div>
-                                                                                                            <div class="inward-input-group">
-                                                                                                                <div class="input-group">
-                                                                                                                    <span class="input-group-text">Qty</span>
-                                                                                                                    <input type="hidden" name="Customers[${i}].CustomerId" value="${customer.id}" />
-                                                                                                                        <input type="hidden" name="Customers[${i}].CustomerName" value="${customer.name}" />
-                                                                                                                        <input type="number" name="Customers[${i}].Inward" class="form-control form-control-sm opening-input"
-                                                                                                                               value="0" min="0" placeholder="0" />
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    `;
-                                customerList.append(row);
-                            }
-                            customerList.removeClass('d-none');
-                            customerListPlaceholder.addClass('d-none');
+                            renderCustomers(customers);
                         } else {
                             resetCustomerList('<p>No customers found for this segment.</p>');
                         }
@@ -305,6 +341,47 @@
                         updateCustomerCount(0);
                     }
                 });
+            }
+
+            function renderCustomers(customers) {
+                customerList.empty();
+                if (customers && customers.length > 0) {
+                    for (let i = 0; i < customers.length; i++) {
+                        const customer = customers[i];
+                        const row = `
+                                                                                                                            <div class="customer-item">
+                                                                                                                                <div class="customer-name">${customer.name}</div>
+                                                                                                                                <div class="inward-input-group">
+                                                                                                                                    <div class="input-group">
+                                                                                                                                        <span class="input-group-text">Qty</span>
+                                                                                                                                        <input type="hidden" name="Customers[${i}].CustomerId" value="${customer.id}" />
+                                                                                                                                        <input type="hidden" name="Customers[${i}].CustomerName" value="${customer.name}" />
+                                                                                                                                        <input type="number" name="Customers[${i}].Inward" class="form-control form-control-sm inward-input" max="999"
+                                                                                                                                               value="0" min="0" placeholder="0" />
+                                                                                                                                    </div>
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                        `;
+                        customerList.append(row);
+                    }
+                    customerList.removeClass('d-none');
+                    customerListPlaceholder.addClass('d-none');
+                } else {
+                    resetCustomerList('<p>No customers match your search.</p>');
+                }
+                updateCustomerCount(customers.length);
+            }
+
+            function filterCustomers() {
+                const searchTerm = customerSearch.val().toLowerCase().trim();
+                if (searchTerm === '') {
+                    renderCustomers(allCustomers);
+                } else {
+                    const filteredCustomers = allCustomers.filter(customer =>
+                        customer.name.toLowerCase().includes(searchTerm)
+                    );
+                    renderCustomers(filteredCustomers);
+                }
             }
 
             function resetCustomerList(message = '<p>Select a segment to load customers.</p>') {

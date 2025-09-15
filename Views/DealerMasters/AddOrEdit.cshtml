@@ -9,23 +9,27 @@
 <div class="w-full bg-white shadow-lg rounded-lg overflow-hidden mt-2">
     <div class="bg-blue-500 px-2 py-2 flex items-center justify-between">
         <h2 class="text-white text-2xl font-semibold">Dealer Master</h2>
-        <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+        <a asp-action="Index"
+            class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
     </div>
     <div class="p-2">
         <div class="w-screen-lg mt-2">
             <form asp-action="AddOrEdit" method="post" id="dealerForm">
-                <div asp-validation-summary="All" class="text-danger"></div>
+                <div asp-validation-summary="All" class="text-danger"></div>    
                 <input type="hidden" asp-for="DealerMaster.Id" value="@Model.DealerMaster.Id" />
                 <input type="hidden" name="id" value="@Model.DealerMaster.Id" />
                 <input type="hidden" name="submit" value="Save" />
                 <div class="md:grid grid-cols-12 flex flex-col md:items-center gap-4 p-2">
                     <div class="col-span-1 relative">
                         <span class="absolute bg-white left-3 -top-[12px] px-2">Id</span>
-                        <input asp-for="DealerMaster.Id" class="text-[12px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
+                        <input asp-for="DealerMaster.Id"
+                            class="text-[12px] h-10 text-gray-700 bg-light w-full border-2 px-2 rounded-sm" readonly />
                     </div>
                     <div class="col-span-6 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Customer<span class="text-red-500">*</span></span>
-                        <select asp-for="DealerMaster.DistributorId" id="customerSelect" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Customer<span
+                                class="text-red-500">*</span></span>
+                        <select asp-for="DealerMaster.DistributorId" id="customerSelect"
+                            class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm">
                             @if (ViewBag.Customers != null)
                             {
                                 @foreach (SelectListItem customer in ViewBag.Customers)
@@ -37,53 +41,66 @@
                         <span asp-validation-for="DealerMaster.DistributorId" class="text-danger"></span>
                     </div>
                     <div class="col-span-5 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Name<span class="text-red-500">*</span></span>
-                        <input asp-for="DealerMaster.Name" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Name<span
+                                class="text-red-500">*</span></span>
+                        <input asp-for="DealerMaster.Name"
+                            class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
                         <span asp-validation-for="DealerMaster.Name" class="text-danger"></span>
                     </div>
                     <div class="col-span-4 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Route Code<span class="text-red-500">*</span></span>
-                        <input asp-for="DealerMaster.RouteCode" id="routeCode" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" readonly />
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Route Code<span
+                                class="text-red-500">*</span></span>
+                        <input asp-for="DealerMaster.RouteCode" id="routeCode"
+                            class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" readonly />
                         <span asp-validation-for="DealerMaster.RouteCode" class="text-danger"></span>
                     </div>
                     <div class="col-span-8 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Address<span class="text-red-500">*</span></span>
-                        <input asp-for="DealerMaster.Address" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Address<span
+                                class="text-red-500">*</span></span>
+                        <input asp-for="DealerMaster.Address"
+                            class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
                         <span asp-validation-for="DealerMaster.Address" class="text-danger"></span>
                     </div>
                     <div class="col-span-4 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">City<span class="text-red-500">*</span></span>
-                        <input asp-for="DealerMaster.City" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">City<span
+                                class="text-red-500">*</span></span>
+                        <input asp-for="DealerMaster.City"
+                            class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
                         <span asp-validation-for="DealerMaster.City" class="text-danger"></span>
                     </div>
                     <div class="col-span-4 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Phone No<span class="text-red-500">*</span></span>
-                        <input asp-for="DealerMaster.PhoneNo" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Phone No<span
+                                class="text-red-500">*</span></span>
+                        <input asp-for="DealerMaster.PhoneNo"
+                            class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
                         <span asp-validation-for="DealerMaster.PhoneNo" class="text-danger"></span>
                     </div>
                     <div class="col-span-4 relative">
                         <span class="absolute bg-white left-3 -top-[12px] px-2">Email</span>
-                        <input asp-for="DealerMaster.Email" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <input asp-for="DealerMaster.Email"
+                            class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
                         <span asp-validation-for="DealerMaster.Email" class="text-danger"></span>
                     </div>
                 </div>
-                
+
                 <!-- Materials Section -->
                 <div class="mt-4 p-2 border border-gray-300 rounded">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
                         <h3 class="text-lg font-semibold">Basic Orders</h3>
                         <div class="flex flex-wrap gap-2">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <span
+                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                 <span class="mr-1">Total Quantity:</span>
                                 <span id="totalQuantity" class="font-bold">0</span>
                             </span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            <span
+                                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                                 <span class="mr-1">Total Amount:</span>
                                 <span id="totalAmount" class="font-bold">0.00</span>
                             </span>
                         </div>
                     </div>
-                    
+
                     <!-- Materials Table -->
                     <div class="table-responsive">
                         <div class="max-h-96 overflow-y-auto">
@@ -91,68 +108,82 @@
                                 <thead class="bg-gray-200 sticky top-0">
                                     <tr>
                                         <!-- Material name column hidden on small screens -->
-                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider hidden sm:table-cell">Material</th>
+                                        <th scope="col"
+                                            class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider hidden sm:table-cell">
+                                            Material</th>
                                         <!-- Short Code column with fixed width and wrapping on small screens -->
-                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider w-24 sm:w-auto">Short</th>
-                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">Rate</th>
-                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">Qty</th>
-                                        <th scope="col" class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">Amount</th>
+                                        <th scope="col"
+                                            class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider w-24 sm:w-auto">
+                                            Short</th>
+                                        <th scope="col"
+                                            class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">
+                                            Rate</th>
+                                        <th scope="col"
+                                            class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">
+                                            Qty</th>
+                                        <th scope="col"
+                                            class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">
+                                            Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @for (int i = 0; i < Model.AvailableMaterials.Count; i++)
                                     {
                                         var material = Model.AvailableMaterials[i];
-                                        var isSelected = Model.SelectedMaterialIds != null && Model.SelectedMaterialIds.Contains(material.Id);
-                                        var quantity = isSelected && Model.MaterialQuantities.ContainsKey(material.Id) ? Model.MaterialQuantities[material.Id] : 0;
+                                        var isSelected = Model.SelectedMaterialIds != null &&
+                                        Model.SelectedMaterialIds.Contains(material.Id);
+                                        var quantity = isSelected && Model.MaterialQuantities.ContainsKey(material.Id) ?
+                                        Model.MaterialQuantities[material.Id] : 0;
                                         // Get existing rate if editing, otherwise default to 1
                                         var rate = 1m;
                                         if (isSelected && Model.MaterialRates.ContainsKey(material.Id))
                                         {
                                             rate = Model.MaterialRates[material.Id];
                                         }
-                                        
-                                        <tr>
-                                            <!-- Material name cell hidden on small screens -->
-                                            <td class="px-2 py-1 whitespace-nowrap hidden sm:table-cell">
-                                                @material.Materialname
-                                                <input type="hidden" name="AvailableMaterials[@i].Id" value="@material.Id" />
-                                                <input type="hidden" name="AvailableMaterials[@i].Materialname" value="@material.Materialname" />
-                                                <input type="hidden" name="AvailableMaterials[@i].ShortName" value="@material.ShortName" />
-                                            </td>
-                                            <!-- Short Code cell with fixed width and wrapping on small screens -->
-                                            <td class="px-2 py-1 w-24 sm:w-auto">@material.ShortName</td>
-                                            <td class="px-2 py-1 whitespace-nowrap">
-                                                <input type="number" 
-                                                       name="MaterialRates[@material.Id]" 
-                                                       value="@rate.ToString("F2")" 
-                                                       min="0" 
-                                                       step="0.01"
-                                                       class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-rate" 
-                                                       data-material-id="@material.Id" />
-                                            </td>
-                                            <td class="px-2 py-1 whitespace-nowrap">
-                                                <input type="number" 
-                                                       name="MaterialQuantities[@material.Id]" 
-                                                       value="@quantity" 
-                                                       min="0" 
-                                                       class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-quantity" 
-                                                       data-material-id="@material.Id" />
-                                            </td>
-                                            <td class="px-2 py-1 whitespace-nowrap">
-                                                <span class="material-amount text-[12px]" data-material-id="@material.Id">@((rate * quantity).ToString("F2"))</span>
-                                            </td>
-                                        </tr>
-                                    }
+
+                                    <tr>
+                                        <!-- Material name cell hidden on small screens -->
+                                        <td class="px-2 py-1 whitespace-nowrap hidden sm:table-cell">
+                                            @material.Materialname
+                                            <input type="hidden" name="AvailableMaterials[@i].Id"
+                                                value="@material.Id" />
+                                            <input type="hidden" name="AvailableMaterials[@i].Materialname"
+                                                value="@material.Materialname" />
+                                            <input type="hidden" name="AvailableMaterials[@i].ShortName"
+                                                value="@material.ShortName" />
+                                        </td>
+                                        <!-- Short Code cell with fixed width and wrapping on small screens -->
+                                        <td class="px-2 py-1 w-24 sm:w-auto">@material.ShortName</td>
+                                        <td class="px-2 py-1 whitespace-nowrap">
+                                            <input type="number" name="MaterialRates[@material.Id]"
+                                                value="@rate.ToString("F2")" min="0" step="0.01"
+                                                class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-rate"
+                                                data-material-id="@material.Id" />
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap">
+                                            <input type="number" name="MaterialQuantities[@material.Id]"
+                                                value="@quantity" min="0"
+                                                class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-quantity"
+                                                data-material-id="@material.Id" />
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap">
+                                            <span class="material-amount text-[12px]"
+                                                data-material-id="@material.Id">@((rate *
+                                                                                                quantity).ToString("F2"))</span>
+                                        </td>
+                                    </tr>
+                                                                        }
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="px-4 text-right py-2 mt-4">
-                    <input type="submit" value="Save" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
-                    <a asp-action="Index" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
+                    <input type="submit" value="Save"
+                        class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn" />
+                    <a asp-action="Index"
+                        class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn">Back</a>
                 </div>
             </form>
         </div>
@@ -160,48 +191,50 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Initialize variables
             const customerSelect = document.getElementById("customerSelect");
             const routeCodeInput = document.getElementById("routeCode");
             const dealerForm = document.getElementById("dealerForm");
             const totalQuantityElement = document.getElementById("totalQuantity");
             const totalAmountElement = document.getElementById("totalAmount");
-            
+
             // Add event listeners to all material inputs
-            setTimeout(function() {
+            setTimeout(function () {
                 attachEventListeners();
                 // Update counts on page load after event listeners are attached
                 updateCounts();
             }, 100);
-            
+
             // Customer selection change event
             if (customerSelect) {
                 customerSelect.addEventListener("change", function () {
                     const customerId = this.value;
-                    
+
                     if (customerId) {
                         // Make AJAX call to get route code
                         fetch(`/DealerMasters/GetRouteCode?customerId=${customerId}`)
-                        .then((response) => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then((data) => {
-                            if (routeCodeInput) {
-                                routeCodeInput.value = data.routeCode || "";
-                            }
-                        })
-                        .catch((error) => {
-                            console.error("Error fetching route code:", error);
-                            if (routeCodeInput) {
-                                routeCodeInput.value = "";
-                            }
-                        });
+                            .then((response) => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            .then((data) => {
+                                if (routeCodeInput) {
+                                    routeCodeInput.value = data.routeCode || "";
+                                }
+                            })
+                            .catch((error) => {
+                                console.error("Error fetching route code:", error);
+                                if (routeCodeInput) {
+                                    routeCodeInput.value = "";
+                                }
+                            });
                     } else {
                         if (routeCodeInput) {
                             routeCodeInput.value = "";
@@ -209,60 +242,60 @@
                     }
                 });
             }
-            
+
             // Function to attach event listeners to all material inputs
             function attachEventListeners() {
                 // Add event listeners to quantity inputs
                 const quantityInputs = document.querySelectorAll(".material-quantity");
-                quantityInputs.forEach(function(input) {
-                    input.addEventListener("input", function() {
+                quantityInputs.forEach(function (input) {
+                    input.addEventListener("input", function () {
                         const materialId = this.getAttribute("data-material-id");
                         handleQuantityChange(this, materialId);
                     });
                 });
-                
+
                 // Add event listeners to rate inputs
                 const rateInputs = document.querySelectorAll(".material-rate");
-                rateInputs.forEach(function(input) {
-                    input.addEventListener("input", function() {
+                rateInputs.forEach(function (input) {
+                    input.addEventListener("input", function () {
                         const materialId = this.getAttribute("data-material-id");
                         handleRateChange(this, materialId);
                     });
                 });
             }
-            
+
             // Function to handle quantity changes
             function handleQuantityChange(quantityInput, materialId) {
                 if (!quantityInput) return;
-                
+
                 let value = parseInt(quantityInput.value) || 0;
-                
+
                 // Ensure value is not negative
                 if (value < 0) {
                     quantityInput.value = 0;
                     value = 0;
                 }
-                
+
                 updateAmount(materialId);
                 updateCounts();
             }
-            
+
             // Function to handle rate changes
             function handleRateChange(rateInput, materialId) {
                 if (!rateInput) return;
-                
+
                 let value = parseFloat(rateInput.value) || 0;
-                
+
                 // Ensure value is not negative
                 if (value < 0) {
                     rateInput.value = 0;
                     value = 0;
                 }
-                
+
                 updateAmount(materialId);
                 updateCounts();
             }
-            
+
             // Function to update the amount display
             function updateAmount(materialId) {
                 const quantityInput = document.querySelector(
@@ -274,7 +307,7 @@
                 const amountElement = document.querySelector(
                     `.material-amount[data-material-id="${materialId}"]`
                 );
-                
+
                 if (quantityInput && rateInput && amountElement) {
                     const quantity = parseInt(quantityInput.value) || 0;
                     const rate = parseFloat(rateInput.value) || 0;
@@ -282,7 +315,7 @@
                     amountElement.textContent = amount;
                 }
             }
-            
+
             // Function to update total quantity and total amount
             function updateCounts() {
                 try {
@@ -290,24 +323,24 @@
                     let totalAmount = 0;
                     const quantityInputs = document.querySelectorAll(".material-quantity");
                     const amountElements = document.querySelectorAll(".material-amount");
-                    
+
                     // Calculate total quantity
                     quantityInputs.forEach(function (input) {
                         const quantity = parseInt(input.value) || 0;
                         totalQuantity += quantity;
                     });
-                    
+
                     // Calculate total amount by summing individual amounts
                     amountElements.forEach(function (element) {
                         const amount = parseFloat(element.textContent) || 0;
                         totalAmount += amount;
                     });
-                    
+
                     // Update the display elements
                     if (totalQuantityElement) {
                         totalQuantityElement.textContent = totalQuantity;
                     }
-                    
+
                     if (totalAmountElement) {
                         totalAmountElement.textContent = totalAmount.toFixed(2);
                     }
@@ -315,7 +348,7 @@
                     console.error("Error updating counts:", error);
                 }
             }
-            
+
             // Handle focus event for quantity inputs to clear value when user focuses on a non-zero field
             document.addEventListener("focus", function (e) {
                 if (e.target && e.target.classList.contains("material-quantity")) {
@@ -326,22 +359,22 @@
                     }
                 }
             }, true); // Using capture phase to ensure we catch the focus event
-            
+
             // Handle keydown events for quantity inputs (Enter)
             document.addEventListener("keydown", function (e) {
                 if (e.target && e.target.classList.contains("material-quantity")) {
                     // Prevent form submission and move to next field when Enter is pressed
                     if (e.key === "Enter") {
                         e.preventDefault(); // Prevent form submission
-                        
+
                         // Find all quantity inputs
                         const quantityInputs = Array.from(
                             document.querySelectorAll(".material-quantity")
                         );
-                        
+
                         // Find current input index
                         const currentIndex = quantityInputs.indexOf(e.target);
-                        
+
                         // Move to next input if available, otherwise remove focus
                         if (currentIndex < quantityInputs.length - 1) {
                             // Move to next quantity input
@@ -358,7 +391,7 @@
                     }
                 }
             });
-            
+
             // Form validation before submit
             if (dealerForm) {
                 dealerForm.addEventListener("submit", function (e) {
@@ -372,7 +405,7 @@
                                 hasValidQuantity = true;
                             }
                         });
-                        
+
                         // Allow form submission to proceed
                         return true;
                     } catch (error) {
