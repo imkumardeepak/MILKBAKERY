@@ -1,11 +1,12 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿@{
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿@{
 
-	string role = Context.Request.HttpContext.Session.GetString("role");
-	string user = Context.Request.HttpContext.Session.GetString("UserName");
-	string name = Context.Request.HttpContext.Session.GetString("name");
+string role = Context.Request.HttpContext.Session.GetString("role");
+string user = Context.Request.HttpContext.Session.GetString("UserName");
+string name = Context.Request.HttpContext.Session.GetString("name");
 }
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,17 +20,19 @@
 
 	<link href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" rel="stylesheet" />
 	<link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" rel="stylesheet" />
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-	
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+		integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
 	<!-- MDB CSS -->
 	@* <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.2/mdb.min.css" rel="stylesheet" /> *@
-	
-	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+		integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 	<!-- Tailwind CSS CDN -->
 	<script src="https://cdn.tailwindcss.com"></script>
 	<!--select2-->
-    <link href="~/selectjs/select2.css" rel="stylesheet" />
+	<link href="~/selectjs/select2.css" rel="stylesheet" />
 	<!-- Custom styles for this template-->
 	<link href="~/css/sb-admin.css" rel="stylesheet" />
 	<link href="~/css/Styless.css" rel="stylesheet" />
@@ -37,8 +40,79 @@
 	<link href="~/css/site.css" rel="stylesheet" />
 	<link href="~/vendor/date-picker/css/datepicker.min.css" rel="stylesheet" />
 
+	<style>
+		/* Fixed header and sidebar styles */
+		body {
+			padding-top: 56px;
+			/* Height of the navbar */
+			overflow: hidden;
+			/* Prevent body scroll */
+		}
+
+		.navbar {
+			position: fixed !important;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 1030;
+			/* Higher than sidebar */
+		}
+
+		#wrapper {
+			display: flex;
+			height: calc(100vh - 56px);
+			/* Full height minus navbar height */
+		}
+
+		.sidebar {
+			position: fixed !important;
+			top: 56px;
+			/* Height of navbar */
+			left: 0;
+			bottom: 0;
+			z-index: 1020;
+			overflow-y: auto;
+			height: calc(100vh - 56px);
+		}
+
+		.content-wrapper {
+			flex: 1;
+			margin-left: 225px;
+			/* Width of sidebar */
+			overflow-y: auto;
+			height: calc(100vh - 56px);
+			padding: 20px;
+		}
+
+		/* Adjust for different screen sizes */
+		@@media (max-width: 768px) {
+			.content-wrapper {
+				margin-left: 0;
+			}
+
+			.sidebar {
+				width: 225px;
+			}
+		}
+
+		/* Ensure footer stays at bottom */
+		.sticky-footer {
+			position: sticky;
+			bottom: 0;
+			width: 100%;
+			z-index: 1010;
+		}
+
+		/* Fix for Customer and Sales roles which don't have sidebar */
+		.role-customer .content-wrapper,
+		.role-sales .content-wrapper {
+			margin-left: 0;
+			height: calc(100vh - 56px);
+		}
+	</style>
 
 </head>
+
 <body id="page-top">
 
 	@if (role == "Customer")
@@ -74,7 +148,8 @@
 			</div>
 			</li>*@
 				<li class="nav-item dropdown no-arrow mx-1">
-					<a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<span class="badge badge-danger">5</span>
 						<i class="fas fa-envelope fa-fw"></i>
 					</a>
@@ -87,15 +162,18 @@
 					</div>
 				</li>
 				<li class="nav-item dropdown no-arrow">
-					<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-user-circle fa-fw"></i>
 					</a>
 					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="">@name</a>
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="">@user</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Home/ChangePassword">Change Password</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Home/ChangePassword">Change
+							Password</a>
 						<div class="dropdown-divider"></div>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="#" data-toggle="modal" data-target="#logoutModal">Logout</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="#" data-toggle="modal"
+							data-target="#logoutModal">Logout</a>
 					</div>
 				</li>
 			</ul>
@@ -123,7 +201,8 @@
 		</a>
 
 		<!-- Logout Modal-->
-		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+			aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -134,8 +213,11 @@
 					</div>
 					<div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
 					<div class="modal-footer">
-						<button class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn" type="button" data-dismiss="modal">Cancel</button>
-						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn" asp-controller="Home" asp-action="Logout">Logout</a>
+						<button
+							class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn"
+							type="button" data-dismiss="modal">Cancel</button>
+						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"
+							asp-controller="Home" asp-action="Logout">Logout</a>
 					</div>
 				</div>
 			</div>
@@ -176,7 +258,8 @@
 			</div>
 			</li>*@
 				<li class="nav-item dropdown no-arrow mx-1">
-					<a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<span class="badge badge-danger">5</span>
 						<i class="fas fa-envelope fa-fw"></i>
 					</a>
@@ -189,14 +272,17 @@
 					</div>
 				</li>
 				<li class="nav-item dropdown no-arrow">
-					<a class="nav-link dropdown-toggle" href="#" id="nameDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="nameDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-user-circle fa-fw"></i>
 					</a>
 					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
 						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="">@name</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Home/ChangePassword">Change Password</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Home/ChangePassword">Change
+							Password</a>
 						<div class="dropdown-divider"></div>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="#" data-toggle="modal" data-target="#logoutModal">Logout</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="#" data-toggle="modal"
+							data-target="#logoutModal">Logout</a>
 					</div>
 				</li>
 			</ul>
@@ -223,7 +309,8 @@
 		</a>
 
 		<!-- Logout Modal-->
-		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+			aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -234,8 +321,11 @@
 					</div>
 					<div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
 					<div class="modal-footer">
-						<button class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn" type="button" data-dismiss="modal">Cancel</button>
-						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn" asp-controller="Home" asp-action="Logout">Logout</a>
+						<button
+							class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn"
+							type="button" data-dismiss="modal">Cancel</button>
+						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"
+							asp-controller="Home" asp-action="Logout">Logout</a>
 					</div>
 				</div>
 			</div>
@@ -277,7 +367,8 @@
 			</div>
 			</li>*@
 				<li class="nav-item dropdown no-arrow mx-1">
-					<a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<span class="badge badge-danger">5</span>
 						<i class="fas fa-envelope fa-fw"></i>
 					</a>
@@ -290,13 +381,16 @@
 					</div>
 				</li>
 				<li class="nav-item dropdown no-arrow">
-					<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-user-circle fa-fw"></i>
 					</a>
 					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Home/ChangePassword">Change Password</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Home/ChangePassword">Change
+							Password</a>
 						<div class="dropdown-divider"></div>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="#" data-toggle="modal" data-target="#logoutModal">Logout</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="#" data-toggle="modal"
+							data-target="#logoutModal">Logout</a>
 					</div>
 				</li>
 			</ul>
@@ -311,64 +405,96 @@
 					</a>
 				</li>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-fw fa-tasks"></i>
 						<span>Master</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
 
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CategoryMasters/Index">Category</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Sub_CategoryMaster/Index">Sub-Category</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CompanyMasters/Index">Company Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Customer_Master/Index">Customer Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/EmployeeMasters/Index">Employee Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/MaterialMasters/Index">Material Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/SegementMasters/Index">Segement Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Company_SegementMap/Index">Comp-Sege_Mapp</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustomerSegementMaps/Index">Cust_Sege_Mapp</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Cust2CustMap/Index">Customer Map</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DepartmentMasters/Index">Department Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DesignationMasters/Index">Designation Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GradeMasters/Index">Grade Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PlantMasters/Index">Plant Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteMasters/Index">Route Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/UnitMasters/Index">Unit Master</a>
-                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesManages/Index">Crates Manage</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/CategoryMasters/Index">Category</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/Sub_CategoryMaster/Index">Sub-Category</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CompanyMasters/Index">Company
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Customer_Master/Index">Customer
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/EmployeeMasters/Index">Employee
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/MaterialMasters/Index">Material
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/SegementMasters/Index">Segement
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/Company_SegementMap/Index">Comp-Sege_Mapp</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/CustomerSegementMaps/Index">Cust_Sege_Mapp</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Cust2CustMap/Index">Customer
+							Map</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/DepartmentMasters/Index">Department Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/DesignationMasters/Index">Designation Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GradeMasters/Index">Grade
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PlantMasters/Index">Plant
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteMasters/Index">Route
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/UnitMasters/Index">Unit
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesManages/Index">Crates
+							Manage</a>
 					</div>
 				</li>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-fw fa-barcode"></i>
 						<span>Operation</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Create">Place Order</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Index">Order View</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/OrderProcessFile/Index">File Generation</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RepeatOrder/Index">Order Repeat</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/ReProcess/Index">Order Re-Process</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DealerOrders/Index">Dealer Order Entry</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Create">Place
+							Order</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Index">Order
+							View</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/OrderProcessFile/Index">File
+							Generation</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RepeatOrder/Index">Order
+							Repeat</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/ReProcess/Index">Order
+							Re-Process</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DealerOrders/Index">Dealer Order
+							Entry</a>
 					</div>
 				</li>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa fa-file-text"></i>
 						<span>Import File</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustTrans/Index">Upload Transaction</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustTrans/Index">Upload
+							Transaction</a>
 					</div>
 				</li>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-bar-chart"></i>
 						<span>Report</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Outstanding/Index">Bill Summary</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteReport/Index">Route Summary Report</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/VisitReport/Index">Tracking Report</a>
-                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesTrackingReport/Index">Crates Tracking Report</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Outstanding/Index">Bill
+							Summary</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteReport/Index">Route Summary
+							Report</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/VisitReport/Index">Tracking
+							Report</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/CratesTrackingReport/Index">Crates Tracking Report</a>
 					</div>
 				</li>
 			</ul>
@@ -399,7 +525,8 @@
 		</a>
 
 		<!-- Logout Modal-->
-		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+			aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -410,8 +537,11 @@
 					</div>
 					<div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
 					<div class="modal-footer">
-						<button class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn" type="button" data-dismiss="modal">Cancel</button>
-						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn" asp-controller="Home" asp-action="Logout">Logout</a>
+						<button
+							class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn"
+							type="button" data-dismiss="modal">Cancel</button>
+						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"
+							asp-controller="Home" asp-action="Logout">Logout</a>
 					</div>
 				</div>
 			</div>
@@ -454,7 +584,8 @@
 			</div>
 			</li>*@
 				<li class="nav-item dropdown no-arrow mx-1">
-					<a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<span class="badge badge-danger">5</span>
 						<i class="fas fa-envelope fa-fw"></i>
 					</a>
@@ -467,13 +598,16 @@
 					</div>
 				</li>
 				<li class="nav-item dropdown no-arrow">
-					<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-user-circle fa-fw"></i>
 					</a>
 					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Home/ChangePassword">Change Password</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Home/ChangePassword">Change
+							Password</a>
 						<div class="dropdown-divider"></div>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="#" data-toggle="modal" data-target="#logoutModal">Logout</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="#" data-toggle="modal"
+							data-target="#logoutModal">Logout</a>
 					</div>
 				</li>
 			</ul>
@@ -488,62 +622,91 @@
 					</a>
 				</li>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-fw fa-tasks"></i>
 						<span>Master</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
 
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CategoryMasters/Index">Category</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Sub_CategoryMaster/Index">Sub-Category</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CompanyMasters/Index">Company Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Customer_Master/Index">Customer Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/EmployeeMasters/Index">Employee Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/MaterialMasters/Index">Material Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/SegementMasters/Index">Segement Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Company_SegementMap/Index">Comp-Sege_Mapp</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustomerSegementMaps/Index">Cust_Sege_Mapp</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Cust2CustMap/Index">Customer Map</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DepartmentMasters/Index">Department Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/DesignationMasters/Index">Designation Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GradeMasters/Index">Grade Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PlantMasters/Index">Plant Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteMasters/Index">Route Master</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/UnitMasters/Index">Unit Master</a>
-                        <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesManages/Index">Crates Manage</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/CategoryMasters/Index">Category</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/Sub_CategoryMaster/Index">Sub-Category</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CompanyMasters/Index">Company
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Customer_Master/Index">Customer
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/EmployeeMasters/Index">Employee
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/MaterialMasters/Index">Material
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/SegementMasters/Index">Segement
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/Company_SegementMap/Index">Comp-Sege_Mapp</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/CustomerSegementMaps/Index">Cust_Sege_Mapp</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Cust2CustMap/Index">Customer
+							Map</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/DepartmentMasters/Index">Department Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white"
+							href="/DesignationMasters/Index">Designation Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/GradeMasters/Index">Grade
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PlantMasters/Index">Plant
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteMasters/Index">Route
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/UnitMasters/Index">Unit
+							Master</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CratesManages/Index">Crates
+							Manage</a>
 					</div>
 				</li>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-fw fa-barcode"></i>
 						<span>Operation</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Create">Place Order</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Index">Order View</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/OrderProcessFile/Index">File Generation</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RepeatOrder/Index">Order Repeat</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/ReProcess/Index">Order Re-Process</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Create">Place
+							Order</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/PurchaseOrders/Index">Order
+							View</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/OrderProcessFile/Index">File
+							Generation</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RepeatOrder/Index">Order
+							Repeat</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/ReProcess/Index">Order
+							Re-Process</a>
 
 					</div>
 				</li>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa fa-file-text"></i>
 						<span>Import File</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustTrans/Index">Upload Transaction</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/CustTrans/Index">Upload
+							Transaction</a>
 					</div>
 				</li>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
 						<i class="fas fa-bar-chart"></i>
 						<span>Report</span>
 					</a>
 					<div class="dropdown-menu" aria-labelledby="pagesDropdown">
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Outstanding/Index">Bill Summary</a>
-						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteReport/Index">Route Summary Report</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/Outstanding/Index">Bill
+							Summary</a>
+						<a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/RouteReport/Index">Route Summary
+							Report</a>
 						@*   <a class="dropdown-item hover:bg-blue-700 hover:text-white" href="/VisitReport/Index">Tracking Report</a> *@
 					</div>
 				</li>
@@ -575,7 +738,8 @@
 		</a>
 
 		<!-- Logout Modal-->
-		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+			aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -586,8 +750,11 @@
 					</div>
 					<div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
 					<div class="modal-footer">
-						<button class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn" type="button" data-dismiss="modal">Cancel</button>
-						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn" asp-controller="Home" asp-action="Logout">Logout</a>
+						<button
+							class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn"
+							type="button" data-dismiss="modal">Cancel</button>
+						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"
+							asp-controller="Home" asp-action="Logout">Logout</a>
 					</div>
 				</div>
 			</div>
@@ -601,7 +768,7 @@
 		<nav class="navbar navbar-expand navbar-dark bg-dark static-top">
 			<button class="btn btn-link btn-sm text-white order-1 order-sm-0" id="sidebarToggle" href="#">
 				<i class="fas fa-bars"></i>
-			</button>
+				</button>
 			<div class="flex items-center">
 				<!-- Your logo image goes here -->
 				<img src="~/img/Picture1.png" alt="Your Logo" typeof="" class="w-15 h-12">
@@ -764,7 +931,8 @@
 		</a>
 
 		<!-- Logout Modal-->
-		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+			aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -775,8 +943,11 @@
 					</div>
 					<div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
 					<div class="modal-footer">
-						<button class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn" type="button" data-dismiss="modal">Cancel</button>
-						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn" asp-controller="Home" asp-action="Logout">Logout</a>
+						<button
+							class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn"
+							type="button" data-dismiss="modal">Cancel</button>
+						<a class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"
+							asp-controller="Home" asp-action="Logout">Logout</a>
 					</div>
 				</div>
 			</div>
@@ -788,15 +959,14 @@
 	<script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 	<script src="~/vendor/bootstrap/js/bootstrap.min.js"></script>
-	
+
 	<!-- MDB JavaScript -->
 	@* <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.2/mdb.min.js"></script> *@
-	
+
 	<!-- Core plugin JavaScript-->
 	<script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-			integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
-			crossorigin="anonymous"></script>
+		integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
 
 	<!-- Page level plugin JavaScript-->
 	<script src="~/vendor/datatables/jquery.dataTables.js"></script>
@@ -807,11 +977,11 @@
 	<script src="~/vendor/datatables/jszip.min.js"></script>
 	<script src="~/vendor/datatables/pdfmake.min.js"></script>
 	<script src="~/vendor/datatables/vfs_fonts.js"></script>
-    <script src="~/js/table2excel.js"></script>
+	<script src="~/js/table2excel.js"></script>
 	<script src="~/js/demo/datatables-demo.js"></script>
-    <script src="~/vendor/chart.js/chart.min.js"></script>
+	<script src="~/vendor/chart.js/chart.min.js"></script>
 	<!--select2-->
-    <script src="~/selectjs/select2.min.js"></script>
+	<script src="~/selectjs/select2.min.js"></script>
 
 	<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
 	<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
@@ -830,4 +1000,5 @@
 	@await Component.InvokeAsync("Notyf")
 	@await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>
