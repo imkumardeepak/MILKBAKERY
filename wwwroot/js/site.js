@@ -1,13 +1,150 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿﻿﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
 
+// Set new default font family and font color to mimic Bootstrap's default styling
+Chart.defaults.global.defaultFontFamily =
+  '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+Chart.defaults.global.defaultFontColor = "#292b2c";
+
+// Pie Chart Example
+$.ajax({
+  url: "/Home/CratesOutwardChart",
+  type: "POST",
+  dataType: "json",
+  success: function (data) {
+    console.log(data);
+    var labels = data[0];
+    var values = data[1];
+    var ctx = document.getElementById("myPieChart");
+    var myPieChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            data: values,
+            backgroundColor: [
+              "#4e73df",
+              "#1cc88a",
+              "#36b9cc",
+              "#f6c23e",
+              "#e74a3b",
+              "#858796",
+              "#5a5c69",
+              "#d45d79",
+            ],
+          },
+        ],
+      },
+      options: {
+        tooltips: {
+          callbacks: {
+            label: function (tooltipItem, data) {
+              var dataset = data.datasets[tooltipItem.datasetIndex];
+              var total = dataset.data.reduce(function (
+                previousValue,
+                currentValue,
+                currentIndex,
+                array
+              ) {
+                return previousValue + currentValue;
+              });
+              var currentValue = dataset.data[tooltipItem.index];
+              var percentage = Math.floor((currentValue / total) * 100 + 0.5);
+              return (
+                data.labels[tooltipItem.index] +
+                ": " +
+                currentValue +
+                " (" +
+                percentage +
+                "%)"
+              );
+            },
+          },
+        },
+      },
+    });
+  },
+  error: function (error) {
+    console.log(error);
+  },
+});
+
+$.ajax({
+  url: "/Home/NewChart",
+  type: "POST",
+  dataType: "json",
+  success: function (chData) {
+    var aData = chData;
+    var aLabels = aData[0];
+    var aDatasets1 = aData[1];
+    var ctx = document.getElementById("myAreaChart");
+    var myLineChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: aLabels,
+        datasets: [
+          {
+            label: "Earnings",
+            lineTension: 0.3,
+            backgroundColor: "rgba(2,117,216,0.2)",
+            borderColor: "rgba(2,117,216,1)",
+            pointRadius: 5,
+            pointBackgroundColor: "rgba(2,117,216,1)",
+            pointBorderColor: "rgba(255,255,255,0.8)",
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: "rgba(2,117,216,1)",
+            pointHitRadius: 50,
+            pointBorderWidth: 2,
+            data: aDatasets1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          xAxes: [
+            {
+              time: {
+                unit: "date",
+              },
+              gridLines: {
+                display: false,
+              },
+              ticks: {
+                maxTicksLimit: 7,
+              },
+            },
+          ],
+          yAxes: [
+            {
+              ticks: {
+                min: 0,
+                maxTicksLimit: 5,
+              },
+              gridLines: {
+                color: "rgba(0, 0, 0, .125)",
+              },
+            },
+          ],
+        },
+        legend: {
+          display: false,
+        },
+      },
+    });
+  },
+  error: function (error) {
+    console.log(error);
+  },
+});
+
 $(function () {
-    // Initialize select2
-    if ($.fn.select2) {
-        $(".select2").select2();
-    }
+  // Initialize select2
+  if ($.fn.select2) {
+    $(".select2").select2();
+  }
   // Initialize dataTable_table only if not already initialized
   if (!$.fn.DataTable.isDataTable("#dataTable_table")) {
     $("#dataTable_table").DataTable();

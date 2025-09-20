@@ -157,7 +157,7 @@ namespace Milk_Bakery.Controllers.Api
 
 		// POST: api/Invoice
 		[HttpPost]
-		public async Task<ActionResult<ApiResponseDto<InvoiceResponseDto>>> CreateInvoice(CreateInvoiceRequestDto createDto)
+		public async Task<ActionResult> CreateInvoice(CreateInvoiceRequestDto createDto)
 		{
 			try
 			{
@@ -201,10 +201,8 @@ namespace Milk_Bakery.Controllers.Api
 				await _context.SaveChangesAsync();
 
 				var invoiceDto = _mappingService.MapToResponseDto(invoice);
-				var response = _mappingService.CreateSuccessResponse(invoiceDto, "Invoice created successfully");
-
-				return CreatedAtAction(nameof(GetInvoice),
-					new { id = invoice.InvoiceId }, response);
+				var response = _mappingService.CreateSuccessResponse(invoiceDto, "Invoice retrieved successfully");
+				return Ok(response);
 			}
 			catch (Exception ex)
 			{

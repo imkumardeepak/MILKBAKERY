@@ -70,16 +70,19 @@ namespace Milk_Bakery.Controllers
 					foreach (var route in routeMaster)
 					{
 						var routeCustomers = await _context.Customer_Master
-							.AsNoTracking()
-							.Where(a => a.route == route.Route)
-							.Select(a => a.Name)
-							.Distinct()
-							.ToListAsync();
+											.AsNoTracking()
+											.Where(a => a.route == route.Route)
+											.Select(a => new { a.Name, a.Sequence })
+											.Distinct()
+											.OrderBy(x => x.Sequence)
+											.Select(x => x.Name)
+											.ToListAsync();
 
 						var purchaseOrders = await _context.PurchaseOrder
 							.AsNoTracking()
 							.Include(po => po.ProductDetails)
-							.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
+							.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate &&
+							po.Segementname == Segement && routeCustomers.Contains(po.Customername))
 							.ToListAsync();
 
 						var distinctCustomers = purchaseOrders

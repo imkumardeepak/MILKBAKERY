@@ -1,0 +1,86 @@
+@model Milk_Bakery.ViewModels.RoleViewModel
+
+@{ 
+    ViewData["Title"] = "Manage Role Permissions";
+}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4>Manage Permissions for @Model.RoleName</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Manage">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="RoleId" />
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll" />
+                        <label class="form-check-label" for="selectAll">
+                            Select All
+                        </label>
+                    </div>
+                </div>
+                <hr />
+<div class="row">
+    @for (var i = 0; i < Model.MenuItems.Count; i++)
+    {
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="form-check">
+                        <input asp-for="MenuItems[i].HasAccess" class="form-check-input parent-checkbox" data-parent-id="@Model.MenuItems[i].MenuItemId" />
+                        <label class="form-check-label" asp-for="MenuItems[i].HasAccess">
+                            @Model.MenuItems[i].MenuItemName
+                        </label>
+                        <input type="hidden" asp-for="MenuItems[i].MenuItemId" />
+                        <input type="hidden" asp-for="MenuItems[i].MenuItemName" />
+                    </div>
+                </div>
+                @if (Model.MenuItems[i].Children != null && Model.MenuItems[i].Children.Any()) 
+                {
+                    <div class="card-body">
+                        @for (var j = 0; j < Model.MenuItems[i].Children.Count; j++)
+                        {
+                            <div class="form-check ml-3">
+                                <input asp-for="MenuItems[i].Children[j].HasAccess" class="form-check-input child-checkbox" data-parent-id="@Model.MenuItems[i].MenuItemId" />
+                                <label class="form-check-label" asp-for="MenuItems[i].Children[j].HasAccess">
+                                    @Model.MenuItems[i].Children[j].MenuItemName
+                                </label>
+                                <input type="hidden" asp-for="MenuItems[i].Children[j].MenuItemId" />
+                                <input type="hidden" asp-for="MenuItems[i].Children[j].MenuItemName" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+                <div class="form-group mt-3">
+                    <input type="submit" value="Save" class="btn btn-primary" />
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#selectAll').click(function (event) {
+                if (this.checked) {
+                    $('.form-check-input').each(function () {
+                        this.checked = true;
+                    });
+                } else {
+                    $('.form-check-input').each(function () {
+                        this.checked = false;
+                    });
+                }
+            });
+        });
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

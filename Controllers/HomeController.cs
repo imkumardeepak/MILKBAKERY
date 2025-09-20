@@ -1,4 +1,4 @@
-﻿using AspNetCoreHero.ToastNotification.Abstractions;
+﻿﻿﻿using AspNetCoreHero.ToastNotification.Abstractions;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -189,19 +189,22 @@ namespace Milk_Bakery.Controllers
 				var obj = _context.Users.Where(a => a.phoneno.Equals(u.phoneno) && a.Password.Equals(u.Password)).FirstOrDefault();
 				if (obj != null)
 				{
-					HttpContext.Session.SetString("UserName", obj.phoneno.ToString());
-					HttpContext.Session.SetString("role", obj.Role.ToString());
-					HttpContext.Session.SetString("name", obj.name.ToString());
+					HttpContext.Session.SetString("UserName", obj.phoneno?.ToString() ?? "");
+					HttpContext.Session.SetString("role", obj.Role?.ToString() ?? "");
+					HttpContext.Session.SetString("name", obj.name?.ToString() ?? "");
 					_notifyService.Success("Login Success");
 					return RedirectToAction("Index");
+				}
+				else
+				{
+					_notifyService.Error("Login Failed");
+					return RedirectToAction("Login");
 				}
 			}
 			else
 			{
-				_notifyService.Error("Login Failed");
-				return RedirectToAction("Login");
+				return RedirectToAction("Index");
 			}
-			return View();
 		}
 		public ActionResult Logout()
 		{
@@ -257,6 +260,41 @@ namespace Milk_Bakery.Controllers
 				iData.Add(x);
 			}
 			//Source data returned as JSON  
+			return Json(iData);
+		}
+		[HttpPost]
+		public JsonResult CratesOutwardChart()
+		{
+			var query = _context.CratesManages
+		.Where(cm => cm.CratesTypeId != null)
+		.GroupBy(cm => cm.CratesTypeId.Value)
+		.Select(g => new
+		{
+			CratesTypeId = g.Key,
+			TotalOutward = g.Sum(cm => cm.Outward)
+		})
+		.ToList();
+
+			var crateTypes = _context.CratesTypes.ToDictionary(ct => ct.Id, ct => ct.Cratestype);
+
+			var chartData = query.Select(q => new
+			{
+				Label = crateTypes.ContainsKey(q.CratesTypeId) ? crateTypes[q.CratesTypeId] : "Unknown",
+				Value = q.TotalOutward
+			}).ToList();
+
+			List<object> iData = new List<object>();
+			List<object> labels = new List<object>();
+			List<object> values = new List<object>();
+
+			foreach (var item in chartData)
+			{
+				labels.Add(item.Label);
+				values.Add(item.Value);
+			}
+			iData.Add(labels);
+			iData.Add(values);
+
 			return Json(iData);
 		}
 	}

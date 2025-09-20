@@ -35,7 +35,7 @@ namespace Milk_Bakery.Services
 					await ProcessInvoicesWithSetFlagZero();
 
 					// Wait for 10 minutes before next execution
-					await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
+					await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
 				}
 				catch (Exception ex)
 				{

@@ -1,0 +1,33 @@
+@model IEnumerable<Milk_Bakery.Models.Role>
+
+@{ 
+    ViewData["Title"] = "Roles";
+}
+
+<h2>Roles</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.RoleName)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.RoleName)
+            </td>
+            <td>
+                <a asp-action="Manage" asp-route-id="@item.Id">Manage Permissions</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

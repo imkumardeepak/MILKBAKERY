@@ -1,0 +1,310 @@
+﻿@model Milk_Bakery.Models.User
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Milk & Bakery</title>
+    <link rel="icon" href="~/img/Picture1.png" type="image/svg">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-color: #3b4465;
+            --secondary-color: #065492;
+            --accent-color: #ff7e5f;
+            --text-color: #2F2D3B;
+            --light-gray: #f5f5f5;
+            --medium-gray: #ccc;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: var(--primary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: linear-gradient(135deg, #3b4465 0%, #1e2a3a 100%);
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            margin: 0 auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            }
+
+        #signupLogo {
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+            #signupLogo:hover {
+                transform: scale(1.05);
+            }
+
+        .formTitle {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+            text-align: center;
+            font-size: 1.75rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+            .formTitle::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 60px;
+                height: 3px;
+                background: var(--accent-color);
+                border-radius: 3px;
+            }
+
+        .inputDiv {
+            width: 100%;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .inputLabel {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-weight: 600;
+        }
+
+        .input-field {
+            width: 100%;
+            height: 48px;
+            font-size: 0.95rem;
+            border-radius: 6px;
+            border: 1px solid var(--medium-gray);
+            padding: 0 1rem 0 3rem;
+            transition: all 0.3s ease;
+            background-color: var(--light-gray);
+        }
+
+            .input-field:focus {
+                outline: none;
+                border-color: var(--secondary-color);
+                box-shadow: 0 0 0 3px rgba(6, 84, 146, 0.1);
+                background-color: #fff;
+            }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--medium-gray);
+            transition: color 0.3s ease;
+            z-index: 2;
+            width: 20px;
+            text-align: center;
+        }
+
+        .input-field:focus + .input-icon {
+            color: var(--secondary-color);
+        }
+
+        .text-danger {
+            color: var(--error-color);
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            display: block;
+        }
+
+        .buttonWrapper {
+            margin-top: 2rem;
+        }
+
+        .submitButton {
+            width: 100%;
+            height: 48px;
+            color: #fff;
+            background-color: var(--secondary-color);
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+            .submitButton:hover {
+                background-color: #05467d;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(6, 84, 146, 0.3);
+            }
+
+            .submitButton:active {
+                transform: translateY(0);
+            }
+
+            .submitButton i {
+                font-size: 1rem;
+            }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+            .forgot-password a {
+                color: var(--secondary-color);
+                text-decoration: none;
+                font-size: 0.85rem;
+                transition: color 0.3s ease;
+            }
+
+                .forgot-password a:hover {
+                    color: var(--accent-color);
+                    text-decoration: underline;
+                }
+
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+            .register-link a {
+                color: var(--secondary-color);
+                text-decoration: none;
+                font-weight: 600;
+                transition: color 0.3s ease;
+            }
+
+                .register-link a:hover {
+                    color: var(--accent-color);
+                }
+
+        /* Responsive adjustments */
+        @@media (max-width: 480px) {
+            .card
+
+        {
+            padding: 1.5rem;
+        }
+
+        .formTitle {
+            font-size: 1.5rem;
+        }
+
+        }
+
+        /* Animation */
+       @@keyframes fadeIn {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        .card {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="card">
+            <form asp-action="Login" method="post" id="signupForm">
+                <img src="~/img/Picture1.png" id="signupLogo" alt="Milk & Bakery Logo" />
+
+                <h2 class="formTitle">
+                    Welcome Back
+                </h2>
+
+                <div class="inputDiv">
+                    <label class="inputLabel" for="phoneno">Username</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-mobile input-icon"></i>
+                        <input asp-for="phoneno" autocomplete="tel" id="phoneno" class="input-field" required placeholder="Enter your Username">
+                    </div>
+                    <span asp-validation-for="phoneno" class="text-danger"></span>
+                </div>
+
+                <div class="inputDiv">
+                    <label class="inputLabel" for="Password">Password</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" autocomplete="current-password" id="Password" asp-for="Password" class="input-field" required placeholder="Enter your password">
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="forgot-password">
+                    <a href="#">Forgot password?</a>
+                </div>
+
+                <div class="buttonWrapper">
+                    <button type="submit" id="submitButton" class="submitButton">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @section Scripts {
+        @await Component.InvokeAsync("Notyf")
+        @await RenderSectionAsync("Scripts", required: false)
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+    }
+</body>
+</html>

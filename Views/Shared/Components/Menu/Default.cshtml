@@ -1,0 +1,33 @@
+@model IEnumerable<Milk_Bakery.Models.MenuItem>
+
+<ul class="sidebar navbar-nav">
+    @foreach (var item in Model.Where(m => m.ParentId == null))
+    {
+        var children = Model.Where(m => m.ParentId == item.Id).ToList();
+        if (children.Any())
+        {
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="pagesDropdown_@item.Id" role="button" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-fw fa-folder"></i>
+                    <span>@item.Name</span>
+                </a>
+                <div class="dropdown-menu" aria-labelledby="pagesDropdown_@item.Id">
+                    @foreach (var child in children)
+                    {
+                        <a class="dropdown-item" href="@Url.Action(child.Action, child.Controller)">@child.Name</a>
+                    }
+                </div>
+            </li>
+        }
+        else
+        {
+            <li class="nav-item">
+                <a class="nav-link" href="@Url.Action(item.Action, item.Controller)">
+                    <i class="fas fa-fw fa-link"></i>
+                    <span>@item.Name</span>
+                </a>
+            </li>
+        }
+    }
+</ul>

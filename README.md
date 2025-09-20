@@ -33,6 +33,10 @@ Milk & Bakery Management System is a comprehensive enterprise solution designed 
 - **Authentication**: Secure login system with session management
 - **Password Management**: User-friendly password change functionality
 
+### ⏰ Automated Services
+- **Invoice Processing**: Automated processing of invoices with setflag=0
+- **Crates Management**: Daily creation of opening balance records for customers
+
 ## Technology Stack
 
 ### Backend
@@ -101,6 +105,8 @@ Milk&Bakery/
 ├── Data/                # Database context
 ├── Migrations/          # EF Core migrations
 ├── Services/            # Business logic services
+│   ├── InvoiceBackgroundService.cs    # Processes invoices with setflag=0
+│   └── CratesManagementBackgroundService.cs  # Daily crates management records
 ├── DTOs/                # Data Transfer Objects
 ├── wwwroot/             # Static files (CSS, JS, images)
 └── Program.cs           # Application entry point

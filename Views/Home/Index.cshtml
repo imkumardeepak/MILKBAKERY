@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Milk_Bakery.Models.PurchaseOrder>
+@model IEnumerable<Milk_Bakery.Models.PurchaseOrder>
 @{
     ViewData["Title"] = "Home Page";
     string role = Context.Request.HttpContext.Session.GetString("role");
@@ -29,7 +29,7 @@
                         <h3 class="mr-5">Place New Order</h3>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/PurchaseOrders/Create">
-                        <span class="float-left">Click Here</span>
+                        <span class="float-left">Create Order</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -46,7 +46,7 @@
                         <h3 class="mr-5">Dealer Order Entry</h3>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/DealerOrders/Index">
-                        <span class="float-left">Click Here</span>
+                        <span class="float-left">Create Dealer Order</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -62,7 +62,7 @@
                         <h3 class="mr-5">View Order</h3>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/PurchaseOrders/Index">
-                        <span class="float-left">Click Here</span>
+                        <span class="float-left">View Orders</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -78,7 +78,7 @@
                         <h3 class="mr-5">Repeat Order</h3>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/RepeatOrder/Index">
-                        <span class="float-left">Click Here</span>
+                        <span class="float-left">Repeat Orders</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -94,7 +94,7 @@
                         <h3 class="mr-5">Add Dealer</h3>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/DealerMasters/AddOrEdit/0">
-                        <span class="float-left">Click Here</span>
+                        <span class="float-left">Add Dealer</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -110,7 +110,7 @@
                         <h3 class="mr-5">Bill Summary</h3>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/Outstanding/Index">
-                        <span class="float-left">Click Here</span>
+                        <span class="float-left">View Bills</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -127,7 +127,7 @@
                         <h3 class="mr-5">Variance Report</h3>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/VarianceOrderReport/Index">
-                        <span class="float-left">Click Here</span>
+                        <span class="float-left">View Report</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -144,7 +144,7 @@
                         <h3 class="mr-5">Delivered Quantity</h3>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/DeliveredQuantity/Index">
-                        <span class="float-left">Click Here</span>
+                        <span class="float-left">Enter Quantity</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -178,7 +178,7 @@ else if (role == "Sales")
                         <div class="mr-5">Order Generation</div>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/PurchaseOrders/Create">
-                        <span class="float-left">View All Order</span>
+                        <span class="float-left">Create Order</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>
@@ -194,7 +194,7 @@ else if (role == "Sales")
                         <div class="mr-5">View Order</div>
                     </div>
                     <a class="card-footer text-white clearfix small z-1" href="/PurchaseOrders/Index">
-                        <span class="float-left">View Details</span>
+                        <span class="float-left">View Orders</span>
                         <span class="float-right">
                             <i class="fas fa-angle-right"></i>
                         </span>

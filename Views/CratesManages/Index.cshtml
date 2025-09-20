@@ -49,6 +49,10 @@
         color: white;
     }
 
+    .dataTables_wrapper {
+        padding: 1rem;
+    }
+
     @@media (max-width: 768px) {
         .action-card .card-body {
             padding: 1rem;
@@ -68,34 +72,61 @@
 <div class="container-fluid p-2">
     <!-- Action Cards -->
     <div class="row mb-4 g-3">
-        <div class="col-md-6">
+        <div class="col-md-3">
             <div class="card text-white bg-primary action-card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0"><i class="fas fa-plus-circle action-icon"></i> Opening Entry</h5>
                 </div>
                 <div class="card-body">
                     <p class="card-text">Set initial opening balances for crates by segment and customer.</p>
-                    <a asp-action="CreateBulkOpeningEntry" class="btn btn-light">
-                        <i class="fas fa-plus me-2"></i>Go to Opening Entry
+                    <a asp-action="CreateBulkOpeningEntry" class="btn btn-light btn-sm w-100 mb-2">
+                        <i class="fas fa-plus me-1"></i>Manual Entry
                     </a>
-                    <a asp-action="UploadBulkOpeningEntry" class="btn btn-light">
-                        <i class="fas fa-upload me-2"></i>Upload Opening By CSV
+                    <a asp-action="UploadBulkOpeningEntry" class="btn btn-light btn-sm w-100">
+                        <i class="fas fa-upload me-1"></i>Upload CSV
                     </a>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-3">
             <div class="card text-white bg-info action-card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0"><i class="fas fa-boxes action-icon"></i> Bulk Inward Entry</h5>
                 </div>
                 <div class="card-body">
                     <p class="card-text">Record bulk inward crates entries for multiple customers.</p>
-                    <a asp-action="BulkInwardEntry" class="btn btn-light">
-                        <i class="fas fa-boxes me-2"></i>Go to Bulk Inward Entry
+                    <a asp-action="BulkInwardEntry" class="btn btn-light btn-sm w-100 mb-2">
+                        <i class="fas fa-boxes me-1"></i>Manual Entry
                     </a>
-                    <a asp-action="UploadBulkInwardEntry" class="btn btn-light">
-                        <i class="fas fa-upload me-2"></i>Upload Inward By CSV
+                    <a asp-action="UploadBulkInwardEntry" class="btn btn-light btn-sm w-100">
+                        <i class="fas fa-upload me-1"></i>Upload CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success action-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-exchange-alt action-icon"></i> Debit & Credit Crates
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Process debit and credit transactions for crate balances.</p>
+                    <a asp-action="DebitCreditEntry" class="btn btn-light btn-sm w-100">
+                        <i class="fas fa-exchange-alt me-1"></i>Process Debit/Credit
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning action-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-history action-icon"></i> Transaction History</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">View all debit and credit transactions records.</p>
+                    <a asp-action="CreditDebitRecords" class="btn btn-light btn-sm w-100">
+                        <i class="fas fa-history me-1"></i>View History
                     </a>
                 </div>
             </div>
@@ -170,7 +201,21 @@
                 $('#dataTable').DataTable({
                     "order": [[3, "desc"]], // Sort by dispatch date descending by default
                     "pageLength": 25,
-                    "responsive": true
+                    "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                    "responsive": true,
+                    "paging": true,
+                    "pagingType": "full_numbers",
+                    "language": {
+                        "paginate": {
+                            "first": "First",
+                            "last": "Last",
+                            "next": "Next",
+                            "previous": "Previous"
+                        },
+                        "lengthMenu": "Show _MENU_ entries per page",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                        "search": "Search:"
+                    }
                 });
             }
         });

@@ -212,6 +212,46 @@ namespace Milk_Bakery.Migrations
                     b.ToTable("CratesTypes");
                 });
 
+            modelBuilder.Entity("Milk_Bakery.Models.CreditDebitRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CratesId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("Date");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Segment")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CratesId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("CreditDebitRecords");
+                });
+
             modelBuilder.Entity("Milk_Bakery.Models.Cust2CustMap", b =>
                 {
                     b.Property<int>("id")
@@ -964,6 +1004,60 @@ namespace Milk_Bakery.Migrations
                     b.ToTable("MaterialMaster");
                 });
 
+            modelBuilder.Entity("Milk_Bakery.Models.MenuItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Controller")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MenuItems");
+                });
+
+            modelBuilder.Entity("Milk_Bakery.Models.PageAccess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("HasAccess")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PageName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("PageAccesses");
+                });
+
             modelBuilder.Entity("Milk_Bakery.Models.PlantMaster", b =>
                 {
                     b.Property<int>("id")
@@ -1079,6 +1173,23 @@ namespace Milk_Bakery.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PurchaseOrder");
+                });
+
+            modelBuilder.Entity("Milk_Bakery.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Milk_Bakery.Models.RouteMaster", b =>
@@ -1282,6 +1393,25 @@ namespace Milk_Bakery.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("Milk_Bakery.Models.CreditDebitRecord", b =>
+                {
+                    b.HasOne("Milk_Bakery.Models.CratesType", "CratesType")
+                        .WithMany()
+                        .HasForeignKey("CratesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Milk_Bakery.Models.Customer_Master", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CratesType");
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("Milk_Bakery.Models.Cust2EmpMap", b =>
                 {
                     b.HasOne("Milk_Bakery.Models.EmpToCustMap", "EmpToCustMaps")
@@ -1337,6 +1467,17 @@ namespace Milk_Bakery.Migrations
                     b.Navigation("Cust2CustMaps");
                 });
 
+            modelBuilder.Entity("Milk_Bakery.Models.PageAccess", b =>
+                {
+                    b.HasOne("Milk_Bakery.Models.Role", "Role")
+                        .WithMany("PageAccesses")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("Milk_Bakery.Models.ProductDetail", b =>
                 {
                     b.HasOne("Milk_Bakery.Models.PurchaseOrder", "PurchaseOrder")
@@ -1376,6 +1517,11 @@ namespace Milk_Bakery.Migrations
             modelBuilder.Entity("Milk_Bakery.Models.PurchaseOrder", b =>
                 {
                     b.Navigation("ProductDetails");
+                });
+
+            modelBuilder.Entity("Milk_Bakery.Models.Role", b =>
+                {
+                    b.Navigation("PageAccesses");
                 });
 #pragma warning restore 612, 618
         }

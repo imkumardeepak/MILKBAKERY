@@ -543,14 +543,23 @@ namespace Milk_Bakery.Controllers
 
 					foreach (var customer in viewModel.Customers.Where(a => a.OpeningBalance > 0))
 					{
-						var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName && s.SegementName == viewModel.SegmentCode);
-
 						if (customer.OpeningBalance > 0)
 						{
-							// Check if a record for this customer, segment, and crates type already exists
+							// Get the segment mapping for this customer and segment
+							var segment = await _context.CustomerSegementMap
+								.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName &&
+														s.SegementName == viewModel.SegmentCode);
+
+							// Skip if no valid segment mapping found
+							if (segment == null)
+							{
+								continue;
+							}
+
+							// Check if a record for this customer, segment, crates type, and date already exists
 							var existingRecord = await _context.CratesManages
 								.Where(cm => cm.CustomerId == customer.CustomerId &&
-									 cm.SegmentCode == viewModel.SegmentCode &&
+									 cm.SegmentCode == segment.custsegementcode &&
 									 cm.CratesTypeId == viewModel.CratesTypeId)
 								.OrderByDescending(cm => cm.DispDate)
 								.FirstOrDefaultAsync();
@@ -740,7 +749,7 @@ namespace Milk_Bakery.Controllers
 			return View(viewModel);
 		}
 
-		// Helper method to parse CSV file
+		// Helper method to parse CSV file for opening balance entries
 		private async Task<List<OpeningBalanceCustomerViewModel>> ParseCsvFile(IFormFile file, string segmentCode)
 		{
 			var customers = new List<OpeningBalanceCustomerViewModel>();
@@ -760,11 +769,12 @@ namespace Milk_Bakery.Controllers
 					}
 
 					var values = line.Split(',');
-					if (values.Length >= 3)
+					if (values.Length >= 5 && !string.IsNullOrEmpty(values[0].Trim()) &&
+						!string.IsNullOrEmpty(values[4].Trim()))
 					{
-						// Assuming CSV format: CustomerId,CustomerName,OpeningBalance
+						// Assuming CSV format: CustomerId,CustomerName,City,Route,OpeningBalance
 						if (int.TryParse(values[0].Trim(), out int customerId) &&
-							int.TryParse(values[2].Trim(), out int openingBalance))
+							int.TryParse(values[4].Trim(), out int openingBalance))
 						{
 							// Validate that the customer belongs to the selected segment
 							var customerSegment = await _context.CustomerSegementMap
@@ -825,12 +835,22 @@ namespace Milk_Bakery.Controllers
 					{
 						if (customer.Inward > 0)
 						{
-							var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName && s.SegementName == viewModel.SegmentCode);
+							// Get the segment mapping for this customer and segment
+							var segment = await _context.CustomerSegementMap
+								.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName &&
+														s.SegementName == viewModel.SegmentCode);
+
+							// Skip if no valid segment mapping found
+							if (segment == null)
+							{
+								continue;
+							}
+
 							// Check if a record for this customer, segment, crates type, and date already exists
 							var existingRecord = await _context.CratesManages
 								.Where(cm => cm.CustomerId == customer.CustomerId &&
 											 cm.SegmentCode == segment.custsegementcode &&
-											 cm.DispDate == viewModel.DispDate &&
+											  cm.DispDate == viewModel.DispDate &&
 											 cm.CratesTypeId == viewModel.CratesTypeId)
 								.OrderByDescending(cm => cm.DispDate)
 								.FirstOrDefaultAsync();
@@ -845,7 +865,20 @@ namespace Milk_Bakery.Controllers
 							}
 							else
 							{
-								continue;
+								// Create new record when no existing record found
+								var cratesManage = new CratesManage
+								{
+									CustomerId = customer.CustomerId,
+									SegmentCode = segment.custsegementcode,
+									CratesTypeId = viewModel.CratesTypeId,
+									DispDate = viewModel.DispDate,
+									Opening = 0, // Default opening balance for inward entries
+									Outward = 0, // Default outward for inward entries
+									Inward = customer.Inward,
+									Balance = 0 - customer.Inward // Balance calculation (Opening + Outward - Inward)
+								};
+								_context.Add(cratesManage);
+								recordsProcessed++;
 							}
 						}
 					}
@@ -1009,11 +1042,12 @@ namespace Milk_Bakery.Controllers
 					}
 
 					var values = line.Split(',');
-					if (values.Length >= 3)
+					if (values.Length >= 5 && !string.IsNullOrEmpty(values[0].Trim()) &&
+						!string.IsNullOrEmpty(values[4].Trim()))
 					{
-						// Assuming CSV format: CustomerId,CustomerName,InwardQuantity
+						// Assuming CSV format: CustomerId,CustomerName,City,Route,InwardQuantity
 						if (int.TryParse(values[0].Trim(), out int customerId) &&
-							int.TryParse(values[2].Trim(), out int inwardQuantity))
+							int.TryParse(values[4].Trim(), out int inwardQuantity))
 						{
 							// Validate that the customer belongs to the selected segment
 							var customerSegment = await _context.CustomerSegementMap
@@ -1061,11 +1095,11 @@ namespace Milk_Bakery.Controllers
 
 			// Create CSV content
 			var csvContent = new StringBuilder();
-			csvContent.AppendLine("Customer ID,Customer Name,Opening Balance"); // Header row
+			csvContent.AppendLine("Customer ID,Customer Name,City,Route,Opening Balance"); // Header row
 
 			foreach (var customer in customers)
 			{
-				csvContent.AppendLine($"{customer.Id},{customer.Name},");
+				csvContent.AppendLine($"{customer.Id},{customer.Name},{customer.city},{customer.route},");
 			}
 
 			// Convert to byte array
@@ -1089,11 +1123,11 @@ namespace Milk_Bakery.Controllers
 
 			// Create CSV content
 			var csvContent = new StringBuilder();
-			csvContent.AppendLine("Customer ID,Customer Name,Inward Quantity"); // Header row
+			csvContent.AppendLine("Customer ID,Customer Name,City,Route,Inward Quantity"); // Header row
 
 			foreach (var customer in customers)
 			{
-				csvContent.AppendLine($"{customer.Id},{customer.Name},");
+				csvContent.AppendLine($"{customer.Id},{customer.Name},{customer.city},{customer.route},");
 			}
 
 			// Convert to byte array
@@ -1121,6 +1155,214 @@ namespace Milk_Bakery.Controllers
 				.ToListAsync();
 
 			return customers;
+		}
+
+		// GET: CratesManages/DebitCreditEntry
+		[HttpGet]
+		public async Task<IActionResult> DebitCreditEntry()
+		{
+			ViewBag.Customers = GetCustomerList();
+			ViewBag.Segments = GetSegment();
+			return View();
+		}
+
+		// GET: CratesManages/GetSegmentsForCustomerJson
+		[HttpGet]
+		public async Task<IActionResult> GetSegmentsForCustomerJson(int customerId)
+		{
+			var segments = await GetSegmentsForCustomerByIdAsync(customerId);
+			return Json(segments);
+		}
+
+		// GET: CratesManages/GetCrateTypesForSegmentJson
+		[HttpGet]
+		public IActionResult GetCrateTypesForSegmentJson(string segmentCode)
+		{
+			if (string.IsNullOrEmpty(segmentCode))
+			{
+				return Json(new List<SelectListItem>());
+			}
+
+			var crateTypes = _context.CratesTypes
+				.Where(ct => ct.Division == segmentCode)
+				.Select(ct => new SelectListItem
+				{
+					Value = ct.Id.ToString(),
+					Text = ct.Cratestype
+				})
+				.OrderBy(ct => ct.Text)
+				.ToList();
+
+			return Json(crateTypes);
+		}
+
+		// GET: CratesManages/GetLastBalance
+		[HttpGet]
+		public async Task<IActionResult> GetLastBalance(int customerId, string segmentCode, int crateTypeId)
+		{
+
+			var customer = await _context.Customer_Master.FindAsync(customerId);
+			var segment = await _context.CustomerSegementMap
+				.FirstOrDefaultAsync(s => s.Customername == customer.Name && s.SegementName == segmentCode);
+
+			if (segment == null)
+			{
+				return Json(new
+				{
+					success = true,
+					balance = 0,
+					opening = 0,
+					inward = 0,
+					outward = 0,
+					dispDate = DateTime.Today.ToString("yyyy-MM-dd")
+				});
+			}
+
+			var lastRecord = await _context.CratesManages
+				.Where(cm => cm.CustomerId == customerId &&
+					 cm.SegmentCode == segment.custsegementcode &&
+					 cm.CratesTypeId == crateTypeId)
+				.OrderByDescending(cm => cm.DispDate)
+				.FirstOrDefaultAsync();
+
+			if (lastRecord != null)
+			{
+				return Json(new
+				{
+					success = true,
+					balance = lastRecord.Balance,
+					opening = lastRecord.Opening,
+					inward = lastRecord.Inward,
+					outward = lastRecord.Outward,
+					dispDate = lastRecord.DispDate.ToString("yyyy-MM-dd")
+				});
+			}
+			else
+			{
+				// Return default values if no record exists
+				return Json(new
+				{
+					success = true,
+					balance = 0,
+					opening = 0,
+					inward = 0,
+					outward = 0,
+					dispDate = DateTime.Today.ToString("yyyy-MM-dd")
+				});
+			}
+		}
+
+		// POST: CratesManages/ProcessDebitCredit
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> ProcessDebitCredit(int customerId, string segmentCode, int crateTypeId,
+			string operationType, int quantity, string reason)
+		{
+			try
+			{
+				// Validate inputs
+				if (customerId <= 0 || string.IsNullOrEmpty(segmentCode) || crateTypeId <= 0 || quantity <= 0)
+				{
+					_notifyService.Error("Invalid input parameters.");
+					return RedirectToAction(nameof(DebitCreditEntry));
+				}
+
+				if (operationType != "Debit" && operationType != "Credit")
+				{
+					_notifyService.Error("Invalid operation type.");
+					return RedirectToAction(nameof(DebitCreditEntry));
+				}
+				// Get customer and segment names for record creation
+				var customer = await _context.Customer_Master.FindAsync(customerId);
+				var segment = await _context.CustomerSegementMap
+					.FirstOrDefaultAsync(s => s.Customername == customer.Name && s.SegementName == segmentCode);
+
+				if (customer == null || segment == null)
+				{
+					_notifyService.Error("Invalid customer or segment.");
+					return RedirectToAction(nameof(DebitCreditEntry));
+				}
+
+				// Get the last record for this combination
+				var lastRecord = await _context.CratesManages
+					.Where(cm => cm.CustomerId == customerId &&
+						 cm.SegmentCode == segment.custsegementcode &&
+						 cm.DispDate == DateTime.Today.Date &&
+						 cm.CratesTypeId == crateTypeId)
+					.OrderByDescending(cm => cm.DispDate)
+					.FirstOrDefaultAsync();
+
+				if (lastRecord == null)
+				{
+					_notifyService.Error("No opening balance found for this customer and segment.");
+					return RedirectToAction(nameof(DebitCreditEntry));
+				}
+				lastRecord.Inward += quantity;
+				lastRecord.Balance = lastRecord.Opening + lastRecord.Outward - lastRecord.Inward;
+
+
+				// Create CreditDebitRecord entry
+				var creditDebitRecord = new CreditDebitRecord
+				{
+					CustomerId = customerId,
+					CratesId = crateTypeId,
+					Segment = segmentCode,
+					Date = DateTime.Today,
+					Reason = $"{operationType} operation - {quantity} crates",
+					CreatedBy = HttpContext.Session.GetString("UserName") ?? "Unknown"
+				};
+
+				_context.CreditDebitRecords.Add(creditDebitRecord);
+
+				await _context.SaveChangesAsync();
+
+				_notifyService.Success($"{operationType} operation completed successfully. New balance: {lastRecord.Balance}");
+				return RedirectToAction(nameof(Index));
+			}
+			catch (Exception ex)
+			{
+				_notifyService.Error($"Error processing {operationType} operation: {ex.Message}");
+				return RedirectToAction(nameof(DebitCreditEntry));
+			}
+		}
+
+		// GET: CratesManages/CreditDebitRecords
+		[HttpGet]
+		public async Task<IActionResult> CreditDebitRecords()
+		{
+			var records = await _context.CreditDebitRecords
+				.Include(r => r.Customer)
+				.Include(r => r.CratesType)
+				.OrderByDescending(r => r.Date)
+				.ToListAsync();
+
+			return View(records);
+		}
+
+		// Helper method to get segments for customer (async version)
+		private async Task<List<SelectListItem>> GetSegmentsForCustomerByIdAsync(int customerId)
+		{
+			var lstProducts = new List<SelectListItem>();
+
+			// Get the customer
+			var customer = await _context.Customer_Master.FirstOrDefaultAsync(c => c.Id == customerId);
+			if (customer == null)
+			{
+				return lstProducts;
+			}
+
+			// Get segments mapped to this customer
+			var mappings = await _context.CustomerSegementMap
+				.Where(m => m.Customername == customer.Name)
+				.ToListAsync();
+
+			lstProducts = mappings.Select(n => new SelectListItem
+			{
+				Value = n.SegementName,
+				Text = n.SegementName
+			}).ToList();
+
+			return lstProducts;
 		}
 	}
 }
