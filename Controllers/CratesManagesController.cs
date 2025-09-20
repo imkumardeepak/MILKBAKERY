@@ -120,14 +120,6 @@ namespace Milk_Bakery.Controllers
 				Text = n.Name
 			}).ToList();
 
-			var defItem = new SelectListItem()
-			{
-				Value = "",
-				Text = "All Customers"
-			};
-
-			lstProducts.Insert(0, defItem);
-
 			return lstProducts;
 		}
 
