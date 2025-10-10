@@ -1,6 +1,5 @@
 using AspNetCoreHero.ToastNotification;
 using AspNetCoreHero.ToastNotification.Extensions;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Data;
 using Milk_Bakery.Middleware;
@@ -10,14 +9,22 @@ using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add CORS service
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowAll",
+		builder =>
+		{
+			builder.AllowAnyOrigin()
+				   .AllowAnyMethod()
+				   .AllowAnyHeader();
+		});
+});
 
 builder.Services.AddDbContext<MilkDbContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbContextConnection"),
 	sqlServerOptions => sqlServerOptions.CommandTimeout(500)));
 
-
-//builder.Services.AddDbContext<MilkDbContext>(options =>
-//   options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 builder.Services.AddMemoryCache();
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.AddSession();
@@ -46,6 +53,9 @@ if (!app.Environment.IsDevelopment())
 // Add global exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// Use CORS middleware
+app.UseCors("AllowAll");
+
 app.UseNotyf();
 app.UseSession();
 app.UseHttpsRedirection();
@@ -59,19 +69,19 @@ app.MapControllerRoute(
 	name: "default",
 	pattern: "{controller=Home}/{action=Index}/{id?}");
 
-using (var scope = app.Services.CreateScope())
-{
-	var services = scope.ServiceProvider;
-	try
-	{
-		var context = services.GetRequiredService<MilkDbContext>();
-		DbInitializer.Initialize(context);
-	}
-	catch (Exception ex)
-	{
-		var logger = services.GetRequiredService<ILogger<Program>>();
-		logger.LogError(ex, "An error occurred while seeding the database.");
-	}
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//	var services = scope.ServiceProvider;
+//	try
+//	{
+//		var context = services.GetRequiredService<MilkDbContext>();
+//		DbInitializer.Initialize(context);
+//	}
+//	catch (Exception ex)
+//	{
+//		var logger = services.GetRequiredService<ILogger<Program>>();
+//		logger.LogError(ex, "An error occurred while seeding the database.");
+//	}
+//}
 
 app.Run();

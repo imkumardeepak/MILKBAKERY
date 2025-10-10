@@ -35,7 +35,7 @@ namespace Milk_Bakery.Services
 					await ProcessInvoicesWithSetFlagZero();
 
 					// Wait for 10 minutes before next execution
-					await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+					await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
 				}
 				catch (Exception ex)
 				{
@@ -67,6 +67,16 @@ namespace Milk_Bakery.Services
 						{
 							try
 							{
+								// Search the po avilable in purchase
+								var purchase = await dbContext.PurchaseOrder
+									.Where(p => p.OrderNo == invoice.CustomerRefPO).FirstOrDefaultAsync();
+
+								if (purchase == null)
+								{
+									_logger.LogWarning("Purchase not found for invoice ID: {invoiceId}, PO: {po}", invoice.InvoiceId, invoice.CustomerRefPO);
+									continue;
+								}
+
 								_logger.LogInformation("Processing invoice ID: {invoiceId}, Invoice No: {invoiceNo}",
 									invoice.InvoiceId, invoice.InvoiceNo);
 

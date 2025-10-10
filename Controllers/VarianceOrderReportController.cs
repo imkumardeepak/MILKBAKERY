@@ -112,6 +112,11 @@ namespace Milk_Bakery.Controllers
 
 			var purchaseOrders = await purchaseOrdersQuery.ToListAsync();
 
+			if (purchaseOrders.Count == 0)
+			{
+				return reportItems;
+			}
+
 			// Get invoices within date range and customer filter
 			var invoicesQuery = _context.Invoices
 				.Include(i => i.InvoiceMaterials)

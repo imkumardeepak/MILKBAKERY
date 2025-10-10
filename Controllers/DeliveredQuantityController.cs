@@ -51,7 +51,7 @@ namespace Milk_Bakery.Controllers
 			foreach (var dealer in viewModel.Dealers)
 			{
 				var orders = await _context.DealerOrders
-					.Where(dbo => dbo.DealerId == dealer.Id && dbo.DistributorId == distributorId)
+					.Where(dbo => dbo.DealerId == dealer.Id && dbo.DistributorId == distributorId && dbo.OrderDate == DateTime.Now.Date)
 					.Include(dbo => dbo.DealerOrderItems)
 					.ToListAsync();
 
