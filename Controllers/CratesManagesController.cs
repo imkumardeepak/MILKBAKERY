@@ -761,24 +761,33 @@ namespace Milk_Bakery.Controllers
 					}
 
 					var values = line.Split(',');
-					if (values.Length >= 5 && !string.IsNullOrEmpty(values[0].Trim()) &&
-						!string.IsNullOrEmpty(values[4].Trim()))
+					if (values.Length >= 6 && !string.IsNullOrEmpty(values[0].Trim()) &&
+						!string.IsNullOrEmpty(values[5].Trim()))
 					{
 						// Assuming CSV format: CustomerId,CustomerName,City,Route,OpeningBalance
 						if (int.TryParse(values[0].Trim(), out int customerId) &&
-							int.TryParse(values[4].Trim(), out int openingBalance))
+							int.TryParse(values[5].Trim(), out int openingBalance))
 						{
+
+							var customer = await _context.Customer_Master.FindAsync(customerId);
+
+							if (customer == null)
+							{
+								continue; // Skip if customer not found
+							}
+
 							// Validate that the customer belongs to the selected segment
 							var customerSegment = await _context.CustomerSegementMap
-								.FirstOrDefaultAsync(csm => csm.Customername == values[1].Trim() &&
+								.FirstOrDefaultAsync(csm => csm.Customername == customer.Name &&
 														   csm.SegementName == segmentCode);
+
 
 							if (customerSegment != null)
 							{
 								customers.Add(new OpeningBalanceCustomerViewModel
 								{
 									CustomerId = customerId,
-									CustomerName = values[1].Trim(),
+									CustomerName = customer.Name.Trim(),
 									OpeningBalance = openingBalance
 								});
 							}
@@ -857,20 +866,48 @@ namespace Milk_Bakery.Controllers
 							}
 							else
 							{
-								// Create new record when no existing record found
-								var cratesManage = new CratesManage
+								var topexistingRecord = await _context.CratesManages
+								.Where(cm => cm.CustomerId == customer.CustomerId &&
+											 cm.SegmentCode == segment.custsegementcode &&
+											 cm.CratesTypeId == viewModel.CratesTypeId)
+								.OrderByDescending(cm => cm.DispDate)
+								.FirstOrDefaultAsync();
+
+								if (topexistingRecord != null)
 								{
-									CustomerId = customer.CustomerId,
-									SegmentCode = segment.custsegementcode,
-									CratesTypeId = viewModel.CratesTypeId,
-									DispDate = viewModel.DispDate,
-									Opening = 0, // Default opening balance for inward entries
-									Outward = 0, // Default outward for inward entries
-									Inward = customer.Inward,
-									Balance = 0 - customer.Inward // Balance calculation (Opening + Outward - Inward)
-								};
-								_context.Add(cratesManage);
-								recordsProcessed++;
+									var cratesManage = new CratesManage
+									{
+										CustomerId = customer.CustomerId,
+										SegmentCode = segment.custsegementcode,
+										CratesTypeId = viewModel.CratesTypeId,
+										DispDate = viewModel.DispDate,
+										Opening = topexistingRecord.Balance, // Default opening balance for inward entries
+										Outward = 0, // Default outward for inward entries
+										Inward = customer.Inward,
+										Balance = topexistingRecord.Balance - customer.Inward // Balance calculation (Opening + Outward - Inward)
+									};
+									_context.Add(cratesManage);
+									recordsProcessed++;
+
+								}
+								else
+								{
+
+									var cratesManage = new CratesManage
+									{
+										CustomerId = customer.CustomerId,
+										SegmentCode = segment.custsegementcode,
+										CratesTypeId = viewModel.CratesTypeId,
+										DispDate = viewModel.DispDate,
+										Opening = 0, // Default opening balance for inward entries
+										Outward = 0, // Default outward for inward entries
+										Inward = customer.Inward,
+										Balance = 0 - customer.Inward // Balance calculation (Opening + Outward - Inward)
+									};
+									_context.Add(cratesManage);
+									recordsProcessed++;
+								}
+
 							}
 						}
 					}
@@ -964,6 +1001,11 @@ namespace Milk_Bakery.Controllers
 						if (customer.Inward > 0)
 						{
 							var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName && s.SegementName == viewModel.SegmentCode);
+
+							if (segment == null)
+							{
+								continue;
+							}
 							// Check if a record for this customer, segment, crates type, and date already exists
 							var existingRecord = await _context.CratesManages
 								.Where(cm => cm.CustomerId == customer.CustomerId &&
@@ -983,7 +1025,47 @@ namespace Milk_Bakery.Controllers
 							}
 							else
 							{
-								continue;
+								var topexistingRecord = await _context.CratesManages
+								.Where(cm => cm.CustomerId == customer.CustomerId &&
+											 cm.SegmentCode == segment.custsegementcode &&
+											 cm.CratesTypeId == viewModel.CratesTypeId)
+								.OrderByDescending(cm => cm.DispDate)
+								.FirstOrDefaultAsync();
+
+								if (topexistingRecord != null)
+								{
+									var cratesManage = new CratesManage
+									{
+										CustomerId = customer.CustomerId,
+										SegmentCode = segment.custsegementcode,
+										CratesTypeId = viewModel.CratesTypeId,
+										DispDate = viewModel.DispDate,
+										Opening = topexistingRecord.Balance, // Default opening balance for inward entries
+										Outward = 0, // Default outward for inward entries
+										Inward = customer.Inward,
+										Balance = topexistingRecord.Balance - customer.Inward // Balance calculation (Opening + Outward - Inward)
+									};
+									_context.Add(cratesManage);
+									recordsProcessed++;
+
+								}
+								else
+								{
+
+									var cratesManage = new CratesManage
+									{
+										CustomerId = customer.CustomerId,
+										SegmentCode = segment.custsegementcode,
+										CratesTypeId = viewModel.CratesTypeId,
+										DispDate = viewModel.DispDate,
+										Opening = 0, // Default opening balance for inward entries
+										Outward = 0, // Default outward for inward entries
+										Inward = customer.Inward,
+										Balance = 0 - customer.Inward // Balance calculation (Opening + Outward - Inward)
+									};
+									_context.Add(cratesManage);
+									recordsProcessed++;
+								}
 							}
 						}
 					}
@@ -1034,24 +1116,32 @@ namespace Milk_Bakery.Controllers
 					}
 
 					var values = line.Split(',');
-					if (values.Length >= 5 && !string.IsNullOrEmpty(values[0].Trim()) &&
-						!string.IsNullOrEmpty(values[4].Trim()))
+					if (values.Length >= 6 && !string.IsNullOrEmpty(values[0].Trim()) &&
+						!string.IsNullOrEmpty(values[5].Trim()))
 					{
 						// Assuming CSV format: CustomerId,CustomerName,City,Route,InwardQuantity
 						if (int.TryParse(values[0].Trim(), out int customerId) &&
-							int.TryParse(values[4].Trim(), out int inwardQuantity))
+							int.TryParse(values[5].Trim(), out int inwardQuantity))
 						{
+							var customer = await _context.Customer_Master.FindAsync(customerId);
+
+							if (customer == null)
+							{
+								continue; // Skip if customer not found
+							}
+
 							// Validate that the customer belongs to the selected segment
 							var customerSegment = await _context.CustomerSegementMap
-								.FirstOrDefaultAsync(csm => csm.Customername == values[1].Trim() &&
+								.FirstOrDefaultAsync(csm => csm.Customername == customer.Name &&
 														   csm.SegementName == segmentCode);
+
 
 							if (customerSegment != null)
 							{
 								customers.Add(new BulkInwardCustomerViewModel
 								{
 									CustomerId = customerId,
-									CustomerName = values[1].Trim(),
+									CustomerName = customer.Name.Trim(),
 									Inward = inwardQuantity
 								});
 							}
@@ -1087,11 +1177,11 @@ namespace Milk_Bakery.Controllers
 
 			// Create CSV content
 			var csvContent = new StringBuilder();
-			csvContent.AppendLine("Customer ID,Customer Name,City,Route,Opening Balance"); // Header row
+			csvContent.AppendLine("Customer ID,Customer Name,Short Name,City,Route,Outward Quantity"); // Header row
 
 			foreach (var customer in customers)
 			{
-				csvContent.AppendLine($"{customer.Id},{customer.Name},{customer.city},{customer.route},");
+				csvContent.AppendLine($"{customer.Id},{customer.Name},{customer.shortname},{customer.city},{customer.route},");
 			}
 
 			// Convert to byte array
@@ -1115,11 +1205,11 @@ namespace Milk_Bakery.Controllers
 
 			// Create CSV content
 			var csvContent = new StringBuilder();
-			csvContent.AppendLine("Customer ID,Customer Name,City,Route,Inward Quantity"); // Header row
+			csvContent.AppendLine("Customer ID,Customer Name,Short Name,City,Route,Outward Quantity"); // Header row
 
 			foreach (var customer in customers)
 			{
-				csvContent.AppendLine($"{customer.Id},{customer.Name},{customer.city},{customer.route},");
+				csvContent.AppendLine($"{customer.Id},{customer.Name},{customer.shortname},{customer.city},{customer.route},");
 			}
 
 			// Convert to byte array

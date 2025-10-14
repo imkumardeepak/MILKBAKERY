@@ -1,0 +1,65 @@
+DEALER MANAGEMENT SYSTEM
+
+The Milk & Bakery Management System includes a comprehensive dealer management module for handling distributor relationships:
+
+1. Dealer Master Entity:
+- DealerMaster represents distributor information
+- Fields: Id, DistributorId, Name, RouteCode, Address, City, PhoneNo, Email
+- Navigation property to DealerBasicOrders
+- Related to Customer_Master through DistributorId
+
+2. Dealer Basic Order Entity:
+- DealerBasicOrder represents basic orders for dealers
+- Fields: Id, DealerId, MaterialName, SapCode, ShortCode, Quantity, Rate
+- Navigation property to DealerMaster
+- Used for initial dealer order setup
+
+3. Dealer Management Features:
+- CRUD operations for dealer information
+- Role-based access control:
+  - Customers can only see dealers associated with their account
+  - Sales users can see dealers for their assigned customers
+  - Admin users have full access to all dealers
+- Dealer order management with material selection
+- Route code auto-population based on customer selection
+
+4. Dealer Creation Workflow:
+- AddOrEdit action for creating new dealers
+- Customer selection with validation
+- Material selection with quantity and rate specification
+- Automatic route code population from customer data
+- Validation for quantities (must be > 0)
+- Duplicate dealer prevention for same customer
+
+5. Dealer Editing Workflow:
+- Existing dealer information can be modified
+- Associated basic orders can be updated
+- Material quantities and rates can be adjusted
+- Route code automatically updated when customer changes
+
+6. Dealer Order Management:
+- Basic order creation with material details
+- Rate-based pricing (changed from previous BasicAmount calculation)
+- Quantity validation (non-negative values)
+- Material selection from available products
+
+7. Controllers:
+- DealerMastersController handles all dealer operations
+- Index action with customer filtering for customers
+- AddOrEdit action for creation and modification
+- Delete action for dealer removal
+- AJAX endpoints for dynamic data loading
+
+8. Views:
+- Index view with dealer listing
+- AddOrEdit view for dealer creation/modification
+- Delete confirmation view
+- Dynamic customer and material selection
+
+9. Supporting Features:
+- Customer-to-customer mapping support
+- Employee-to-customer mapping for sales users
+- Material display with category and subcategory information
+- Session-based filtering and access control
+- Validation for all input fields
+- Error handling and user notifications

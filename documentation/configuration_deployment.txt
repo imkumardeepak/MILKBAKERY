@@ -1,0 +1,92 @@
+CONFIGURATION AND DEPLOYMENT
+
+The Milk & Bakery Management System requires specific configuration and follows a defined deployment process:
+
+1. Application Configuration:
+- appsettings.json for main configuration
+- Connection string for SQL Server database
+- AppSettings section for application-specific settings
+- FolderPath setting for SAP file storage
+- Logging configuration for error and information logging
+- AllowedHosts for CORS configuration
+
+2. Database Configuration:
+- SQL Server connection string with:
+  - Data Source (server name)
+  - Initial Catalog (database name)
+  - User ID and Password authentication
+  - MultipleActiveResultSets enabled
+  - TrustServerCertificate enabled
+  - Encrypt enabled
+- Database schema managed through Entity Framework Migrations
+- Seed data initialization through DbInitializer
+
+3. Development Environment:
+- .NET SDK 6.0 or higher required
+- SQL Server (Express or full version)
+- Visual Studio 2022 or VS Code recommended
+- NuGet package management
+- Entity Framework Core tools for migrations
+
+4. Setup Process:
+- Clone repository
+- Restore NuGet packages with dotnet restore
+- Update database schema with dotnet ef database update
+- Configure connection string in appsettings.json
+- Run application with dotnet run
+- Access through https://localhost:7112 or http://localhost:5089
+
+5. Deployment Configuration:
+- launchSettings.json for development profiles
+- IIS Express configuration for local development
+- HTTPS and HTTP binding support
+- Environment variables for configuration
+- Multiple profiles for different deployment scenarios
+
+6. CORS Configuration:
+- AllowAll policy configured in Program.cs
+- Allows any origin, method, and header
+- Applied to all endpoints through middleware
+
+7. Session and Caching Configuration:
+- Session middleware for user state management
+- Memory cache configuration for performance
+- 5-minute cache duration for dashboard statistics
+- Notyf configuration for toast notifications
+
+8. Background Services Configuration:
+- InvoiceBackgroundService registered as hosted service
+- CratesManagementBackgroundService registered as hosted service
+- Automatic startup with application
+- Graceful shutdown handling
+
+9. Middleware Configuration:
+- ExceptionHandlingMiddleware for global error handling
+- CORS middleware for cross-origin requests
+- Session middleware for user state
+- Static files middleware for wwwroot content
+- Routing middleware for endpoint mapping
+- Authorization middleware for access control
+
+10. Build and Deployment Process:
+- Build with dotnet build command
+- Publish with dotnet publish -c Release -o ./publish
+- Framework-dependent or self-contained deployment options
+- IIS deployment support
+- Cloud deployment compatibility (Azure, etc.)
+- Environment-specific configuration files
+
+11. Security Considerations:
+- HTTPS enforcement in production
+- Session-based authentication
+- Role-based authorization
+- Connection string security
+- No explicit mention of password hashing
+- Input validation through model binding
+
+12. Performance Optimization:
+- Memory caching for dashboard data
+- Database indexing for frequently queried columns
+- Efficient Entity Framework queries
+- Background processing for long-running tasks
+- Asynchronous operations where appropriate

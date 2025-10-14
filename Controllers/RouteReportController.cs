@@ -199,9 +199,11 @@ namespace Milk_Bakery.Controllers
 					var routeCustomers = await _context.Customer_Master
 						.AsNoTracking()
 						.Where(a => a.route == Customer)
-						.Select(a => a.Name)
-						.Distinct()
-						.ToListAsync();
+						.Select(a => new { a.Name, a.Sequence })
+											.Distinct()
+											.OrderBy(x => x.Sequence)
+											.Select(x => x.Name)
+											.ToListAsync();
 
 					var purchaseOrders = await _context.PurchaseOrder
 						.AsNoTracking()
@@ -382,9 +384,11 @@ namespace Milk_Bakery.Controllers
 						var routeCustomers = await _context.Customer_Master
 							.AsNoTracking()
 							.Where(c => c.route == route.Route)
-							.Select(c => c.Name)
-							.Distinct()
-							.ToListAsync();
+							.Select(a => new { a.Name, a.Sequence })
+											.Distinct()
+											.OrderBy(x => x.Sequence)
+											.Select(x => x.Name)
+											.ToListAsync();
 
 						var purchaseOrders = await _context.PurchaseOrder
 							.AsNoTracking()
@@ -436,9 +440,11 @@ namespace Milk_Bakery.Controllers
 					var routeCustomers = await _context.Customer_Master
 						.AsNoTracking()
 						.Where(c => c.route == Customer)
-						.Select(c => c.Name)
-						.Distinct()
-						.ToListAsync();
+						.Select(a => new { a.Name, a.Sequence })
+											.Distinct()
+											.OrderBy(x => x.Sequence)
+											.Select(x => x.Name)
+											.ToListAsync();
 
 					var purchaseOrders = await _context.PurchaseOrder
 						.AsNoTracking()

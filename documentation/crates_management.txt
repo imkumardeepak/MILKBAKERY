@@ -1,0 +1,68 @@
+CRATES MANAGEMENT SYSTEM
+
+The Milk & Bakery Management System includes a comprehensive crates management module for tracking crate inventory movements:
+
+1. Crates Management Entity:
+- CratesManage represents crate transactions
+- Fields: Id, CustomerId, SegmentCode, DispDate, Opening, Outward, Inward, Balance, CratesTypeId
+- Related to Customer_Master and CratesType entities
+- Date-based tracking with opening balances
+
+2. Crates Type Entity:
+- CratesType represents different crate types
+- Fields: Id, Cratestype, Division
+- Used to categorize different crate varieties
+
+3. Crates Management Features:
+- Opening balance entry for initial crate counts
+- Inward entry for crate receipts
+- Outward entry for crate dispatches
+- Balance calculation (Opening + Outward - Inward)
+- Daily automatic opening balance creation
+- Segment-based crate tracking
+- Customer-specific crate management
+
+4. Crates Operations:
+- Bulk opening entry for multiple customers
+- Bulk inward entry for multiple customers
+- File upload support for bulk operations (CSV/Excel)
+- Manual entry forms for individual operations
+- Crate type selection based on segment/division
+- Date-specific transaction recording
+
+5. Controllers:
+- CratesManagesController handles crates operations
+- Index action for crates overview
+- Bulk entry actions for opening/inward operations
+- Upload actions for file-based bulk operations
+- AJAX endpoints for dynamic data loading
+
+6. Views:
+- Index view with crates overview
+- Bulk entry forms for manual input
+- Upload forms for file-based input
+- Dynamic segment and crate type selection
+- Customer listing with crate information
+
+7. Background Services:
+- CratesManagementBackgroundService for daily opening balance creation
+- Runs at midnight to create new records with previous day's balance
+- Processes all customer-segment-crate combinations
+- Automatic record creation for active crate relationships
+
+8. Supporting Features:
+- Customer segment mapping integration
+- Dynamic dropdown population
+- File parsing for CSV and Excel formats
+- Validation for all input fields
+- Error handling and user notifications
+- Session-based access control
+- Role-based feature availability
+
+9. Key Workflows:
+- Opening Entry: Create initial crate balances
+- Inward Entry: Record crate receipts
+- Outward Entry: Record crate dispatches (handled through invoice processing)
+- Daily Processing: Automatic balance carry-forward
+- Bulk Operations: Efficient entry for multiple customers
+- File Upload: CSV/Excel import for bulk data entry

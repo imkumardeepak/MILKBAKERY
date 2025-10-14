@@ -1,0 +1,41 @@
+SYSTEM ARCHITECTURE
+
+The Milk & Bakery Management System follows a layered MVC (Model-View-Controller) architecture using ASP.NET Core:
+
+1. Presentation Layer:
+- Frontend: Razor Views with Bootstrap, jQuery, and Chart.js
+- Static assets served from wwwroot directory
+- Responsive design for cross-device compatibility
+
+2. Business Logic Layer:
+- Controllers: Handle HTTP requests and responses
+- Services: Contain business logic and background processing
+- ViewModels: Strongly-typed models for views
+- DTOs: Data Transfer Objects for APIs and inter-layer communication
+
+3. Data Access Layer:
+- Entity Framework Core: ORM for database interactions
+- DbContext: MilkDbContext for database operations
+- Models: Entity classes mapped to database tables
+- Repository Pattern: Implemented through EF Core DbContext
+
+4. Infrastructure Layer:
+- Middleware: Custom ExceptionHandlingMiddleware for global error handling
+- Background Services: IHostedService implementations for automated tasks
+- Dependency Injection: Built-in DI container manages service lifetimes
+
+Component Interaction Flow:
+1. User interacts with Views (Razor templates)
+2. Requests are routed to Controllers
+3. Controllers call Services or directly use DbContext
+4. Services process business logic and interact with Models/Entities
+5. Data is persisted via EF Core to SQL Server
+6. Static assets are served from wwwroot
+7. Background services run independently to handle recurring tasks
+
+Architectural Patterns Used:
+- MVC Pattern: Clear separation between Models, Views, and Controllers
+- Repository Pattern: EF Core DbContext abstracts data access
+- Singleton/Middleware: ExceptionHandlingMiddleware for global error handling
+- Background Services Pattern: For scheduled/automated jobs
+- Dependency Injection: Built-in DI container manages service lifetimes

@@ -1,0 +1,70 @@
+BACKGROUND SERVICES
+
+The Milk & Bakery Management System implements background services for automated processing tasks using the IHostedService pattern:
+
+1. Invoice Background Service:
+- InvoiceBackgroundService for automated invoice processing
+- Runs every minute to check for unprocessed invoices
+- Processes invoices with setflag = 0
+- Updates setflag to 1 after processing
+- Integrates with crates management for outward movements
+- Error handling and logging for processing failures
+- Continues processing even if individual invoices fail
+
+2. Crates Management Background Service:
+- CratesManagementBackgroundService for daily crate balance management
+- Runs at midnight to create new opening balances
+- Calculates time until next midnight for scheduling
+- Processes all customer-segment-crate combinations
+- Creates new records with previous day's balance as opening
+- Prevents duplicate records for same date
+- Error handling for individual combination processing
+
+3. Service Implementation Details:
+- Both services implement IHostedService interface
+- Use dependency injection for database context access
+- Create service scopes for database operations
+- Include comprehensive logging for monitoring
+- Handle exceptions to prevent service crashes
+- Graceful shutdown handling through StopAsync method
+- CancellationToken support for service cancellation
+
+4. Invoice Processing Workflow:
+- Retrieve invoices with setflag = 0
+- Match to purchase orders using CustomerRefPO
+- Find customer using ShipToCode
+- Process each invoice material line
+- Extract crate type information
+- Create/update crates management records
+- Mark invoices as processed (setflag = 1)
+- Save all changes in single transaction
+
+5. Crates Management Workflow:
+- Calculate time until next midnight
+- Wait until scheduled time
+- Retrieve all customer-segment-crate combinations
+- Check for existing records for current date
+- Get last available balance for each combination
+- Create new records with previous balance as opening
+- Save all changes in single transaction
+
+6. Error Handling:
+- Try-catch blocks for exception handling
+- Logger integration for error reporting
+- Continue processing despite individual failures
+- Detailed error messages for debugging
+- Service restart capability
+
+7. Performance Considerations:
+- Efficient database queries with Include for related data
+- Asynchronous operations throughout
+- Delay between processing cycles
+- Memory management through service scopes
+- Database connection management through EF Core
+
+8. Monitoring and Logging:
+- Informational logging for service start/stop
+- Processing status updates
+- Error logging with stack traces
+- Record count reporting
+- Timing information for operations

@@ -1,0 +1,34 @@
+MILK & BAKERY MANAGEMENT SYSTEM - DOCUMENTATION INDEX
+
+Project Overview:
+The Milk & Bakery Management System is an enterprise-level application designed for dairy and bakery businesses to streamline daily operations, improve data accuracy, and enhance decision-making through comprehensive reporting.
+
+Table of Contents:
+1. System Architecture
+2. Technology Stack
+3. Database Design
+4. User Authentication and Authorization
+5. Master Data Management
+6. Order Processing System
+7. Dealer Management System
+8. Crates Management System
+9. Invoice Processing System
+10. Reporting System
+11. Background Services
+12. Error Handling
+13. Configuration and Deployment
+
+Each component is documented in detail in separate files:
+- system_architecture.txt
+- technology_stack.txt
+- database_design.txt
+- authentication_authorization.txt
+- master_data_management.txt
+- order_processing.txt
+- dealer_management.txt
+- crates_management.txt
+- invoice_processing.txt
+- reporting_system.txt
+- background_services.txt
+- error_handling.txt
+- configuration_deployment.txt
