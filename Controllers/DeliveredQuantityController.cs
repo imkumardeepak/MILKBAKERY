@@ -32,33 +32,82 @@ namespace Milk_Bakery.Controllers
 			return View(viewModel);
 		}
 
-		// POST: DeliveredQuantity/LoadDealers
-		[HttpPost]
-		public async Task<IActionResult> LoadDealers(int distributorId)
+		// GET: DeliveredQuantity/GetDealersByDistributor
+		[HttpGet]
+		public async Task<IActionResult> GetDealersByDistributor(int distributorId)
 		{
-			var viewModel = new DeliveredQuantityEntryViewModel();
-
-			// Set selected distributor
-			viewModel.SelectedDistributorId = distributorId;
-			viewModel.AvailableDistributors = await GetAvailableDistributors();
-
-			// Get dealers for the selected distributor
-			viewModel.Dealers = await _context.DealerMasters
-				.Where(d => d.DistributorId == distributorId)
-				.ToListAsync();
-
-			// Get dealer orders for each dealer
-			foreach (var dealer in viewModel.Dealers)
+			try
 			{
+				var today = DateTime.Now.Date;
+				
+				// Get all dealers for this distributor
+				var dealers = await _context.DealerMasters
+					.Where(d => d.DistributorId == distributorId)
+					.ToListAsync();
+				
+				// Get dealer IDs that have orders today
+				var dealerIdsWithOrdersToday = await _context.DealerOrders
+					.Where(o => o.DistributorId == distributorId && o.OrderDate == today)
+					.Select(o => o.DealerId)
+					.Distinct()
+					.ToListAsync();
+				
+				// Create result with order status, sorting to put non-ordered dealers first
+				var dealerResults = dealers
+					.Select(d => new { 
+						Id = d.Id, 
+						Name = d.Name,
+						hasOrderedToday = dealerIdsWithOrdersToday.Contains(d.Id)
+					})
+					.OrderBy(d => d.hasOrderedToday) // False (0) comes before True (1)
+					.ToList();
+
+				return Json(new { success = true, dealers = dealerResults });
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
+
+		// POST: DeliveredQuantity/LoadDealerOrders
+		[HttpPost]
+		public async Task<IActionResult> LoadDealerOrders(int distributorId, int dealerId)
+		{
+			try
+			{
+				var viewModel = new DeliveredQuantityEntryViewModel
+				{
+					SelectedDistributorId = distributorId,
+					AvailableDistributors = await GetAvailableDistributors()
+				};
+
+				// Get the specific dealer
+				var dealer = await _context.DealerMasters
+					.FirstOrDefaultAsync(d => d.Id == dealerId && d.DistributorId == distributorId);
+
+				if (dealer == null)
+				{
+					return Json(new { success = false, message = "Dealer not found." });
+				}
+
+				viewModel.Dealers = new List<DealerMaster> { dealer };
+
+				// Get dealer orders for this dealer
 				var orders = await _context.DealerOrders
 					.Where(dbo => dbo.DealerId == dealer.Id && dbo.DistributorId == distributorId && dbo.OrderDate == DateTime.Now.Date)
 					.Include(dbo => dbo.DealerOrderItems)
 					.ToListAsync();
 
 				viewModel.DealerOrders[dealer.Id] = orders;
-			}
 
-			return PartialView("_DeliveredQuantityPartial", viewModel);
+				// Return the partial view for this single dealer
+				return PartialView("_DeliveredQuantityPartial", viewModel);
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
 		}
 
 		// POST: DeliveredQuantity/Save

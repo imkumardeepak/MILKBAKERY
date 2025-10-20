@@ -2,11 +2,6 @@
 
 <div class="row">
     <div class="col-md-12">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h1 class="h4 mb-0 text-gray-800">Dealers for Selected Distributor</h1>
-            <span class="badge badge-primary badge-pill">@Model.Dealers.Count Dealers</span>
-        </div>
-        
         @if (Model.Dealers.Any())
         {
             <form id="saveOrdersForm">
@@ -15,7 +10,7 @@
                 @{ int index = 0; }
                 @foreach (var dealer in Model.Dealers)
                 {
-                    <div class="card shadow mb-3 border-left-primary">
+                    <div class="card shadow mb-3 border-left-primary" id="dealer-card-@dealer.Id">
                         <div class="card-header py-2 d-flex justify-content-between align-items-center" id="heading@(dealer.Id)">
                             <h6 class="m-0 font-weight-bold text-primary">@dealer.Name</h6>
                             <button class="btn btn-link text-primary p-1 accordion-toggle" type="button" data-dealer-id="@dealer.Id">
@@ -71,6 +66,13 @@
                                     <div class="text-right">
                                         <strong class="dealer-total">Dealer Total: ₹@dealerTotal.ToString("F2")</strong>
                                     </div>
+                                    
+                                    <!-- Save button for individual dealer -->
+                                    <div class="text-center mt-2">
+                                        <button type="button" class="btn btn-success save-dealer-order-btn" data-dealer-id="@dealer.Id">
+                                            <i class="fas fa-save"></i> Save Order for @dealer.Name
+                                        </button>
+                                    </div>
                                 }
                                 else
                                 {
@@ -83,40 +85,6 @@
                     </div>
                     index++;
                 }
-                
-                <div class="card shadow mb-3">
-                    <div class="card-body p-3">
-                        @{
-                            // Calculate overall distributor total
-                            decimal distributorTotal = 0;
-                            foreach (var dealer in Model.Dealers)
-                            {
-                                if (Model.DealerBasicOrders.ContainsKey(dealer.Id))
-                                {
-                                    foreach (var basicOrder in Model.DealerBasicOrders[dealer.Id])
-                                    {
-                                        // Fixed: Rate is already the rate per item, no need to divide by quantity
-                                        decimal price = basicOrder.Rate * basicOrder.Quantity;
-                                        distributorTotal += price;
-                                    }
-                                }
-                            }
-                        }
-                        
-                        <div class="text-right mb-3">
-                            <h5><strong>Distributor Total: ₹@distributorTotal.ToString("F2")</strong></h5>
-                        </div>
-                        
-                        <div class="text-center">
-                            <button type="button" id="saveAllOrdersBtn" class="btn btn-success mr-2">
-                                <i class="fas fa-save"></i> Save All Orders
-                            </button>
-                            <button type="button" id="resetFormBtn" class="btn btn-secondary">
-                                <i class="fas fa-redo"></i> Reset Form
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </form>
         }
         else
@@ -148,9 +116,6 @@
             // Recalculate dealer total
             var dealerId = $(this).data('dealer-id');
             recalculateDealerTotal(dealerId);
-            
-            // Recalculate distributor total
-            recalculateDistributorTotal();
         });
         
         // Function to recalculate dealer total
@@ -164,27 +129,42 @@
             $('#collapse' + dealerId).find('.dealer-total').text('Dealer Total: ₹' + dealerTotal.toFixed(2));
         }
         
-        // Function to recalculate distributor total
-        function recalculateDistributorTotal() {
-            var distributorTotal = 0;
-            $('.price-cell').each(function() {
-                distributorTotal += parseFloat($(this).text()) || 0;
-            });
-            
-            // Update distributor total display - targeting the correct element
-            $('.card-body.p-3 .text-right h5 strong').text('Distributor Total: ₹' + distributorTotal.toFixed(2));
-        }
-        
-        // Handle save all orders button click
-        $('#saveAllOrdersBtn').on('click', function () {
-            // Show loading indicator
+        // Handle save order for individual dealer
+        $(document).on('click', '.save-dealer-order-btn', function () {
             var button = $(this);
             var originalText = button.html();
+            var dealerId = button.data('dealer-id');
+            var dealerName = $('#dealer-card-' + dealerId).find('.card-header h6').text();
+            
+            // Show loading indicator
             button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
             button.prop('disabled', true);
             
-            // Prepare form data
-            var formData = $('#saveOrdersForm').serialize();
+            // Prepare data for this specific dealer
+            var distributorId = $('#SelectedDistributorId').val();
+            var dealerData = {};
+            
+            // Collect data for this dealer only
+            $('#dealer-card-' + dealerId).find('.quantity-input').each(function() {
+                var dealerId = $(this).data('dealer-id');
+                var basicOrderId = $(this).data('basic-order-id');
+                var quantity = $(this).val();
+                
+                if (!dealerData[dealerId]) {
+                    dealerData[dealerId] = {};
+                }
+                dealerData[dealerId][basicOrderId] = quantity;
+            });
+            
+            // Serialize the data properly for the AJAX call
+            var formData = 'SelectedDistributorId=' + encodeURIComponent(distributorId);
+            
+            // Add dealer data
+            for (var dealerId in dealerData) {
+                for (var basicOrderId in dealerData[dealerId]) {
+                    formData += '&DealerOrderItemQuantities[' + encodeURIComponent(dealerId) + '][' + encodeURIComponent(basicOrderId) + ']=' + encodeURIComponent(dealerData[dealerId][basicOrderId]);
+                }
+            }
             
             $.ajax({
                 url: '@Url.Action("SaveOrders", "DealerOrders")',
@@ -192,66 +172,38 @@
                 data: formData,
                 success: function (result) {
                     if (result.success) {
-                        // Show success message with SweetAlert and redirect to home index
+                        // Trigger custom event to move dealer to successful orders
+                        $(document).trigger('orderSaved', [dealerId, dealerName]);
+                        
+                        // Show success message
                         Swal.fire({
                             icon: 'success',
                             title: 'Success',
-                            text: 'All orders saved successfully!',
+                            text: 'Order for ' + dealerName + ' saved successfully!',
                             confirmButtonText: 'OK'
-                        }).then((r) => {
-                            // Redirect to Home Index after successful save
-                            window.location.href = '@Url.Action("Index", "Home")';
                         });
                     } else {
-                        // Show error message with SweetAlert
+                        // Show error message
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Error saving orders: ' + result.message,
+                            text: 'Error saving order for ' + dealerName + ': ' + (result.message || 'Unknown error'),
                             confirmButtonText: 'OK'
                         });
                     }
                 },
                 error: function (xhr, status, error) {
-                    // Show error message with SweetAlert
+                    // Show error message
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Error saving orders. Please try again. ' + error,
+                        text: 'Error saving order for ' + dealerName + '. Please try again. ' + error,
                         confirmButtonText: 'OK'
                     });
                 },
                 complete: function() {
                     // Always reset button state when AJAX call completes
                     resetButtonState(button, originalText);
-                }
-            });
-        });
-        
-        // Handle reset form button
-        $('#resetFormBtn').on('click', function () {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'All unsaved changes will be lost.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, reset it!',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $('input.quantity-input').each(function() {
-                        var defaultValue = $(this).attr('value');
-                        $(this).val(defaultValue);
-                        
-                        // Trigger input event to recalculate prices
-                        $(this).trigger('input');
-                    });
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Reset',
-                        text: 'Form has been reset to default values.',
-                        confirmButtonText: 'OK'
-                    });
                 }
             });
         });

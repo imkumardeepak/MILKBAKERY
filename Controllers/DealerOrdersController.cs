@@ -32,6 +32,107 @@ namespace Milk_Bakery.Controllers
 			return View(viewModel);
 		}
 
+		// GET: DealerOrders/GetDealersByDistributor
+		[HttpGet]
+		public async Task<IActionResult> GetDealersByDistributor(int distributorId)
+		{
+			try
+			{
+				var today = DateTime.Now.Date;
+				
+				// Get all dealers for this distributor
+				var dealers = await _context.DealerMasters
+					.Where(d => d.DistributorId == distributorId)
+					.ToListAsync();
+				
+				// Get dealer IDs that have orders today
+				var dealerIdsWithOrdersToday = await _context.DealerOrders
+					.Where(o => o.DistributorId == distributorId && o.OrderDate == today)
+					.Select(o => o.DealerId)
+					.Distinct()
+					.ToListAsync();
+				
+				// Create result with order status, sorting to put non-ordered dealers first
+				var dealerResults = dealers
+					.Select(d => new { 
+						Id = d.Id, 
+						Name = d.Name,
+						hasOrderedToday = dealerIdsWithOrdersToday.Contains(d.Id)
+					})
+					.OrderBy(d => d.hasOrderedToday) // False (0) comes before True (1)
+					.ToList();
+
+				return Json(new { success = true, dealers = dealerResults });
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
+
+		// POST: DealerOrders/LoadDealerOrder
+		[HttpPost]
+		public async Task<IActionResult> LoadDealerOrder(int distributorId, int dealerId)
+		{
+			try
+			{
+				// Check if an order already exists for this dealer today
+				var today = DateTime.Now.Date;
+				var existingOrder = await _context.DealerOrders
+					.FirstOrDefaultAsync(d => d.DealerId == dealerId && d.DistributorId == distributorId && d.OrderDate == today);
+
+				if (existingOrder != null)
+				{
+					return Json(new { success = false, message = "An order has already been placed for this dealer today. Only one order per dealer is allowed per day." });
+				}
+
+				var viewModel = new DealerOrdersViewModel
+				{
+					SelectedDistributorId = distributorId,
+					AvailableDistributors = await GetAvailableDistributors()
+				};
+
+				// Get the specific dealer
+				var dealer = await _context.DealerMasters
+					.FirstOrDefaultAsync(d => d.Id == dealerId && d.DistributorId == distributorId);
+
+				if (dealer == null)
+				{
+					return Json(new { success = false, message = "Dealer not found." });
+				}
+
+				viewModel.Dealers = new List<DealerMaster> { dealer };
+
+				// Get basic orders for this dealer
+				var basicOrders = await _context.DealerBasicOrders
+					.Where(dbo => dbo.DealerId == dealer.Id)
+					.ToListAsync();
+
+				viewModel.DealerBasicOrders[dealer.Id] = basicOrders;
+
+				// Initialize order item quantities
+				if (!viewModel.DealerOrderItemQuantities.ContainsKey(dealer.Id))
+				{
+					viewModel.DealerOrderItemQuantities[dealer.Id] = new Dictionary<int, int>();
+				}
+
+				foreach (var order in basicOrders)
+				{
+					viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = order.Quantity;
+				}
+
+				// Get available materials
+				viewModel.AvailableMaterials = await _context.MaterialMaster.ToListAsync();
+
+				// Return the partial view for this single dealer
+				return PartialView("_DealerOrdersPartial", viewModel);
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
+
 		// POST: DealerOrders/LoadDealers
 		[HttpPost]
 		public async Task<IActionResult> LoadDealers(int distributorId)
@@ -76,7 +177,7 @@ namespace Milk_Bakery.Controllers
 
 		// POST: DealerOrders/SaveOrders
 		[HttpPost]
-		public async Task<IActionResult> SaveOrders(int SelectedDistributorId, Dictionary<string, Dictionary<string, string>> DealerOrderItemQuantities)
+		public async Task<IActionResult> SaveOrders(int SelectedDistributorId, Dictionary<string, Dictionary<string, string>> DealerOrderItemQuantities, Dictionary<string, string> MaterialDealerPrices)
 		{
 			try
 			{
@@ -90,7 +191,7 @@ namespace Milk_Bakery.Controllers
 				// Get the current date for order date
 				var orderDate = DateTime.Now.Date;
 
-				// Convert string-based dictionary to int-based dictionary
+				// Convert string-based dictionary to int-based dictionary for quantities
 				var intQuantities = new Dictionary<int, Dictionary<int, int>>();
 				foreach (var dealerEntry in DealerOrderItemQuantities)
 				{
@@ -172,36 +273,57 @@ namespace Milk_Bakery.Controllers
 					}
 				}
 
-				// Get dealers for the selected distributor
-				var dealers = await _context.DealerMasters
-					.Where(d => d.DistributorId == SelectedDistributorId)
-					.ToListAsync();
-
-				// Process each dealer's orders
-				bool hasSavedOrders = false;
-				foreach (var dealer in dealers)
+				// Convert string-based dictionary to material name-decimal dictionary for dealer prices
+				var dealerPrices = new Dictionary<string, decimal>();
+				if (MaterialDealerPrices != null)
 				{
-					// Check if this dealer has any order items
-					if (intQuantities.ContainsKey(dealer.Id) && intQuantities[dealer.Id].Count > 0)
+					foreach (var priceEntry in MaterialDealerPrices)
 					{
-						hasSavedOrders = true;
-						//FIND EXISTNG ORDER
-						var order = await _context.DealerOrders
-							.FirstOrDefaultAsync(d => d.DealerId == dealer.Id && d.DistributorId == SelectedDistributorId && d.OrderDate == orderDate);
-
-
-						if (order != null)
+						if (int.TryParse(priceEntry.Key, out int materialId) &&
+							decimal.TryParse(priceEntry.Value, out decimal price))
 						{
-							_notifyService.Error("Dealer order already exists. Please send order on Next Day.");
-							return Json(new { success = false, message = "Dealer order already exists. Please send order on Next Day." });
-						}	
+							// Get the material name by ID to use as the key
+							var material = await _context.MaterialMaster.FindAsync(materialId);
+							if (material != null)
+							{
+								dealerPrices[material.Materialname] = price;
+							}
+						}
+					}
+				}
 
+				// Process each dealer's orders (should be just one in this case)
+				bool hasSavedOrders = false;
+                List<int> savedDealerIds = new List<int>(); // Track which dealers had orders saved
+                
+				foreach (var kvp in intQuantities)
+				{
+					var dealerId = kvp.Key;
+					var orderItems = kvp.Value;
+					
+					// Check if this dealer has any order items
+					if (orderItems.Count > 0)
+					{
+						// Check if an order already exists for this dealer today
+						var existingOrder = await _context.DealerOrders
+							.FirstOrDefaultAsync(d => d.DealerId == dealerId && d.DistributorId == SelectedDistributorId && d.OrderDate == orderDate);
+
+						if (existingOrder != null)
+						{
+							var dealer = await _context.DealerMasters.FindAsync(dealerId);
+							_notifyService.Error($"An order has already been placed for {dealer?.Name ?? "this dealer"} today. Only one order per dealer is allowed per day.");
+							return Json(new { success = false, message = $"An order has already been placed for {dealer?.Name ?? "this dealer"} today. Only one order per dealer is allowed per day." });
+						}
+
+						hasSavedOrders = true;
+                        savedDealerIds.Add(dealerId);
+                        
 						// Create DealerOrder
 						var dealerOrder = new DealerOrder
 						{
 							OrderDate = orderDate,
 							DistributorId = SelectedDistributorId,
-							DealerId = dealer.Id,
+							DealerId = dealerId,
 							DistributorCode = GetDistributorCode(SelectedDistributorId),
 							ProcessFlag = 0 // Default to not processed
 						};
@@ -210,35 +332,39 @@ namespace Milk_Bakery.Controllers
 						await _context.SaveChangesAsync();
 
 						// Process order items based on quantities
-						if (intQuantities.ContainsKey(dealer.Id))
+						foreach (var itemKvp in orderItems)
 						{
-							foreach (var kvp in intQuantities[dealer.Id])
+							var basicOrderId = itemKvp.Key;
+							var quantity = itemKvp.Value;
+
+							// Only create order items for quantities > 0
+							if (quantity > 0)
 							{
-								var basicOrderId = kvp.Key;
-								var quantity = kvp.Value;
+								// Get the basic order to get material details
+								var basicOrder = await _context.DealerBasicOrders
+									.FirstOrDefaultAsync(dbo => dbo.Id == basicOrderId);
 
-								// Only create order items for quantities > 0
-								if (quantity > 0)
+								if (basicOrder != null)
 								{
-									// Get the basic order to get material details
-									var basicOrder = await _context.DealerBasicOrders
-										.FirstOrDefaultAsync(dbo => dbo.Id == basicOrderId);
-
-									if (basicOrder != null)
+									// Determine the rate to use - dealer price if provided, otherwise basic order rate
+									var rate = basicOrder.Rate;
+									if (dealerPrices.ContainsKey(basicOrder.MaterialName))
 									{
-										var orderItem = new DealerOrderItem
-										{
-											DealerOrderId = dealerOrder.Id,
-											MaterialName = basicOrder.MaterialName,
-											ShortCode = basicOrder.ShortCode,
-											SapCode = basicOrder.SapCode,
-											Qty = quantity,
-											Rate = basicOrder.Rate,
-											DeliverQnty = 0
-										};
-
-										_context.DealerOrderItems.Add(orderItem);
+										rate = dealerPrices[basicOrder.MaterialName];
 									}
+
+									var orderItem = new DealerOrderItem
+									{
+										DealerOrderId = dealerOrder.Id,
+										MaterialName = basicOrder.MaterialName,
+										ShortCode = basicOrder.ShortCode,
+										SapCode = basicOrder.SapCode,
+										Qty = quantity,
+										Rate = rate,
+										DeliverQnty = 0
+									};
+
+									_context.DealerOrderItems.Add(orderItem);
 								}
 							}
 						}
@@ -250,6 +376,8 @@ namespace Milk_Bakery.Controllers
 				if (hasSavedOrders)
 				{
 					_notifyService.Success("Dealer orders saved successfully.");
+                    // Return the list of saved dealer IDs so the frontend can handle them appropriately
+                    return Json(new { success = true, savedDealerIds = savedDealerIds });
 				}
 				else
 				{

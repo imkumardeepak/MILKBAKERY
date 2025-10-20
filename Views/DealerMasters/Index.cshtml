@@ -8,7 +8,14 @@
 <div class="w-full bg-white shadow-lg rounded-lg overflow-hidden mt-2">
     <div class="bg-blue-500 px-2 py-2 flex items-center justify-between">
         <h2 class="text-white text-2xl font-semibold">Dealer Master</h2>
-        <a asp-action="AddOrEdit" asp-route-id="0" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn"><i class="fa fa-plus">Add</i></a>
+        <div class="flex space-x-2">
+            <a asp-action="UploadDealers" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn flex items-center justify-center">
+                <i class="fa fa-upload mr-1"></i> Upload
+            </a>
+            <a asp-action="AddOrEdit" asp-route-id="0" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn flex items-center justify-center">
+                <i class="fa fa-plus mr-1"></i> Add
+            </a>
+        </div>
     </div>
     <div class="p-2">
         <div class="w-screen-lg mt-2">

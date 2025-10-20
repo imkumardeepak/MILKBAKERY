@@ -20,7 +20,7 @@
                 <div class="col-lg-12">
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Select Distributor/Customer</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Select Distributor and Dealer</h6>
                         </div>
                         <div class="card-body">
                             <form id="deliveredQuantityForm">
@@ -31,8 +31,15 @@
                                         asp-items="@(new SelectList(Model.AvailableDistributors, "Id", "Name"))">
                                         <option value="">-- Select Distributor --</option>
                                     </select>
-                                    <small class="form-text text-muted">Please select a distributor to view associated
-                                        dealers and their orders.</small>
+                                    <small class="form-text text-muted">Please select a distributor first.</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="dealerSelect" class="font-weight-bold">Select Dealer:</label>
+                                    <select id="dealerSelect" class="form-control form-control-lg select2" disabled>
+                                        <option value="">-- Select Dealer --</option>
+                                    </select>
+                                    <small class="form-text text-muted">Please select a dealer after selecting a distributor.</small>
                                 </div>
                             </form>
                         </div>
@@ -57,18 +64,96 @@
             $('#distributorSelect').on('change', function () {
                 var distributorId = $(this).val();
                 if (distributorId) {
-                    // Show loading indicator
-                    $('#deliveredQuantityContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p>Loading dealers and order details...</p></div>');
-
+                    // Enable dealer dropdown
+                    $('#dealerSelect').prop('disabled', false);
+                    
+                    // Load dealers for the selected distributor
+                    $('#dealerSelect').html('<option value="">Loading dealers...</option>');
+                    
                     $.ajax({
-                        url: '@Url.Action("LoadDealers", "DeliveredQuantity")',
-                        type: 'POST',
+                        url: '@Url.Action("GetDealersByDistributor", "DeliveredQuantity")',
+                        type: 'GET',
                         data: { distributorId: distributorId },
                         success: function (result) {
-                            $('#deliveredQuantityContainer').html(result);
+                            var dealerSelect = $('#dealerSelect');
+                            dealerSelect.html('<option value="">-- Select Dealer --</option>');
+                            
+                            if (result.success && result.dealers && result.dealers.length > 0) {
+                                // Separate ordered and non-ordered dealers
+                                var orderedDealers = [];
+                                var nonOrderedDealers = [];
+                                
+                                $.each(result.dealers, function (index, dealer) {
+                                    if (dealer.hasOrderedToday) {
+                                        orderedDealers.push(dealer);
+                                    } else {
+                                        nonOrderedDealers.push(dealer);
+                                    }
+                                });
+                                
+                                // Add non-ordered dealers first
+                                $.each(nonOrderedDealers, function (index, dealer) {
+                                    dealerSelect.append('<option value="' + dealer.id + '">' + dealer.name + '</option>');
+                                });
+                                
+                                // Add ordered dealers at the bottom
+                                if (orderedDealers.length > 0) {
+                                    // Add a separator
+                                    dealerSelect.append('<option disabled>──────────────────</option>');
+                                    $.each(orderedDealers, function (index, dealer) {
+                                        dealerSelect.append('<option value="' + dealer.id + '" class="ordered-dealer" data-has-ordered="true">' + dealer.name + ' <i class="fas fa-check-circle text-success"></i></option>');
+                                    });
+                                }
+                            } else {
+                                dealerSelect.html('<option value="">No dealers found</option>');
+                            }
                         },
                         error: function () {
-                            $('#deliveredQuantityContainer').html('<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation-triangle"></i> Error loading dealers. Please try again.</div>');
+                            $('#dealerSelect').html('<option value="">Error loading dealers</option>');
+                        }
+                    });
+                } else {
+                    // Reset dealer dropdown if no distributor is selected
+                    $('#dealerSelect').prop('disabled', true).html('<option value="">-- Select Dealer --</option>');
+                    $('#deliveredQuantityContainer').html('');
+                }
+            });
+            
+            // Handle dealer selection
+            $('#dealerSelect').on('change', function () {
+                var dealerId = $(this).val();
+                var dealerOption = $('#dealerSelect option:selected');
+                var hasOrderedToday = dealerOption.data('has-ordered');
+                var distributorId = $('#distributorSelect').val();
+                
+                if (dealerId && distributorId) {
+                    // Show loading indicator
+                    $('#deliveredQuantityContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p>Loading dealer order details...</p></div>');
+                    
+                    $.ajax({
+                        url: '@Url.Action("LoadDealerOrders", "DeliveredQuantity")',
+                        type: 'POST',
+                        data: { 
+                            distributorId: distributorId,
+                            dealerId: dealerId 
+                        },
+                        success: function (result) {
+                            if (result.success === false) {
+                                // Handle error from server
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: result.message,
+                                    confirmButtonText: 'OK'
+                                });
+                                $('#dealerSelect').val('');
+                                $('#deliveredQuantityContainer').html('');
+                            } else {
+                                $('#deliveredQuantityContainer').html(result);
+                            }
+                        },
+                        error: function () {
+                            $('#deliveredQuantityContainer').html('<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation-triangle"></i> Error loading dealer order details. Please try again.</div>');
                         }
                     });
                 } else {
@@ -77,4 +162,15 @@
             });
         });
     </script>
+    
+    <style>
+        .ordered-dealer {
+            color: #6c757d !important;
+            font-style: italic;
+        }
+        .select2-container--default .select2-results__option[aria-disabled=true] {
+            font-weight: bold;
+            color: #6c757d;
+        }
+    </style>
 }

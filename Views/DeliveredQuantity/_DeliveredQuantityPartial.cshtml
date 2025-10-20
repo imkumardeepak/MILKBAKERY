@@ -5,11 +5,6 @@
         <!-- AddAntiForgeryToken for AJAX requests -->
         @Html.AntiForgeryToken()
 
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h1 class="h4 mb-0 text-gray-800">Dealers for Selected Distributor</h1>
-            <span class="badge badge-primary badge-pill">@Model.Dealers.Count Dealers</span>
-        </div>
-
         @if (Model.Dealers.Any())
         {
             <div class="accordion" id="dealersAccordion">
@@ -117,7 +112,7 @@
                                                                         <td class="text-center">
                                                                             <input type="number"
                                                                                 class="form-control form-control-sm delivered-qty text-center"
-                                                                                data-item-id="@item.Id" value="@item.Qty" min="0" step="1"
+                                                                                data-item-id="@item.Id" value="@item.DeliverQnty" min="0" step="1"
                                                                                 style="width: 100px; margin: 0 auto;" />
                                                                         </td>
                                                                         <td
@@ -353,6 +348,16 @@
                             title: 'Success',
                             text: 'Delivered quantities saved successfully!',
                             confirmButtonText: 'OK'
+                        }).then((result) => {
+                            // Update the dealer option in the dropdown to show it's ordered
+                            var dealerSelect = $('#dealerSelect');
+                            var dealerOption = dealerSelect.find('option:selected');
+                            if (dealerOption.length && !dealerOption.data('has-ordered')) {
+                                var optionText = dealerOption.text();
+                                dealerOption.text(optionText + ' ✓');
+                                dealerOption.attr('data-has-ordered', 'true');
+                                dealerOption.addClass('ordered-dealer');
+                            }
                         });
                     } else {
                         Swal.fire({

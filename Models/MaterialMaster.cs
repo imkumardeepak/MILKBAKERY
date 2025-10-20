@@ -55,12 +55,14 @@ namespace Milk_Bakery.Models
 
 		[Required]
 		[Display(Name = "Active")]
-
 		public bool isactive { get; set; }
 
 		[Required(ErrorMessage = "A Crates Type is required.")]
 		[Display(Name = "Crates Type")]
 		public string CratesTypes { get; set; }
 
+		[Display(Name = "Dealer Price")]
+		[Column(TypeName = "decimal(18,2)")]
+		public decimal dealerprice { get; set; } = 1;
 	}
 }

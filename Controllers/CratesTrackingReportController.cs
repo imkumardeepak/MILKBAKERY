@@ -73,24 +73,106 @@ namespace Milk_Bakery.Controllers
 
         private List<SelectListItem> GetCustomer()
         {
-            var lstProducts = new List<SelectListItem>();
+            var role = HttpContext.Session.GetString("role");
+            var userName = HttpContext.Session.GetString("UserName");
 
-            lstProducts = _context.Customer_Master.AsNoTracking().Select(n =>
-            new SelectListItem
+            if (role == "Customer")
             {
-                Value = n.Id.ToString(),
-                Text = n.Name
-            }).ToList();
+                // For customer role, get the logged-in customer and their mapped customers
+                var loggedInCustomer = _context.Customer_Master
+                    .AsNoTracking()
+                    .FirstOrDefault(c => c.phoneno == userName);
 
-            var defItem = new SelectListItem()
+                if (loggedInCustomer != null)
+                {
+                    var customers = new List<SelectListItem>
+                    {
+                        new SelectListItem
+                        {
+                            Value = loggedInCustomer.Id.ToString(),
+                            Text = loggedInCustomer.Name
+                        }
+                    };
+
+                    // Get mapped customers
+                    var mappedCustomer = _context.Cust2CustMap
+                        .AsNoTracking()
+                        .FirstOrDefault(c => c.phoneno == userName);
+
+                    if (mappedCustomer != null)
+                    {
+                        var mappedCusts = _context.mappedcusts
+                            .AsNoTracking()
+                            .Where(mc => mc.cust2custId == mappedCustomer.id)
+                            .ToList();
+
+                        foreach (var mapped in mappedCusts)
+                        {
+                            var customer = _context.Customer_Master
+                                .AsNoTracking()
+                                .FirstOrDefault(c => c.Name == mapped.customer);
+                            if (customer != null)
+                            {
+                                customers.Add(new SelectListItem
+                                {
+                                    Value = customer.Id.ToString(),
+                                    Text = customer.Name
+                                });
+                            }
+                        }
+                    }
+
+                    return customers.OrderBy(c => c.Text).ToList();
+                }
+            }
+            else if (role == "Sales")
             {
-                Value = "",
-                Text = "All Customers"
-            };
+                // For sales role, get mapped customers
+                var empToCustMap = _context.EmpToCustMap
+                    .AsNoTracking()
+                    .FirstOrDefault(e => e.empl == userName);
 
-            lstProducts.Insert(0, defItem);
+                if (empToCustMap != null)
+                {
+                    var mappedCusts = _context.mappedcusts
+                        .AsNoTracking()
+                        .Where(mc => mc.cust2custId == empToCustMap.id)
+                        .ToList();
 
-            return lstProducts;
+                    var customers = new List<SelectListItem>();
+                    foreach (var mapped in mappedCusts)
+                    {
+                        var customer = _context.Customer_Master
+                            .AsNoTracking()
+                            .FirstOrDefault(c => c.Name == mapped.customer);
+                        if (customer != null)
+                        {
+                            customers.Add(new SelectListItem
+                            {
+                                Value = customer.Id.ToString(),
+                                Text = customer.Name
+                            });
+                        }
+                    }
+
+                    return customers.OrderBy(c => c.Text).ToList();
+                }
+            }
+            else
+            {
+                // For admin role, get all customers
+                var lstProducts = _context.Customer_Master
+                    .AsNoTracking()
+                    .Select(n => new SelectListItem
+                    {
+                        Value = n.Id.ToString(),
+                        Text = n.Name
+                    }).ToList();
+
+                return lstProducts.OrderBy(c => c.Text).ToList();
+            }
+
+            return new List<SelectListItem>();
         }
 
         private List<SelectListItem> GetDivision()

@@ -106,35 +106,13 @@ namespace Milk_Bakery.Controllers
 			// Create the view model
 			var viewModel = new DealerOrderViewModel();
 
-			// Get all materials for the dropdown/table
-			var materials = await _context.MaterialMaster.ToListAsync();
-			viewModel.AvailableMaterials = materials.Select(m => new MaterialDisplayModel
-			{
-				Id = m.Id,
-				ShortName = m.ShortName,
-				Materialname = m.Materialname,
-				Unit = m.Unit,
-				Category = m.Category,
-				subcategory = m.subcategory,
-				sequence = m.sequence,
-				segementname = m.segementname,
-				material3partycode = m.material3partycode,
-				price = m.price,
-				isactive = m.isactive,
-				CratesCode = m.CratesTypes
-			}).ToList();
-
 			// Get customers for dropdown using the same logic as RepeatOrderController
 			ViewBag.Customers = GetCustomer();
 
 			if (id == 0 || id == null)
 			{
-				// Creating new dealer - set default rate of 1 for all materials
-				foreach (var material in viewModel.AvailableMaterials)
-				{
-					viewModel.MaterialRates[material.Id] = 1;
-				}
-
+				// For new dealers, we'll populate materials when a customer is selected
+				// Initially show no materials until customer is selected
 				viewDataForView(viewModel);
 				return View(viewModel);
 			}
@@ -152,10 +130,29 @@ namespace Milk_Bakery.Controllers
 
 				viewModel.DealerMaster = dealerMaster;
 
+				// Get materials based on customer segment mapping
+				var materials = await GetMaterialsForCustomerAsync(dealerMaster.DistributorId);
+				viewModel.AvailableMaterials = materials.Select(m => new MaterialDisplayModel
+				{
+					Id = m.Id,
+					ShortName = m.ShortName,
+					Materialname = m.Materialname,
+					Unit = m.Unit,
+					Category = m.Category,
+					subcategory = m.subcategory,
+					sequence = m.sequence,
+					segementname = m.segementname,
+					material3partycode = m.material3partycode,
+					price = m.price,
+					isactive = m.isactive,
+					CratesCode = m.CratesTypes,
+					dealerprice = m.dealerprice
+				}).ToList();
+
 				// Populate the existing orders and selected materials
 				viewModel.DealerBasicOrders = dealerMaster.DealerBasicOrders.ToList();
 
-				// Populate the quantities and rates
+				// Populate the quantities and dealer prices
 				foreach (var order in dealerMaster.DealerBasicOrders)
 				{
 					// Find the corresponding material in AvailableMaterials
@@ -165,8 +162,17 @@ namespace Milk_Bakery.Controllers
 						viewModel.SelectedMaterialIds.Add(material.Id);
 						viewModel.MaterialQuantities[material.Id] = order.Quantity;
 
-						// Store the rate directly from the DealerBasicOrder
-						viewModel.MaterialRates[material.Id] = order.Rate;
+						// Store the rate from the DealerBasicOrder (this is the saved dealer rate)
+						viewModel.MaterialDealerPrices[material.Id] = order.Rate;
+					}
+				}
+
+				// For materials that don't have existing orders, use the material's default dealer price
+				foreach (var material in viewModel.AvailableMaterials)
+				{
+					if (!viewModel.MaterialDealerPrices.ContainsKey(material.Id))
+					{
+						viewModel.MaterialDealerPrices[material.Id] = material.dealerprice;
 					}
 				}
 
@@ -178,12 +184,10 @@ namespace Milk_Bakery.Controllers
 		// POST: DealerMasters/AddOrEdit/5
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> AddOrEdit(int id, DealerOrderViewModel viewModel, string submit, Dictionary<int, decimal> MaterialRates = null)
+		public async Task<IActionResult> AddOrEdit(int id, DealerOrderViewModel viewModel, string submit, Dictionary<int, decimal> MaterialDealerPrices = null)
 		{
 			// Get customers for dropdown (needed in both GET and POST)
 			ViewBag.Customers = GetCustomer();
-
-			viewDataForView(viewModel);
 
 			// Automatically populate RouteCode based on selected customer
 			if (viewModel.DealerMaster.DistributorId > 0)
@@ -193,6 +197,25 @@ namespace Milk_Bakery.Controllers
 				{
 					viewModel.DealerMaster.RouteCode = customer.route;
 				}
+
+				// Get materials based on customer segment mapping
+				var materials = await GetMaterialsForCustomerAsync(viewModel.DealerMaster.DistributorId);
+				viewModel.AvailableMaterials = materials.Select(m => new MaterialDisplayModel
+				{
+					Id = m.Id,
+					ShortName = m.ShortName,
+					Materialname = m.Materialname,
+					Unit = m.Unit,
+					Category = m.Category,
+					subcategory = m.subcategory,
+					sequence = m.sequence,
+					segementname = m.segementname,
+					material3partycode = m.material3partycode,
+					price = m.price,
+					isactive = m.isactive,
+					CratesCode = m.CratesTypes,
+					dealerprice = m.dealerprice
+				}).ToList();
 			}
 
 			// Validate that at least one material has quantity > 0
@@ -244,6 +267,15 @@ namespace Milk_Bakery.Controllers
 							return View(viewModel);
 						}
 
+						// Check if the phone number is already mapped to another dealer under the same distributor
+						var existingDealerWithPhone = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == viewModel.DealerMaster.PhoneNo && d.DistributorId == viewModel.DealerMaster.DistributorId);
+						if (existingDealerWithPhone != null)
+						{
+							_notifyService.Error("A dealer with the same phone number already exists for the selected customer.");
+							ModelState.AddModelError("", "A dealer with the same phone number already exists for the selected customer.");
+							return View(viewModel);
+						}
+
 						// Add the dealer master
 						_context.Add(viewModel.DealerMaster);
 						await _context.SaveChangesAsync();
@@ -262,11 +294,11 @@ namespace Milk_Bakery.Controllers
 									var material = await _context.MaterialMaster.FindAsync(materialId);
 									if (material != null)
 									{
-										// Get the rate from MaterialRates or use default rate of 1
+										// Get the rate from MaterialDealerPrices, or use default rate of 1
 										decimal rate = 1;
-										if (MaterialRates != null && MaterialRates.ContainsKey(materialId))
+										if (MaterialDealerPrices != null && MaterialDealerPrices.ContainsKey(materialId))
 										{
-											rate = MaterialRates[materialId];
+											rate = MaterialDealerPrices[materialId];
 										}
 
 										var dealerBasicOrder = new DealerBasicOrder
@@ -276,7 +308,7 @@ namespace Milk_Bakery.Controllers
 											SapCode = material.material3partycode,
 											ShortCode = material.ShortName,
 											Quantity = quantity,
-											Rate = rate  // Changed from BasicAmount to Rate
+											Rate = rate
 										};
 
 										_context.Add(dealerBasicOrder);
@@ -301,6 +333,15 @@ namespace Milk_Bakery.Controllers
 					// Update
 					try
 					{
+						// Check if the phone number is already mapped to another dealer under the same distributor (excluding current dealer)
+						var existingDealerWithPhone = await _context.DealerMasters.FirstOrDefaultAsync(d => d.PhoneNo == viewModel.DealerMaster.PhoneNo && d.DistributorId == viewModel.DealerMaster.DistributorId && d.Id != id);
+						if (existingDealerWithPhone != null)
+						{
+							_notifyService.Error("A dealer with the same phone number already exists for the selected customer.");
+							ModelState.AddModelError("", "A dealer with the same phone number already exists for the selected customer.");
+							return View(viewModel);
+						}
+
 						// Automatically populate RouteCode based on selected customer
 						if (viewModel.DealerMaster.DistributorId > 0)
 						{
@@ -338,11 +379,11 @@ namespace Milk_Bakery.Controllers
 									var material = await _context.MaterialMaster.FindAsync(materialId);
 									if (material != null)
 									{
-										// Get the rate from MaterialRates or use material price as fallback
+										// Get the rate from MaterialDealerPrices, or use material price as fallback
 										decimal rate = 1;
-										if (MaterialRates != null && MaterialRates.ContainsKey(materialId))
+										if (MaterialDealerPrices != null && MaterialDealerPrices.ContainsKey(materialId))
 										{
-											rate = MaterialRates[materialId];
+											rate = MaterialDealerPrices[materialId];
 										}
 										else
 										{
@@ -350,7 +391,7 @@ namespace Milk_Bakery.Controllers
 											var existingOrder = viewModel.DealerBasicOrders.FirstOrDefault(o => o.MaterialName == material.Materialname);
 											if (existingOrder != null && existingOrder.Quantity > 0)
 											{
-												rate = existingOrder.Rate;  // Changed from BasicAmount calculation to Rate
+												rate = existingOrder.Rate;
 											}
 										}
 
@@ -361,7 +402,7 @@ namespace Milk_Bakery.Controllers
 											SapCode = material.material3partycode,
 											ShortCode = material.ShortName,
 											Quantity = quantity,
-											Rate = rate  // Changed from BasicAmount to Rate
+											Rate = rate
 										};
 
 										_context.Add(dealerBasicOrder);
@@ -397,24 +438,6 @@ namespace Milk_Bakery.Controllers
 			}
 
 			// If we get here, something failed; redisplay form
-			// We need to repopulate the AvailableMaterials for the view
-			var materials = await _context.MaterialMaster.ToListAsync();
-			viewModel.AvailableMaterials = materials.Select(m => new MaterialDisplayModel
-			{
-				Id = m.Id,
-				ShortName = m.ShortName,
-				Materialname = m.Materialname,
-				Unit = m.Unit,
-				Category = m.Category,
-				subcategory = m.subcategory,
-				sequence = m.sequence,
-				segementname = m.segementname,
-				material3partycode = m.material3partycode,
-				price = m.price,
-				isactive = m.isactive,
-				CratesCode = m.CratesTypes
-			}).ToList();
-
 			return View(viewModel);
 		}
 
@@ -545,6 +568,160 @@ namespace Milk_Bakery.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
+		// GET: DealerMasters/UploadDealers
+		public async Task<IActionResult> UploadDealers()
+		{
+			ViewBag.Customers = GetCustomer();
+			return View();
+		}
+
+		// POST: DealerMasters/UploadDealers
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> UploadDealers(IFormFile file, int customerId)
+		{
+			if (file == null || file.Length == 0)
+			{
+				_notifyService.Error("Please select a file to upload.");
+				ViewBag.Customers = GetCustomer();
+				return View();
+			}
+
+			if (customerId <= 0)
+			{
+				_notifyService.Error("Please select a customer.");
+				ViewBag.Customers = GetCustomer();
+				return View();
+			}
+
+			try
+			{
+				var dealers = new List<DealerMaster>();
+				using (var stream = new MemoryStream())
+				{
+					await file.CopyToAsync(stream);
+					stream.Position = 0;
+
+					using (var reader = new StreamReader(stream))
+					{
+						string line;
+						bool isFirstLine = true;
+
+						while ((line = await reader.ReadLineAsync()) != null)
+						{
+							if (isFirstLine)
+							{
+								isFirstLine = false;
+								continue; // Skip header line
+							}
+
+							var values = line.Split(',');
+							if (values.Length >= 7)
+							{
+								// Get the distributor ID from the customer name in the CSV
+								// If not provided or invalid, use the selected customer ID
+								int distributorId = customerId;
+								if (!string.IsNullOrWhiteSpace(values[1].Trim()))
+								{
+									var distributor = await _context.Customer_Master
+										.FirstOrDefaultAsync(c => c.Name.Equals(values[1].Trim(), StringComparison.OrdinalIgnoreCase));
+									if (distributor != null)
+									{
+										distributorId = distributor.Id;
+									}
+								}
+
+								var dealer = new DealerMaster
+								{
+									Name = values[0].Trim(),
+									DistributorId = distributorId,
+									RouteCode = values[2].Trim(),
+									Address = values[3].Trim(),
+									City = values[4].Trim(),
+									PhoneNo = values[5].Trim(),
+									Email = values[6].Trim()
+								};
+
+								dealers.Add(dealer);
+							}
+						}
+					}
+				}
+
+				// Save dealers to database
+				foreach (var dealer in dealers)
+				{
+					// Check if dealer already exists for this customer
+					var existingDealer = await _context.DealerMasters
+						.FirstOrDefaultAsync(d => d.Name == dealer.Name && d.DistributorId == dealer.DistributorId);
+
+
+					// Check if the phone number is already mapped to another dealer under the same distributor
+					var existingDealerWithPhone = await _context.DealerMasters
+						.FirstOrDefaultAsync(d => d.PhoneNo == dealer.PhoneNo && d.DistributorId == dealer.DistributorId && d.Id != (existingDealer.Id));
+
+					if (existingDealerWithPhone != null)
+					{
+						_notifyService.Error($"A dealer with phone number {dealer.PhoneNo} already exists for the selected customer.");
+						ViewBag.Customers = GetCustomer();
+						return View();
+					}
+
+					if (existingDealer == null)
+					{
+						// Set the route code based on the customer
+						var customer = await _context.Customer_Master.FindAsync(dealer.DistributorId);
+						if (customer != null)
+						{
+							dealer.RouteCode = customer.route;
+						}
+
+						_context.DealerMasters.Add(dealer);
+					}
+					else
+					{
+						// Update existing dealer
+						existingDealer.RouteCode = dealer.RouteCode;
+						existingDealer.Address = dealer.Address;
+						existingDealer.City = dealer.City;
+						existingDealer.PhoneNo = dealer.PhoneNo;
+						existingDealer.Email = dealer.Email;
+
+						// Update route code based on customer
+						var customer = await _context.Customer_Master.FindAsync(dealer.DistributorId);
+						if (customer != null)
+						{
+							existingDealer.RouteCode = customer.route;
+						}
+
+						_context.DealerMasters.Update(existingDealer);
+					}
+				}
+
+				await _context.SaveChangesAsync();
+				_notifyService.Success($"Successfully uploaded {dealers.Count} dealers.");
+				return RedirectToAction(nameof(Index));
+			}
+			catch (Exception ex)
+			{
+				_notifyService.Error("Error uploading dealers: " + ex.Message);
+				ViewBag.Customers = GetCustomer();
+				return View();
+			}
+		}
+
+		// GET: DealerMasters/DownloadTemplate
+		public IActionResult DownloadTemplate()
+		{
+			var templateContent = "Name,DistributorName,RouteCode,Address,City,PhoneNo,Email\n" +
+								 "Dealer Name,Customer Name,RT001,123 Main St,City,1234567890,email@example.com\n";
+
+			var bytes = Encoding.UTF8.GetBytes(templateContent);
+			var stream = new MemoryStream(bytes);
+
+			return File(stream, "text/csv", "dealer_template.csv");
+		}
+
 		private bool DealerMasterExists(int id)
 		{
 			return _context.DealerMasters.Any(e => e.Id == id);
@@ -667,29 +844,76 @@ namespace Milk_Bakery.Controllers
 
 		private void viewDataForView(DealerOrderViewModel viewModel)
 		{
-			// Get all materials for the dropdown/table
-			if (viewModel.AvailableMaterials == null || viewModel.AvailableMaterials.Count == 0)
-			{
-				var materials = _context.MaterialMaster.ToList();
-				viewModel.AvailableMaterials = materials.Select(m => new MaterialDisplayModel
-				{
-					Id = m.Id,
-					ShortName = m.ShortName,
-					Materialname = m.Materialname,
-					Unit = m.Unit,
-					Category = m.Category,
-					subcategory = m.subcategory,
-					sequence = m.sequence,
-					segementname = m.segementname,
-					material3partycode = m.material3partycode,
-					price = m.price,
-					isactive = m.isactive,
-					CratesCode = m.CratesTypes
-				}).ToList();
-			}
-
 			// Get customers for dropdown using the same logic as RepeatOrderController
 			ViewBag.Customers = GetCustomer();
+		}
+
+		// Helper method to get materials based on customer segment mapping
+		private async Task<List<MaterialMaster>> GetMaterialsForCustomerAsync(int customerId)
+		{
+			// Get the customer
+			var customer = await _context.Customer_Master.FirstOrDefaultAsync(c => c.Id == customerId);
+			if (customer == null)
+			{
+				// If no customer found, return empty list
+				return new List<MaterialMaster>();
+			}
+
+			// Get segments mapped to this customer
+			var segmentMappings = await _context.CustomerSegementMap
+				.Where(m => m.Customername == customer.Name)
+				.ToListAsync();
+
+			// If no segments found for this customer, return empty list
+			if (!segmentMappings.Any())
+			{
+				return new List<MaterialMaster>();
+			}
+
+			// Get the segment names
+			var segmentNames = segmentMappings.Select(m => m.SegementName).ToList();
+
+			// Get materials that belong to these segments
+			var materials = await _context.MaterialMaster
+				.Where(m => segmentNames.Contains(m.segementname) && !m.Materialname.StartsWith("CRATES") && m.isactive == true)
+				.OrderBy(m => m.sequence)
+				.ToListAsync();
+
+			return materials;
+		}
+
+		// Helper method to get materials based on customer segment mapping (synchronous version)
+		private List<MaterialMaster> GetMaterialsForCustomer(int customerId)
+		{
+			// Get the customer
+			var customer = _context.Customer_Master.FirstOrDefault(c => c.Id == customerId);
+			if (customer == null)
+			{
+				// If no customer found, return empty list
+				return new List<MaterialMaster>();
+			}
+
+			// Get segments mapped to this customer
+			var segmentMappings = _context.CustomerSegementMap
+				.Where(m => m.Customername == customer.Name)
+				.ToList();
+
+			// If no segments found for this customer, return empty list
+			if (!segmentMappings.Any())
+			{
+				return new List<MaterialMaster>();
+			}
+
+			// Get the segment names
+			var segmentNames = segmentMappings.Select(m => m.SegementName).ToList();
+
+			// Get materials that belong to these segments
+			var materials = _context.MaterialMaster
+				.Where(m => segmentNames.Contains(m.segementname) && !m.Materialname.StartsWith("CRATES") && m.isactive == true)
+				.OrderBy(m => m.sequence)
+				.ToList();
+
+			return materials;
 		}
 
 		// AJAX endpoint to get route code for a customer
@@ -702,6 +926,82 @@ namespace Milk_Bakery.Controllers
 				return Json(new { routeCode = customer.route });
 			}
 			return Json(new { routeCode = "" });
+		}
+
+		// AJAX endpoint to get materials for a customer
+		[HttpGet]
+		public async Task<IActionResult> GetMaterialsForCustomer(int customerId, int? dealerId = null)
+		{
+			var materials = await GetMaterialsForCustomerAsync(customerId);
+			var materialDisplayModels = materials.Select(m => new MaterialDisplayModel
+			{
+				Id = m.Id,
+				ShortName = m.ShortName,
+				Materialname = m.Materialname,
+				Unit = m.Unit,
+				Category = m.Category,
+				subcategory = m.subcategory,
+				sequence = m.sequence,
+				segementname = m.segementname,
+				material3partycode = m.material3partycode,
+				price = m.price,
+				isactive = m.isactive,
+				CratesCode = m.CratesTypes,
+				dealerprice = m.dealerprice
+			}).ToList();
+
+			// If editing an existing dealer, include existing order information
+			if (dealerId.HasValue && dealerId.Value > 0)
+			{
+				var dealerMaster = await _context.DealerMasters
+					.Include(d => d.DealerBasicOrders)
+					.FirstOrDefaultAsync(d => d.Id == dealerId.Value);
+
+				if (dealerMaster != null)
+				{
+					// Create dictionaries for quantities and dealer prices
+					var materialQuantities = new Dictionary<int, int>();
+					var materialDealerPrices = new Dictionary<int, decimal>();
+
+					// Populate with existing order data
+					foreach (var order in dealerMaster.DealerBasicOrders)
+					{
+						// Find the corresponding material
+						var material = materialDisplayModels.FirstOrDefault(m => m.Materialname == order.MaterialName);
+						if (material != null)
+						{
+							materialQuantities[material.Id] = order.Quantity;
+							materialDealerPrices[material.Id] = order.Rate;
+						}
+					}
+
+					// For materials without existing orders, use default dealer price
+					foreach (var material in materialDisplayModels)
+					{
+						if (!materialDealerPrices.ContainsKey(material.Id))
+						{
+							materialDealerPrices[material.Id] = material.dealerprice;
+						}
+					}
+
+					return Json(new
+					{
+						materials = materialDisplayModels,
+						quantities = materialQuantities,
+						dealerPrices = materialDealerPrices
+					});
+				}
+			}
+
+			// For new dealers, initialize with default dealer prices
+			var defaultDealerPrices = materialDisplayModels.ToDictionary(m => m.Id, m => m.dealerprice);
+
+			return Json(new
+			{
+				materials = materialDisplayModels,
+				quantities = new Dictionary<int, int>(),
+				dealerPrices = defaultDealerPrices
+			});
 		}
 	}
 }

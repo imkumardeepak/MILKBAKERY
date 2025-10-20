@@ -16,7 +16,7 @@
                 <div class="col-lg-12">
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Select Distributor/Customer</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">Select Distributor and Dealer</h6>
                         </div>
                         <div class="card-body">
                             <form id="dealerOrderForm">
@@ -25,7 +25,15 @@
                                     <select id="distributorSelect" class="form-control form-control-lg select2" asp-items="@(new SelectList(Model.AvailableDistributors, "Id", "Name"))">
                                         <option value="">-- Select Distributor --</option>
                                     </select>
-                                    <small class="form-text text-muted">Please select a distributor to view associated dealers and their order details.</small>
+                                    <small class="form-text text-muted">Please select a distributor first.</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="dealerSelect" class="font-weight-bold">Select Dealer:</label>
+                                    <select id="dealerSelect" class="form-control form-control-lg select2" disabled>
+                                        <option value="">-- Select Dealer --</option>
+                                    </select>
+                                    <small class="form-text text-muted">Please select a dealer after selecting a distributor.</small>
                                 </div>
                             </form>
                         </div>
@@ -35,6 +43,14 @@
             
             <div id="dealerOrdersContainer">
                 <!-- Dealer orders will be loaded here via AJAX -->
+            </div>
+            
+            <!-- Container for successfully ordered dealers -->
+            <div id="successfulOrdersContainer" class="mt-4">
+                <h5 class="font-weight-bold text-success"><i class="fas fa-check-circle"></i> Successfully Ordered Dealers</h5>
+                <div id="successfulOrdersList">
+                    <!-- Successfully ordered dealers will be moved here -->
+                </div>
             </div>
         </div>
     </div>
@@ -50,24 +66,167 @@
             $('#distributorSelect').on('change', function () {
                 var distributorId = $(this).val();
                 if (distributorId) {
-                    // Show loading indicator
-                    $('#dealerOrdersContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p>Loading dealers and order details...</p></div>');
+                    // Enable dealer dropdown
+                    $('#dealerSelect').prop('disabled', false);
+                    
+                    // Load dealers for the selected distributor
+                    $('#dealerSelect').html('<option value="">Loading dealers...</option>');
                     
                     $.ajax({
-                        url: '@Url.Action("LoadDealers", "DealerOrders")',
-                        type: 'POST',
+                        url: '@Url.Action("GetDealersByDistributor", "DealerOrders")',
+                        type: 'GET',
                         data: { distributorId: distributorId },
                         success: function (result) {
-                            $('#dealerOrdersContainer').html(result);
+                            var dealerSelect = $('#dealerSelect');
+                            dealerSelect.html('<option value="">-- Select Dealer --</option>');
+                            
+                            if (result.success && result.dealers && result.dealers.length > 0) {
+                                // Separate ordered and non-ordered dealers
+                                var orderedDealers = [];
+                                var nonOrderedDealers = [];
+                                
+                                $.each(result.dealers, function (index, dealer) {
+                                    if (dealer.hasOrderedToday) {
+                                        orderedDealers.push(dealer);
+                                    } else {
+                                        nonOrderedDealers.push(dealer);
+                                    }
+                                });
+                                
+                                // Add non-ordered dealers first
+                                $.each(nonOrderedDealers, function (index, dealer) {
+                                    dealerSelect.append('<option value="' + dealer.id + '">' + dealer.name + '</option>');
+                                });
+                                
+                                // Add ordered dealers at the bottom
+                                if (orderedDealers.length > 0) {
+                                    // Add a separator
+                                    dealerSelect.append('<option disabled>───────Ordered─────────── </option>');
+                                    $.each(orderedDealers, function (index, dealer) {
+                                        dealerSelect.append('<option value="' + dealer.id + '" class="ordered-dealer" data-has-ordered="true">' + dealer.name + ' <i class="fas fa-check-circle text-success"></i></option>');
+                                    });
+                                }
+                            } else {
+                                dealerSelect.html('<option value="">No dealers found</option>');
+                            }
                         },
                         error: function () {
-                            $('#dealerOrdersContainer').html('<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation-triangle"></i> Error loading dealers. Please try again.</div>');
+                            $('#dealerSelect').html('<option value="">Error loading dealers</option>');
+                        }
+                    });
+                } else {
+                    // Reset dealer dropdown if no distributor is selected
+                    $('#dealerSelect').prop('disabled', true).html('<option value="">-- Select Dealer --</option>');
+                    $('#dealerOrdersContainer').html('');
+                }
+            });
+            
+            // Handle dealer selection
+            $('#dealerSelect').on('change', function () {
+                var dealerId = $(this).val();
+                var dealerOption = $('#dealerSelect option:selected');
+                var hasOrderedToday = dealerOption.data('has-ordered');
+                var distributorId = $('#distributorSelect').val();
+                
+                // Check if dealer has already ordered today
+                if (hasOrderedToday) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Order Already Placed',
+                        text: 'An order has already been placed for this dealer today. Only one order per dealer is allowed per day.',
+                        confirmButtonText: 'OK'
+                    });
+                    $(this).val(''); // Reset selection
+                    $('#dealerOrdersContainer').html('');
+                    return;
+                }
+                
+                if (dealerId && distributorId) {
+                    // Show loading indicator
+                    $('#dealerOrdersContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p>Loading dealer order details...</p></div>');
+                    
+                    $.ajax({
+                        url: '@Url.Action("LoadDealerOrder", "DealerOrders")',
+                        type: 'POST',
+                        data: { 
+                            distributorId: distributorId,
+                            dealerId: dealerId 
+                        },
+                        success: function (result) {
+                            if (result.success === false) {
+                                // Handle error from server
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: result.message,
+                                    confirmButtonText: 'OK'
+                                });
+                                $('#dealerSelect').val('');
+                                $('#dealerOrdersContainer').html('');
+                            } else {
+                                $('#dealerOrdersContainer').html(result);
+                            }
+                        },
+                        error: function () {
+                            $('#dealerOrdersContainer').html('<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation-triangle"></i> Error loading dealer order details. Please try again.</div>');
                         }
                     });
                 } else {
                     $('#dealerOrdersContainer').html('');
                 }
             });
+            
+            // Handle successful order saving
+            $(document).on('orderSaved', function(event, dealerId, dealerName) {
+                // Move the dealer card to the successful orders container
+                var dealerCard = $('#dealer-card-' + dealerId);
+                if (dealerCard.length) {
+                    // Add success styling
+                    dealerCard.removeClass('border-left-primary').addClass('border-left-success');
+                    dealerCard.find('.card-header').removeClass('text-primary').addClass('text-success');
+                    
+                    // Add success tick icon
+                    var header = dealerCard.find('.card-header h6');
+                    header.html('<i class="fas fa-check-circle"></i> ' + dealerName + ' <span class="badge badge-success">Ordered</span>');
+                    
+                    // Collapse the card
+                    dealerCard.find('.dealer-collapse-content').addClass('d-none');
+                    dealerCard.find('.toggle-icon').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                    
+                    // Move to successful orders container
+                    $('#successfulOrdersList').append(dealerCard);
+                    
+                    // Show the successful orders container if it was hidden
+                    $('#successfulOrdersContainer').show();
+                    
+                    // Update the dealer option in the dropdown to show it's ordered
+                    var dealerOption = $('#dealerSelect option[value="' + dealerId + '"]');
+                    if (dealerOption.length) {
+                        var optionText = dealerOption.text();
+                        dealerOption.text(optionText + ' ✓');
+                        dealerOption.attr('data-has-ordered', 'true');
+                        dealerOption.addClass('ordered-dealer');
+                    }
+                }
+            });
+            
+            // Show the successful orders container initially if there are any
+            if ($('#successfulOrdersList').children().length > 0) {
+                $('#successfulOrdersContainer').show();
+            } else {
+                $('#successfulOrdersContainer').hide();
+            }
         });
     </script>
+    
+    <style>
+        .ordered-dealer {
+            color: #6c757d !important;
+            font-style: italic;
+        }
+        .select2-container--default .select2-results__option[aria-disabled=true] {
+            font-weight: bold;
+            color: #6c757d;
+        }
+    </style>
 }

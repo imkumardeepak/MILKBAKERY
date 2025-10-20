@@ -975,6 +975,9 @@ namespace Milk_Bakery.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<decimal>("dealerprice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<bool>("isactive")
                         .HasColumnType("bit");
 

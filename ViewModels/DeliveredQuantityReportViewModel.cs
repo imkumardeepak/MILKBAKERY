@@ -1,4 +1,8 @@
-using System.ComponentModel.DataAnnotations;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Milk_Bakery.Models;
 
 namespace Milk_Bakery.ViewModels
 {
@@ -11,6 +15,10 @@ namespace Milk_Bakery.ViewModels
 		public int? CustomerId { get; set; }
 		public List<string> AvailableCustomers { get; set; } = new List<string>();
 		public bool ShowOnlyVariance { get; set; } = false;
+		
+		// Dealer selection properties
+		public int? DealerId { get; set; }
+		public List<DealerMaster> AvailableDealers { get; set; } = new List<DealerMaster>();
 	}
 
 	public class DeliveredQuantityReportItem

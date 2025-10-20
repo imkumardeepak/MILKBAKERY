@@ -30,5 +30,7 @@ namespace Milk_Bakery.ViewModels
         public bool isactive { get; set; }
         
         public string? CratesCode { get; set; }
+        
+        public decimal dealerprice { get; set; }
     }
 }

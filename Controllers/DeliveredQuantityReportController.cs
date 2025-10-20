@@ -53,7 +53,7 @@ namespace Milk_Bakery.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> GenerateReport(DeliveredQuantityReportViewModel model)
 		{
-			var reportItems = await GenerateDeliveredQuantityReport(model.FromDate, model.ToDate, model.CustomerName, model.ShowOnlyVariance);
+			var reportItems = await GenerateDeliveredQuantityReport(model.FromDate, model.ToDate, model.CustomerName, model.DealerId, model.ShowOnlyVariance);
 
 			var viewModel = new DeliveredQuantityReportViewModel
 			{
@@ -61,15 +61,29 @@ namespace Milk_Bakery.Controllers
 				FromDate = model.FromDate,
 				ToDate = model.ToDate,
 				CustomerName = model.CustomerName,
+				DealerId = model.DealerId,
 				ShowOnlyVariance = model.ShowOnlyVariance,
 				AvailableCustomers = await GetAvailableCustomers()
 			};
+
+			// Populate available dealers based on selected customer
+			if (!string.IsNullOrEmpty(model.CustomerName))
+			{
+				var customer = await _context.Customer_Master.FirstOrDefaultAsync(c => c.Name == model.CustomerName);
+				if (customer != null)
+				{
+					viewModel.AvailableDealers = await _context.DealerMasters
+						.Where(d => d.DistributorId == customer.Id)
+						.OrderBy(d => d.Name)
+						.ToListAsync();
+				}
+			}
 
 			ViewBag.Customers = GetCustomer(); // Add customer dropdown data
 			return View("Index", viewModel);
 		}
 
-		private async Task<List<DeliveredQuantityReportItem>> GenerateDeliveredQuantityReport(DateTime? fromDate, DateTime? toDate, string customerName, bool showOnlyVariance)
+		private async Task<List<DeliveredQuantityReportItem>> GenerateDeliveredQuantityReport(DateTime? fromDate, DateTime? toDate, string customerName, int? dealerId, bool showOnlyVariance)
 		{
 			var reportItems = new List<DeliveredQuantityReportItem>();
 
@@ -78,6 +92,12 @@ namespace Milk_Bakery.Controllers
 				.Include(d => d.DealerOrderItems)
 				.AsNoTracking()
 				.Where(d => d.OrderDate >= fromDate && d.OrderDate <= toDate);
+
+			// Apply dealer filter if specified
+			if (dealerId.HasValue && dealerId.Value > 0)
+			{
+				dealerOrdersQuery = dealerOrdersQuery.Where(d => d.DealerId == dealerId.Value);
+			}
 
 			// Apply customer filter based on role
 			var role = HttpContext.Session.GetString("role");
@@ -190,7 +210,7 @@ namespace Milk_Bakery.Controllers
 				var toDate = model.ToDate ?? DateTime.Now.Date;
 				
 				// Generate report data
-				var reportItems = await GenerateDeliveredQuantityReport(fromDate, toDate, model.CustomerName, model.ShowOnlyVariance);
+				var reportItems = await GenerateDeliveredQuantityReport(fromDate, toDate, model.CustomerName, model.DealerId, model.ShowOnlyVariance);
 				
 				// Log the number of items for debugging
 				System.Diagnostics.Debug.WriteLine($"Exporting {reportItems.Count} items to Excel");
@@ -339,7 +359,7 @@ namespace Milk_Bakery.Controllers
 				var defItem = new SelectListItem()
 				{
 					Value = "",
-					Text = "All Customers"
+					Text = "-- Select Customer --"
 				};
 
 				lstProducts.Insert(0, defItem);
@@ -386,7 +406,7 @@ namespace Milk_Bakery.Controllers
 				var defItem = new SelectListItem()
 				{
 					Value = "",
-					Text = "All Customers"
+					Text = "-- Select Customer --"
 				};
 				lstProducts.Add(defItem);
 
@@ -400,6 +420,41 @@ namespace Milk_Bakery.Controllers
 					});
 				}
 				return lstProducts;
+			}
+		}
+
+		// AJAX method to get dealers by customer
+		[HttpGet]
+		public async Task<IActionResult> GetDealersByCustomer(string customerName)
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(customerName))
+				{
+					return Json(new { success = true, dealers = new List<DealerMaster>() });
+				}
+
+				var customer = await _context.Customer_Master.FirstOrDefaultAsync(c => c.Name == customerName);
+				if (customer == null)
+				{
+					return Json(new { success = true, dealers = new List<DealerMaster>() });
+				}
+
+				var dealers = await _context.DealerMasters
+					.Where(d => d.DistributorId == customer.Id)
+					.OrderBy(d => d.Name)
+					.Select(d => new { Id = d.Id, Name = d.Name })
+					.ToListAsync();
+
+				// Add "All Dealers" option
+				var allDealersOption = new { Id = 0, Name = "All Dealers" };
+				dealers.Insert(0, allDealersOption);
+
+				return Json(new { success = true, dealers = dealers });
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
 			}
 		}
 	}

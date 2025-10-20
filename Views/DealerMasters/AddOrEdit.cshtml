@@ -117,7 +117,7 @@
                                             Short</th>
                                         <th scope="col"
                                             class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">
-                                            Rate</th>
+                                            Dealer Price</th>
                                         <th scope="col"
                                             class="px-2 py-1 text-xs font-medium text-black-800 uppercase tracking-wider">
                                             Qty</th>
@@ -127,52 +127,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @for (int i = 0; i < Model.AvailableMaterials.Count; i++)
-                                    {
-                                        var material = Model.AvailableMaterials[i];
-                                        var isSelected = Model.SelectedMaterialIds != null &&
-                                        Model.SelectedMaterialIds.Contains(material.Id);
-                                        var quantity = isSelected && Model.MaterialQuantities.ContainsKey(material.Id) ?
-                                        Model.MaterialQuantities[material.Id] : 0;
-                                        // Get existing rate if editing, otherwise default to 1
-                                        var rate = 1m;
-                                        if (isSelected && Model.MaterialRates.ContainsKey(material.Id))
-                                        {
-                                            rate = Model.MaterialRates[material.Id];
-                                        }
-
-                                    <tr>
-                                        <!-- Material name cell hidden on small screens -->
-                                        <td class="px-2 py-1 whitespace-nowrap hidden sm:table-cell">
-                                            @material.Materialname
-                                            <input type="hidden" name="AvailableMaterials[@i].Id"
-                                                value="@material.Id" />
-                                            <input type="hidden" name="AvailableMaterials[@i].Materialname"
-                                                value="@material.Materialname" />
-                                            <input type="hidden" name="AvailableMaterials[@i].ShortName"
-                                                value="@material.ShortName" />
-                                        </td>
-                                        <!-- Short Code cell with fixed width and wrapping on small screens -->
-                                        <td class="px-2 py-1 w-24 sm:w-auto">@material.ShortName</td>
-                                        <td class="px-2 py-1 whitespace-nowrap">
-                                            <input type="number" name="MaterialRates[@material.Id]"
-                                                value="@rate.ToString("F2")" min="0" step="0.01"
-                                                class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-rate"
-                                                data-material-id="@material.Id" />
-                                        </td>
-                                        <td class="px-2 py-1 whitespace-nowrap">
-                                            <input type="number" name="MaterialQuantities[@material.Id]"
-                                                value="@quantity" min="0"
-                                                class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-quantity"
-                                                data-material-id="@material.Id" />
-                                        </td>
-                                        <td class="px-2 py-1 whitespace-nowrap">
-                                            <span class="material-amount text-[12px]"
-                                                data-material-id="@material.Id">@((rate *
-                                                                                                quantity).ToString("F2"))</span>
-                                        </td>
-                                    </tr>
-                                                                        }
+                                    @* Materials will be populated dynamically via JavaScript *@
                                 </tbody>
                             </table>
                         </div>
@@ -202,218 +157,161 @@
             const dealerForm = document.getElementById("dealerForm");
             const totalQuantityElement = document.getElementById("totalQuantity");
             const totalAmountElement = document.getElementById("totalAmount");
+            const materialsTableBody = document.querySelector("#materialsTable tbody");
+            const dealerId = document.querySelector('input[name="id"]')?.value || 0;
 
-            // Add event listeners to all material inputs
-            setTimeout(function () {
-                attachEventListeners();
-                // Update counts on page load after event listeners are attached
-                updateCounts();
-            }, 100);
-
-            // Customer selection change event
+            // Add event listener for customer selection change
             if (customerSelect) {
-                customerSelect.addEventListener("change", function () {
+                customerSelect.addEventListener('change', function () {
                     const customerId = this.value;
-
                     if (customerId) {
-                        // Make AJAX call to get route code
+                        // Get route code for the selected customer
                         fetch(`/DealerMasters/GetRouteCode?customerId=${customerId}`)
-                            .then((response) => {
-                                if (!response.ok) {
-                                    throw new Error(`HTTP error! status: ${response.status}`);
-                                }
-                                return response.json();
-                            })
-                            .then((data) => {
+                            .then(response => response.json())
+                            .then(data => {
                                 if (routeCodeInput) {
-                                    routeCodeInput.value = data.routeCode || "";
+                                    routeCodeInput.value = data.routeCode || '';
                                 }
                             })
-                            .catch((error) => {
-                                console.error("Error fetching route code:", error);
-                                if (routeCodeInput) {
-                                    routeCodeInput.value = "";
-                                }
-                            });
+                            .catch(error => console.error('Error fetching route code:', error));
+
+                        // Get materials for the selected customer
+                        fetch(`/DealerMasters/GetMaterialsForCustomer?customerId=${customerId}&dealerId=${dealerId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                // Clear existing table rows
+                                materialsTableBody.innerHTML = '';
+
+                                // Add new rows for each material
+                                data.materials.forEach((material, index) => {
+                                    const quantity = data.quantities && data.quantities[material.id] ? data.quantities[material.id] : 0;
+                                    const dealerPrice = data.dealerPrices && data.dealerPrices[material.id] ? data.dealerPrices[material.id] : material.dealerprice;
+
+                                    const row = document.createElement('tr');
+                                    
+                                    // Material name cell (hidden on small screens)
+                                    const materialNameCell = document.createElement('td');
+                                    materialNameCell.className = 'px-2 py-1 whitespace-nowrap hidden sm:table-cell';
+                                    materialNameCell.innerHTML = `
+                                        ${material.materialname}
+                                        <input type="hidden" name="AvailableMaterials[${index}].Id" value="${material.id}" />
+                                        <input type="hidden" name="AvailableMaterials[${index}].Materialname" value="${material.materialname}" />
+                                        <input type="hidden" name="AvailableMaterials[${index}].ShortName" value="${material.shortName}" />
+                                    `;
+                                    
+                                    // Short Code cell
+                                    const shortCodeCell = document.createElement('td');
+                                    shortCodeCell.className = 'px-2 py-1 w-24 sm:w-auto';
+                                    shortCodeCell.textContent = material.shortName;
+                                    
+                                    // Dealer Price cell
+                                    const dealerPriceCell = document.createElement('td');
+                                    dealerPriceCell.className = 'px-2 py-1 whitespace-nowrap';
+                                    dealerPriceCell.innerHTML = `
+                                        <input type="number" name="MaterialDealerPrices[${material.id}]" 
+                                            value="${dealerPrice.toFixed(2)}" min="0" step="0.01"
+                                            class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-dealer-price"
+                                            data-material-id="${material.id}" />
+                                    `;
+                                    
+                                    // Quantity cell
+                                    const quantityCell = document.createElement('td');
+                                    quantityCell.className = 'px-2 py-1 whitespace-nowrap';
+                                    quantityCell.innerHTML = `
+                                        <input type="number" name="MaterialQuantities[${material.id}]" 
+                                            value="${quantity}" min="0"
+                                            class="text-[12px] h-7 text-gray-700 w-16 border-2 px-1 rounded-sm material-quantity"
+                                            data-material-id="${material.id}" />
+                                    `;
+                                    
+                                    // Amount cell
+                                    const amount = quantity * dealerPrice;
+                                    const amountCell = document.createElement('td');
+                                    amountCell.className = 'px-2 py-1 whitespace-nowrap';
+                                    amountCell.innerHTML = `
+                                        <span class="material-amount text-[12px]" data-material-id="${material.id}">${amount.toFixed(2)}</span>
+                                    `;
+                                    
+                                    row.appendChild(materialNameCell);
+                                    row.appendChild(shortCodeCell);
+                                    row.appendChild(dealerPriceCell);
+                                    row.appendChild(quantityCell);
+                                    row.appendChild(amountCell);
+                                    
+                                    materialsTableBody.appendChild(row);
+                                });
+
+                                // Re-attach event listeners to the new inputs
+                                attachMaterialEventListeners();
+                                
+                                // Update totals
+                                updateTotals();
+                            })
+                            .catch(error => console.error('Error fetching materials:', error));
                     } else {
+                        // Clear route code and materials if no customer selected
                         if (routeCodeInput) {
-                            routeCodeInput.value = "";
+                            routeCodeInput.value = '';
                         }
+                        materialsTableBody.innerHTML = '';
                     }
                 });
             }
 
-            // Function to attach event listeners to all material inputs
-            function attachEventListeners() {
-                // Add event listeners to quantity inputs
-                const quantityInputs = document.querySelectorAll(".material-quantity");
-                quantityInputs.forEach(function (input) {
-                    input.addEventListener("input", function () {
-                        const materialId = this.getAttribute("data-material-id");
-                        handleQuantityChange(this, materialId);
-                    });
+            // Function to attach event listeners to material inputs
+            function attachMaterialEventListeners() {
+                // Add event listeners to all dealer price inputs
+                document.querySelectorAll('.material-dealer-price').forEach(input => {
+                    input.addEventListener('input', updateTotals);
                 });
 
-                // Add event listeners to rate inputs
-                const rateInputs = document.querySelectorAll(".material-rate");
-                rateInputs.forEach(function (input) {
-                    input.addEventListener("input", function () {
-                        const materialId = this.getAttribute("data-material-id");
-                        handleRateChange(this, materialId);
-                    });
+                // Add event listeners to all quantity inputs
+                document.querySelectorAll('.material-quantity').forEach(input => {
+                    input.addEventListener('input', updateTotals);
                 });
             }
 
-            // Function to handle quantity changes
-            function handleQuantityChange(quantityInput, materialId) {
-                if (!quantityInput) return;
+            // Function to update totals
+            function updateTotals() {
+                let totalQuantity = 0;
+                let totalAmount = 0;
 
-                let value = parseInt(quantityInput.value) || 0;
-
-                // Ensure value is not negative
-                if (value < 0) {
-                    quantityInput.value = 0;
-                    value = 0;
-                }
-
-                updateAmount(materialId);
-                updateCounts();
-            }
-
-            // Function to handle rate changes
-            function handleRateChange(rateInput, materialId) {
-                if (!rateInput) return;
-
-                let value = parseFloat(rateInput.value) || 0;
-
-                // Ensure value is not negative
-                if (value < 0) {
-                    rateInput.value = 0;
-                    value = 0;
-                }
-
-                updateAmount(materialId);
-                updateCounts();
-            }
-
-            // Function to update the amount display
-            function updateAmount(materialId) {
-                const quantityInput = document.querySelector(
-                    `input[name="MaterialQuantities[${materialId}]"]`
-                );
-                const rateInput = document.querySelector(
-                    `input[name="MaterialRates[${materialId}]"]`
-                );
-                const amountElement = document.querySelector(
-                    `.material-amount[data-material-id="${materialId}"]`
-                );
-
-                if (quantityInput && rateInput && amountElement) {
+                document.querySelectorAll('.material-quantity').forEach(quantityInput => {
+                    const materialId = quantityInput.dataset.materialId;
                     const quantity = parseInt(quantityInput.value) || 0;
-                    const rate = parseFloat(rateInput.value) || 0;
-                    const amount = (rate * quantity).toFixed(2);
-                    amountElement.textContent = amount;
-                }
-            }
+                    const dealerPriceInput = document.querySelector(`.material-dealer-price[data-material-id="${materialId}"]`);
+                    const dealerPrice = parseFloat(dealerPriceInput ? dealerPriceInput.value : 0) || 0;
+                    const amount = quantity * dealerPrice;
+                    const amountElement = document.querySelector(`.material-amount[data-material-id="${materialId}"]`);
 
-            // Function to update total quantity and total amount
-            function updateCounts() {
-                try {
-                    let totalQuantity = 0;
-                    let totalAmount = 0;
-                    const quantityInputs = document.querySelectorAll(".material-quantity");
-                    const amountElements = document.querySelectorAll(".material-amount");
+                    totalQuantity += quantity;
+                    totalAmount += amount;
 
-                    // Calculate total quantity
-                    quantityInputs.forEach(function (input) {
-                        const quantity = parseInt(input.value) || 0;
-                        totalQuantity += quantity;
-                    });
-
-                    // Calculate total amount by summing individual amounts
-                    amountElements.forEach(function (element) {
-                        const amount = parseFloat(element.textContent) || 0;
-                        totalAmount += amount;
-                    });
-
-                    // Update the display elements
-                    if (totalQuantityElement) {
-                        totalQuantityElement.textContent = totalQuantity;
-                    }
-
-                    if (totalAmountElement) {
-                        totalAmountElement.textContent = totalAmount.toFixed(2);
-                    }
-                } catch (error) {
-                    console.error("Error updating counts:", error);
-                }
-            }
-
-            // Handle focus event for quantity inputs to clear value when user focuses on a non-zero field
-            document.addEventListener("focus", function (e) {
-                if (e.target && e.target.classList.contains("material-quantity")) {
-                    // If the field has a value and user focuses on it, clear it for easy re-entry
-                    if (e.target.value !== "" && parseInt(e.target.value) > 0) {
-                        // Clear the value when user focuses on a field with existing value
-                        e.target.value = "";
-                    }
-                }
-            }, true); // Using capture phase to ensure we catch the focus event
-
-            // Handle keydown events for quantity inputs (Enter)
-            document.addEventListener("keydown", function (e) {
-                if (e.target && e.target.classList.contains("material-quantity")) {
-                    // Prevent form submission and move to next field when Enter is pressed
-                    if (e.key === "Enter") {
-                        e.preventDefault(); // Prevent form submission
-
-                        // Find all quantity inputs
-                        const quantityInputs = Array.from(
-                            document.querySelectorAll(".material-quantity")
-                        );
-
-                        // Find current input index
-                        const currentIndex = quantityInputs.indexOf(e.target);
-
-                        // Move to next input if available, otherwise remove focus
-                        if (currentIndex < quantityInputs.length - 1) {
-                            // Move to next quantity input
-                            const nextInput = quantityInputs[currentIndex + 1];
-                            setTimeout(() => {
-                                nextInput.focus();
-                            }, 10);
-                        } else {
-                            // If this is the last input, remove focus
-                            setTimeout(() => {
-                                e.target.blur(); // Remove focus from the input
-                            }, 10);
-                        }
-                    }
-                }
-            });
-
-            // Form validation before submit
-            if (dealerForm) {
-                dealerForm.addEventListener("submit", function (e) {
-                    try {
-                        // Check if at least one material has quantity > 0
-                        let hasValidQuantity = false;
-                        const quantityInputs = document.querySelectorAll(".material-quantity");
-                        quantityInputs.forEach(function (input) {
-                            const quantity = parseInt(input.value) || 0;
-                            if (quantity > 0) {
-                                hasValidQuantity = true;
-                            }
-                        });
-
-                        // Allow form submission to proceed
-                        return true;
-                    } catch (error) {
-                        console.error("Error during form submission:", error);
-                        // Allow form submission to proceed in case of script error
-                        return true;
+                    if (amountElement) {
+                        amountElement.textContent = amount.toFixed(2);
                     }
                 });
+
+                if (totalQuantityElement) {
+                    totalQuantityElement.textContent = totalQuantity;
+                }
+
+                if (totalAmountElement) {
+                    totalAmountElement.textContent = totalAmount.toFixed(2);
+                }
+            }
+
+            // Initialize event listeners
+            attachMaterialEventListeners();
+
+            // Initialize totals
+            updateTotals();
+            
+            // Trigger customer change event on page load if editing existing dealer and customer is already selected
+            if (dealerId > 0 && customerSelect && customerSelect.value) {
+                // Dispatch change event to load materials for existing dealer
+                const event = new Event('change');
+                customerSelect.dispatchEvent(event);
             }
         });
     </script>

@@ -35,10 +35,21 @@
                     <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label asp-for="CustomerName" class="control-label font-weight-bold">Customer</label>
-                            <select asp-for="CustomerName" class="form-control select2" asp-items="ViewBag.Customers">
+                            <select asp-for="CustomerName" class="form-control select2" asp-items="ViewBag.Customers" id="customerSelect">
+                                <option value="">-- Select Customer --</option>
                             </select>
                         </div>
                     </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label asp-for="DealerId" class="control-label font-weight-bold">Dealer</label>
+                            <select asp-for="DealerId" class="form-control select2" id="dealerSelect" disabled>
+                                <option value="">-- Select Customer First --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-lg-3 col-md-6">
                         <div class="form-group">
                             <label class="control-label font-weight-bold">Options</label>
@@ -295,6 +306,44 @@
                 $('#ToDate').val(today);
             }
 
+            // Handle customer selection change
+            $('#customerSelect').on('change', function () {
+                var customerName = $(this).val();
+                var dealerSelect = $('#dealerSelect');
+                
+                // Clear and disable dealer dropdown
+                dealerSelect.html('<option value="">Loading...</option>');
+                dealerSelect.prop('disabled', true);
+                
+                if (customerName) {
+                    // Load dealers for the selected customer
+                    $.ajax({
+                        url: '@Url.Action("GetDealersByCustomer", "DeliveredQuantityReport")',
+                        type: 'GET',
+                        data: { customerName: customerName },
+                        success: function (result) {
+                            dealerSelect.html('<option value="">All Dealers</option>');
+                            
+                            if (result.success && result.dealers && result.dealers.length > 0) {
+                                $.each(result.dealers, function (index, dealer) {
+                                    if (dealer.id !== 0) { // Skip "All Dealers" option as we already added it
+                                        dealerSelect.append('<option value="' + dealer.id + '">' + dealer.name + '</option>');
+                                    }
+                                });
+                                dealerSelect.prop('disabled', false);
+                            } else {
+                                dealerSelect.html('<option value="">No dealers found</option>');
+                            }
+                        },
+                        error: function () {
+                            dealerSelect.html('<option value="">Error loading dealers</option>');
+                        }
+                    });
+                } else {
+                    dealerSelect.html('<option value="">-- Select Customer First --</option>');
+                }
+            });
+
             // Handle export button click
             $('#exportButton').click(function () {
                 // Create a temporary form for export
@@ -307,6 +356,7 @@
                 var fromDate = $('#FromDate').val();
                 var toDate = $('#ToDate').val();
                 var customerName = $('#CustomerName').val();
+                var dealerId = $('#DealerId').val();
                 var showOnlyVariance = $('#ShowOnlyVariance').is(':checked');
 
                 if (fromDate) {
@@ -329,6 +379,12 @@
                     'type': 'hidden',
                     'name': 'CustomerName',
                     'value': customerName
+                }));
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'DealerId',
+                    'value': dealerId
                 }));
 
                 exportForm.append($('<input>', {
