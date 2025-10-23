@@ -45,10 +45,7 @@
                             <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Id</th>
                             <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Distributor ID</th>
                             <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Name</th>
-                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Route Code</th>
-                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">City</th>
                             <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Phone No</th>
-                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Email</th>
                             <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Orders</th>
                             <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Action</th>
                         </tr>
@@ -60,10 +57,7 @@
                                 <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@item.Id</td>
                                 <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@item.DistributorId</td>
                                 <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@item.Name</td>
-                                <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@item.RouteCode</td>
-                                <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@item.City</td>
                                 <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@item.PhoneNo</td>
-                                <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@item.Email</td>
                                 <td class="px-2 py-2 whitespace-nowrap whitespace-nowrap">@item.DealerBasicOrders.Count</td>
                                 <td class="px-3 py-2 whitespace-nowrap whitespace-nowrap">
                                     <a asp-action="AddOrEdit" asp-route-id="@item.Id" class="h-10 w-10 rounded-sm shadow-md text-white text-[16px] hover:bg-yellow-700 bg-yellow-600 btn"><i class="fas fa-pencil-alt"></i> </a> |

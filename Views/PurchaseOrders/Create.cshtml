@@ -39,7 +39,7 @@
 							<div class="row" id="myDiv">
 								<div class="form-group col-sm-6">
 									<label asp-for="Customername" class="control-label"></label>
-									<select asp-for="Customername" id="myDropdown1" class="form-control" asp-items="@ViewBag.customer" onchange="changewb()" readonly></select>
+									<select asp-for="Customername" id="myDropdown1" class="form-control select2" asp-items="@ViewBag.customer" onchange="changewb()" readonly></select>
 									<span asp-validation-for="Customername" class="text-danger"></span>
 								</div>
 								<div class="form-group col-sm-6">

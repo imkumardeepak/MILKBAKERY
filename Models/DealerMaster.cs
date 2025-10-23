@@ -16,8 +16,15 @@ namespace Milk_Bakery.Models
 
 		[Required]
 		[StringLength(200)]
-		[Display(Name = "Name")]
+		[Display(Name = "Dealer Name")]
 		public string Name { get; set; }
+
+
+		[Required]
+		[StringLength(200)]
+		[Display(Name = "Contact Person")]
+		public string ContactPerson { get; set; }
+
 
 		[Required]
 		[StringLength(50)]
@@ -28,11 +35,6 @@ namespace Milk_Bakery.Models
 		[StringLength(500)]
 		[Display(Name = "Address")]
 		public string Address { get; set; }
-
-		[Required]
-		[StringLength(100)]
-		[Display(Name = "City")]
-		public string City { get; set; }
 
 		[Required]
 		[MaxLength(10), MinLength(10)]
@@ -48,7 +50,7 @@ namespace Milk_Bakery.Models
 
 		// Navigation property for related basic orders
 		public virtual ICollection<DealerBasicOrder> DealerBasicOrders { get; set; } = new List<DealerBasicOrder>();
-		
-		
+
+
 	}
 }

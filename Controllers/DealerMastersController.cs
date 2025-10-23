@@ -616,30 +616,19 @@ namespace Milk_Bakery.Controllers
 							}
 
 							var values = line.Split(',');
-							if (values.Length >= 7)
+							if (values.Length >= 5) // Updated to require only 5 columns
 							{
-								// Get the distributor ID from the customer name in the CSV
-								// If not provided or invalid, use the selected customer ID
+								// Get the distributor ID from the selected customer
 								int distributorId = customerId;
-								if (!string.IsNullOrWhiteSpace(values[1].Trim()))
-								{
-									var distributor = await _context.Customer_Master
-										.FirstOrDefaultAsync(c => c.Name.Equals(values[1].Trim(), StringComparison.OrdinalIgnoreCase));
-									if (distributor != null)
-									{
-										distributorId = distributor.Id;
-									}
-								}
-
+								
 								var dealer = new DealerMaster
 								{
 									Name = values[0].Trim(),
 									DistributorId = distributorId,
-									RouteCode = values[2].Trim(),
-									Address = values[3].Trim(),
-									City = values[4].Trim(),
-									PhoneNo = values[5].Trim(),
-									Email = values[6].Trim()
+									ContactPerson = values[1].Trim(),
+									Address = values[2].Trim(),
+									PhoneNo = values[3].Trim(),
+									Email = values[4].Trim()
 								};
 
 								dealers.Add(dealer);
@@ -651,16 +640,22 @@ namespace Milk_Bakery.Controllers
 				// Save dealers to database
 				foreach (var dealer in dealers)
 				{
+					// Set the route code based on the customer
+					var customer = await _context.Customer_Master.FindAsync(dealer.DistributorId);
+					if (customer != null)
+					{
+						dealer.RouteCode = customer.route;
+					}
+
 					// Check if dealer already exists for this customer
 					var existingDealer = await _context.DealerMasters
 						.FirstOrDefaultAsync(d => d.Name == dealer.Name && d.DistributorId == dealer.DistributorId);
 
-
 					// Check if the phone number is already mapped to another dealer under the same distributor
 					var existingDealerWithPhone = await _context.DealerMasters
-						.FirstOrDefaultAsync(d => d.PhoneNo == dealer.PhoneNo && d.DistributorId == dealer.DistributorId && d.Id != (existingDealer.Id));
+						.FirstOrDefaultAsync(d => d.PhoneNo == dealer.PhoneNo && d.DistributorId == dealer.DistributorId);
 
-					if (existingDealerWithPhone != null)
+					if (existingDealerWithPhone != null && (existingDealer == null || existingDealer.Id != existingDealerWithPhone.Id))
 					{
 						_notifyService.Error($"A dealer with phone number {dealer.PhoneNo} already exists for the selected customer.");
 						ViewBag.Customers = GetCustomer();
@@ -669,26 +664,17 @@ namespace Milk_Bakery.Controllers
 
 					if (existingDealer == null)
 					{
-						// Set the route code based on the customer
-						var customer = await _context.Customer_Master.FindAsync(dealer.DistributorId);
-						if (customer != null)
-						{
-							dealer.RouteCode = customer.route;
-						}
-
 						_context.DealerMasters.Add(dealer);
 					}
 					else
 					{
 						// Update existing dealer
-						existingDealer.RouteCode = dealer.RouteCode;
+						existingDealer.ContactPerson = dealer.ContactPerson;
 						existingDealer.Address = dealer.Address;
-						existingDealer.City = dealer.City;
 						existingDealer.PhoneNo = dealer.PhoneNo;
 						existingDealer.Email = dealer.Email;
 
 						// Update route code based on customer
-						var customer = await _context.Customer_Master.FindAsync(dealer.DistributorId);
 						if (customer != null)
 						{
 							existingDealer.RouteCode = customer.route;
@@ -713,8 +699,8 @@ namespace Milk_Bakery.Controllers
 		// GET: DealerMasters/DownloadTemplate
 		public IActionResult DownloadTemplate()
 		{
-			var templateContent = "Name,DistributorName,RouteCode,Address,City,PhoneNo,Email\n" +
-								 "Dealer Name,Customer Name,RT001,123 Main St,City,1234567890,email@example.com\n";
+			var templateContent = "Name,ContactPerson,Address,PhoneNo,Email\n" +
+								 "Dealer Name,Contact Person,123 Main St,1234567890,email@example.com\n";
 
 			var bytes = Encoding.UTF8.GetBytes(templateContent);
 			var stream = new MemoryStream(bytes);
