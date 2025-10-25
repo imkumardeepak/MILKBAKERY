@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Text;
 using OfficeOpenXml;
+using System.Collections.Concurrent;
 
 namespace Milk_Bakery.Controllers
 {
@@ -22,6 +23,10 @@ namespace Milk_Bakery.Controllers
 	{
 		private readonly MilkDbContext _context;
 		public INotyfService _notifyService { get; }
+
+		// Static list to store invoice numbers temporarily (in-memory storage)
+		// In a production environment, this should be stored in a database or cache
+		private static readonly ConcurrentDictionary<string, DateTime> _uploadedInvoices = new ConcurrentDictionary<string, DateTime>();
 
 		public CratesOutwardManagesController(MilkDbContext context, INotyfService notyf)
 		{
@@ -40,6 +45,8 @@ namespace Milk_Bakery.Controllers
 		public async Task<IActionResult> BulkOutwardEntry()
 		{
 			var viewModel = new BulkOutwardEntryViewModel();
+
+			viewModel.DispDate = DateTime.Now.AddDays(-1);
 
 			ViewBag.DivisionId = new SelectList(await _context.SegementMaster.ToListAsync(), "SegementName", "SegementName");
 			ViewBag.CratesTypeId = new SelectList(await _context.CratesTypes.ToListAsync(), "Id", "Cratestype");
@@ -89,6 +96,21 @@ namespace Milk_Bakery.Controllers
 								existingRecord.Balance = existingRecord.Opening + existingRecord.Outward - existingRecord.Inward;
 								_context.CratesManages.Update(existingRecord);
 								recordsProcessed++;
+
+								// Update opening balance for the next day
+								var nextDayRecord = await _context.CratesManages
+									.Where(cm => cm.CustomerId == customer.CustomerId &&
+												 cm.SegmentCode == segment.custsegementcode &&
+												 cm.DispDate == viewModel.DispDate.AddDays(1) &&
+												 cm.CratesTypeId == viewModel.CratesTypeId)
+									.OrderByDescending(cm => cm.DispDate)
+									.FirstOrDefaultAsync();
+								if (nextDayRecord != null)
+								{
+									nextDayRecord.Opening = existingRecord.Balance;
+									nextDayRecord.Balance = nextDayRecord.Opening + nextDayRecord.Outward - nextDayRecord.Inward;
+									_context.CratesManages.Update(nextDayRecord);
+								}
 							}
 							else
 							{
@@ -148,7 +170,7 @@ namespace Milk_Bakery.Controllers
 						_notifyService.Warning("No outward entries were processed.");
 					}
 
-					return RedirectToAction("Index", "CratesManages"); // Redirect to CratesManages Index
+					return RedirectToAction("Index", "Home"); // Redirect to CratesManages Index
 				}
 				catch (Exception ex)
 				{
@@ -167,6 +189,9 @@ namespace Milk_Bakery.Controllers
 		public async Task<IActionResult> UploadBulkOutwardEntry()
 		{
 			var viewModel = new BulkOutwardEntryViewModel();
+
+			// Set dispatch date to one day before current date
+			viewModel.DispDate = DateTime.Now.AddDays(-1);
 
 			ViewBag.DivisionId = new SelectList(await _context.SegementMaster.ToListAsync(), "SegementName", "SegementName");
 			// Initialize with empty list so that crate types are loaded dynamically based on segment selection
@@ -221,12 +246,21 @@ namespace Milk_Bakery.Controllers
 					}
 
 					int recordsProcessed = 0;
+					int duplicateInvoicesSkipped = 0;
+					var processedInvoices = new List<string>(); // Track invoices processed in this upload
 
 					foreach (var customer in viewModel.Customers.Where(a => a.Outward > 0))
 					{
+						// Check if invoice number already exists in our temporary storage
+						if (!string.IsNullOrEmpty(customer.InvoiceNumber) && _uploadedInvoices.ContainsKey(customer.InvoiceNumber))
+						{
+							duplicateInvoicesSkipped++;
+							continue; // Skip this entry
+						}
+
 						if (customer.Outward > 0)
 						{
-							var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName && s.SegementName == viewModel.SegmentCode);
+							var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername.Trim() == customer.CustomerName.Trim() && s.SegementName == viewModel.SegmentCode);
 							// Check if a record for this customer, segment, crates type, and date already exists
 							var existingRecord = await _context.CratesManages
 								.Where(cm => cm.CustomerId == customer.CustomerId &&
@@ -242,6 +276,21 @@ namespace Milk_Bakery.Controllers
 								existingRecord.Balance = existingRecord.Opening + existingRecord.Outward - existingRecord.Inward;
 								_context.CratesManages.Update(existingRecord);
 								recordsProcessed++;
+
+								// Update opening balance for the next day
+								var nextDayRecord = await _context.CratesManages
+									.Where(cm => cm.CustomerId == customer.CustomerId &&
+												 cm.SegmentCode == segment.custsegementcode &&
+												 cm.DispDate == viewModel.DispDate.AddDays(1) &&
+												 cm.CratesTypeId == viewModel.CratesTypeId)
+									.OrderByDescending(cm => cm.DispDate)
+									.FirstOrDefaultAsync();
+								if (nextDayRecord != null)
+								{
+									nextDayRecord.Opening = existingRecord.Balance;
+									nextDayRecord.Balance = nextDayRecord.Opening + nextDayRecord.Outward - nextDayRecord.Inward;
+									_context.CratesManages.Update(nextDayRecord);
+								}
 							}
 							else
 							{
@@ -287,20 +336,38 @@ namespace Milk_Bakery.Controllers
 									recordsProcessed++;
 								}
 							}
+
+							// Add invoice to processed list for this upload
+							if (!string.IsNullOrEmpty(customer.InvoiceNumber))
+							{
+								processedInvoices.Add(customer.InvoiceNumber);
+							}
 						}
 					}
 
-					if (recordsProcessed > 0)
+					if (recordsProcessed > 0 || duplicateInvoicesSkipped > 0)
 					{
 						await _context.SaveChangesAsync();
-						_notifyService.Success($"{recordsProcessed} outward entries saved successfully.");
+
+						// Add the processed invoice numbers to the temporary list
+						foreach (var invoice in processedInvoices)
+						{
+							_uploadedInvoices.TryAdd(invoice, DateTime.Now);
+						}
+
+						var message = $"{recordsProcessed} outward entries saved successfully.";
+						if (duplicateInvoicesSkipped > 0)
+						{
+							message += $" {duplicateInvoicesSkipped} entries with duplicate invoice numbers were skipped.";
+						}
+						_notifyService.Success(message);
 					}
 					else
 					{
 						_notifyService.Warning("No outward entries were processed.");
 					}
 
-					return RedirectToAction("Index", "CratesManages"); // Redirect to CratesManages Index
+					return RedirectToAction("Index", "Home"); // Redirect to CratesManages Index
 				}
 				catch (Exception ex)
 				{
@@ -330,11 +397,11 @@ namespace Milk_Bakery.Controllers
 
 			// Create CSV content
 			var csvContent = new StringBuilder();
-			csvContent.AppendLine("Customer ID,Customer Name,Short Name,City,Route,Outward Quantity"); // Header row
+			csvContent.AppendLine("Customer ID,Customer Name,Short Code,Route,Invoice Number,Outward Quantity");
 
 			foreach (var customer in customers)
 			{
-				csvContent.AppendLine($"{customer.Id},{customer.Name},{customer.shortname},{customer.city},{customer.route},");
+				csvContent.AppendLine($"{customer.Id},{customer.Name},{customer.shortname},{customer.route},,");
 			}
 
 			// Convert to byte array
@@ -384,10 +451,11 @@ namespace Milk_Bakery.Controllers
 					}
 
 					var values = line.Split(',');
+					// Now expecting 6 columns: CustomerId,CustomerName,ShortCode,Route,InvoiceNumber,OutwardQuantity
 					if (values.Length >= 6 && !string.IsNullOrEmpty(values[0].Trim()) &&
 						!string.IsNullOrEmpty(values[5].Trim()))
 					{
-						// Assuming CSV format: CustomerId,CustomerName,City,Route,OutwardQuantity
+						// Assuming CSV format: CustomerId,CustomerName,ShortCode,Route,InvoiceNumber,OutwardQuantity
 						if (int.TryParse(values[0].Trim(), out int customerId) &&
 							int.TryParse(values[5].Trim(), out int outwardQuantity))
 						{
@@ -410,6 +478,7 @@ namespace Milk_Bakery.Controllers
 								{
 									CustomerId = customerId,
 									CustomerName = customer.Name.Trim(),
+									InvoiceNumber = values.Length > 4 ? values[4].Trim() : string.Empty, // Get invoice number from 5th column
 									Outward = outwardQuantity
 								});
 							}

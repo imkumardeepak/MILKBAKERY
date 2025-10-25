@@ -12,6 +12,16 @@
             </div>
         </div>
         <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-12">
+                    <a href="@Url.Action("DispatchRouteSheet", "DealerOrders")" class="btn btn-primary mr-2">
+                        <i class="fas fa-truck"></i> Dispatch Route Sheet
+                    </a>
+                    <a href="#" class="btn btn-success">
+                        <i class="fas fa-file-alt"></i> Consolidated Place Order
+                    </a>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card shadow mb-4">
@@ -131,14 +141,11 @@
                 // Check if dealer has already ordered today
                 if (hasOrderedToday) {
                     Swal.fire({
-                        icon: 'warning',
+                        icon: 'info',
                         title: 'Order Already Placed',
-                        text: 'An order has already been placed for this dealer today. Only one order per dealer is allowed per day.',
-                        confirmButtonText: 'OK'
+                        text: 'An order has already been placed for this dealer today. You can view and edit the existing order.',
+                        confirmButtonText: 'View Order'
                     });
-                    $(this).val(''); // Reset selection
-                    $('#dealerOrdersContainer').html('');
-                    return;
                 }
                 
                 if (dealerId && distributorId) {

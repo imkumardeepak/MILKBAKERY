@@ -67,15 +67,6 @@ namespace Milk_Bakery.Services
 						{
 							try
 							{
-								// Search the po avilable in purchase
-								var purchase = await dbContext.PurchaseOrder
-									.Where(p => p.OrderNo == invoice.CustomerRefPO).FirstOrDefaultAsync();
-
-								if (purchase == null)
-								{
-									_logger.LogWarning("Purchase not found for invoice ID: {invoiceId}, PO: {po}", invoice.InvoiceId, invoice.CustomerRefPO);
-									continue;
-								}
 
 								_logger.LogInformation("Processing invoice ID: {invoiceId}, Invoice No: {invoiceNo}",
 									invoice.InvoiceId, invoice.InvoiceNo);

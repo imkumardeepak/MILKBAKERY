@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Models;
 using static Milk_Bakery.Models.InvoiceDetails;
 
@@ -42,11 +42,11 @@ namespace Milk_Bakery.Data
 		public DbSet<DealerBasicOrder> DealerBasicOrders { get; set; } = default!;
 		public DbSet<DealerOrder> DealerOrders { get; set; } = default!;
 		public DbSet<DealerOrderItem> DealerOrderItems { get; set; } = default!;
-
 		public DbSet<CratesManage> CratesManages { get; set; } = default!;
 		public DbSet<Invoice> Invoices { get; set; } = default!;
 		public DbSet<InvoiceMaterialDetail> InvoiceMaterials { get; set; } = default!;
 		public DbSet<CreditDebitRecord> CreditDebitRecords { get; set; } = default!;
+		public DbSet<ConversionTable> ConversionTables { get; set; } = default!;
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -107,6 +107,15 @@ namespace Milk_Bakery.Data
 			modelBuilder.Entity<Invoice>()
 				.HasIndex(e => e.setflag)
 				.HasDatabaseName("IX_Invoices_setflag");
+				
+			// Configure default values for ConversionTable
+			modelBuilder.Entity<ConversionTable>()
+				.Property(e => e.UnitQuantity)
+				.HasDefaultValue(0);
+				
+			modelBuilder.Entity<ConversionTable>()
+				.Property(e => e.TotalQuantity)
+				.HasDefaultValue(0);
 		}
 	}
 }

@@ -539,7 +539,7 @@ namespace Milk_Bakery.Controllers
 						{
 							// Get the segment mapping for this customer and segment
 							var segment = await _context.CustomerSegementMap
-								.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName &&
+								.FirstOrDefaultAsync(s => s.Customername.Trim() == customer.CustomerName.Trim() &&
 														s.SegementName == viewModel.SegmentCode);
 
 							// Skip if no valid segment mapping found
@@ -682,8 +682,8 @@ namespace Milk_Bakery.Controllers
 					{
 						if (customer.OpeningBalance > 0)
 						{
-							var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName && s.SegementName == viewModel.SegmentCode);
-							// Check if a record for this customer, segment, crates type, and date already exists
+							var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername.Trim() == customer.CustomerName.Trim() && s.SegementName == viewModel.SegmentCode);
+
 							var existingRecord = await _context.CratesManages
 								.Where(cm => cm.CustomerId == customer.CustomerId &&
 									 cm.SegmentCode == segment.custsegementcode &&
@@ -815,6 +815,8 @@ namespace Milk_Bakery.Controllers
 		{
 			var viewModel = new BulkInwardEntryViewModel();
 
+			viewModel.DispDate = DateTime.Now.AddDays(-1);
+
 			ViewBag.DivisionId = new SelectList(await _context.SegementMaster.ToListAsync(), "SegementName", "SegementName");
 			ViewBag.CratesTypeId = new SelectList(await _context.CratesTypes.ToListAsync(), "Id", "Cratestype");
 
@@ -838,7 +840,7 @@ namespace Milk_Bakery.Controllers
 						{
 							// Get the segment mapping for this customer and segment
 							var segment = await _context.CustomerSegementMap
-								.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName &&
+								.FirstOrDefaultAsync(s => s.Customername.Trim() == customer.CustomerName.Trim() &&
 														s.SegementName == viewModel.SegmentCode);
 
 							// Skip if no valid segment mapping found
@@ -863,6 +865,22 @@ namespace Milk_Bakery.Controllers
 								existingRecord.Balance = existingRecord.Opening + existingRecord.Outward - existingRecord.Inward;
 								_context.CratesManages.Update(existingRecord);
 								recordsProcessed++;
+
+								//Update opening balance for the next day
+								var nextDayRecord = await _context.CratesManages
+									.Where(cm => cm.CustomerId == customer.CustomerId &&
+												 cm.SegmentCode == segment.custsegementcode &&
+												 cm.DispDate == viewModel.DispDate.AddDays(1) &&
+												 cm.CratesTypeId == viewModel.CratesTypeId)
+									.FirstOrDefaultAsync();
+
+								if (nextDayRecord != null)
+								{
+									nextDayRecord.Opening = existingRecord.Balance;
+									nextDayRecord.Balance = nextDayRecord.Opening + nextDayRecord.Outward - nextDayRecord.Inward;
+									_context.CratesManages.Update(nextDayRecord);
+									recordsProcessed++;
+								}
 							}
 							else
 							{
@@ -941,6 +959,7 @@ namespace Milk_Bakery.Controllers
 		public async Task<IActionResult> UploadBulkInwardEntry()
 		{
 			var viewModel = new BulkInwardEntryViewModel();
+			viewModel.DispDate = DateTime.Now.AddDays(-1);
 
 			ViewBag.DivisionId = new SelectList(await _context.SegementMaster.ToListAsync(), "SegementName", "SegementName");
 			// Initialize with empty list so that crate types are loaded dynamically based on segment selection
@@ -1000,7 +1019,7 @@ namespace Milk_Bakery.Controllers
 					{
 						if (customer.Inward > 0)
 						{
-							var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername == customer.CustomerName && s.SegementName == viewModel.SegmentCode);
+							var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername.Trim() == customer.CustomerName.Trim() && s.SegementName == viewModel.SegmentCode);
 
 							if (segment == null)
 							{
@@ -1022,6 +1041,22 @@ namespace Milk_Bakery.Controllers
 								existingRecord.Balance = existingRecord.Opening + existingRecord.Outward - existingRecord.Inward;
 								_context.CratesManages.Update(existingRecord);
 								recordsProcessed++;
+
+								//Update opening balance for the next day
+								var nextDayRecord = await _context.CratesManages
+									.Where(cm => cm.CustomerId == customer.CustomerId &&
+												 cm.SegmentCode == segment.custsegementcode &&
+												 cm.DispDate == viewModel.DispDate.AddDays(1) &&
+												 cm.CratesTypeId == viewModel.CratesTypeId)
+									.FirstOrDefaultAsync();
+
+								if (nextDayRecord != null)
+								{
+									nextDayRecord.Opening = existingRecord.Balance;
+									nextDayRecord.Balance = nextDayRecord.Opening + nextDayRecord.Outward - nextDayRecord.Inward;
+									_context.CratesManages.Update(nextDayRecord);
+									recordsProcessed++;
+								}
 							}
 							else
 							{
@@ -1177,7 +1212,7 @@ namespace Milk_Bakery.Controllers
 
 			// Create CSV content
 			var csvContent = new StringBuilder();
-			csvContent.AppendLine("Customer ID,Customer Name,Short Name,City,Route,Outward Quantity"); // Header row
+			csvContent.AppendLine("Customer ID,Customer Name,Short Name,City,Route,Opening Quantity"); // Header row
 
 			foreach (var customer in customers)
 			{
@@ -1205,7 +1240,7 @@ namespace Milk_Bakery.Controllers
 
 			// Create CSV content
 			var csvContent = new StringBuilder();
-			csvContent.AppendLine("Customer ID,Customer Name,Short Name,City,Route,Outward Quantity"); // Header row
+			csvContent.AppendLine("Customer ID,Customer Name,Short Name,City,Route,Inward Quantity"); // Header row
 
 			foreach (var customer in customers)
 			{

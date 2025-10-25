@@ -225,12 +225,13 @@
                                 <ol>
                                     <li><strong>Customer ID</strong> - Numeric ID of the customer</li>
                                     <li><strong>Customer Name</strong> - Name of the customer</li>
+                                    <li><strong>Invoice Number</strong> - Invoice number for this entry</li>
                                     <li><strong>Outward Quantity</strong> - Outward quantity</li>
                                 </ol>
                                 <p><strong>Example:</strong></p>
-                                <pre class="bg-light p-2">101,ABC Customer,50
-102,XYZ Customer,75
-103,PQR Customer,100</pre>
+                                <pre class="bg-light p-2">101,ABC Customer,INV001,50
+102,XYZ Customer,INV002,75
+103,PQR Customer,INV003,100</pre>
                                 <p class="mb-0">The first row (header) will be ignored if present.</p>
                             </div>
 
@@ -238,8 +239,7 @@
                                 <h6>How to Create File from Excel:</h6>
                                 <ol>
                                     <li>Open Microsoft Excel or any spreadsheet application</li>
-                                    <li>Enter your data in three columns: Customer ID, Customer Name, Outward Quantity
-                                    </li>
+                                    <li>Enter your data in four columns: Customer ID, Customer Name, Invoice Number, Outward Quantity</li>
                                     <li>Ensure there are no headers in the data (or they will be ignored)</li>
                                     <li>Click on <strong>File</strong> > <strong>Save As</strong></li>
                                     <li>Choose file type as <strong>CSV (Comma delimited) (*.csv)</strong> or
@@ -258,7 +258,7 @@
                                     <li>Click the "Download Excel Template" button</li>
                                     <li>Open the downloaded CSV file in Excel (it will automatically be recognized as a
                                         spreadsheet)</li>
-                                    <li>Enter outward quantity values in the third column</li>
+                                    <li>Enter invoice numbers and outward quantity values in the respective columns</li>
                                     <li>Save the file as CSV (Comma delimited) or Excel Workbook (*.xlsx)</li>
                                     <li>Upload the updated file using the file upload area</li>
                                 </ol>
@@ -301,11 +301,13 @@
             const cratesTypeDropdown = $('#cratesTypeDropdown');
             const downloadTemplateBtn = $('#downloadTemplateBtn');
 
-            // Set current date for DispDate
+            // Set current date for DispDate (one day before current date)
             const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months start at 0!
-            const dd = String(today.getDate()).padStart(2, '0');
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yyyy = yesterday.getFullYear();
+            const mm = String(yesterday.getMonth() + 1).padStart(2, '0'); // Months start at 0!
+            const dd = String(yesterday.getDate()).padStart(2, '0');
             $('#DispDate').val(`${yyyy}-${mm}-${dd}`);
 
             // Load crate types when segment changes

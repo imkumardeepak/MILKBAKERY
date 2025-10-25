@@ -48,6 +48,12 @@
                         <span asp-validation-for="DealerMaster.Name" class="text-danger"></span>
                     </div>
                     <div class="col-span-4 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Contact Person</span>
+                        <input asp-for="DealerMaster.ContactPerson"
+                            class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" />
+                        <span asp-validation-for="DealerMaster.ContactPerson" class="text-danger"></span>
+                    </div>
+                    <div class="col-span-4 relative">
                         <span class="absolute bg-white left-3 -top-[12px] px-2">Route Code<span
                                 class="text-red-500">*</span></span>
                         <input asp-for="DealerMaster.RouteCode" id="routeCode"
@@ -191,10 +197,100 @@
                                         <input type="hidden" name="AvailableMaterials[${index}].Materialname" value="${material.materialname}" />
                                         <input type="hidden" name="AvailableMaterials[${index}].ShortName" value="${material.shortName}" />
                                     `;
+                                    
+                                    // Short code cell
+                                    const shortCodeCell = document.createElement('td');
+                                    shortCodeCell.className = 'px-2 py-1 whitespace-nowrap';
+                                    shortCodeCell.textContent = material.shortName;
+                                    
+                                    // Dealer price cell with input
+                                    const dealerPriceCell = document.createElement('td');
+                                    dealerPriceCell.className = 'px-2 py-1 whitespace-nowrap';
+                                    dealerPriceCell.innerHTML = `
+                                        <input type="number" step="0.01" min="0" 
+                                            name="MaterialDealerPrices[${material.id}]" 
+                                            value="${dealerPrice.toFixed(2)}" 
+                                            class="w-20 text-right border rounded px-1 py-1 material-price" 
+                                            data-material-id="${material.id}" />
+                                    `;
+                                    
+                                    // Quantity cell with input
+                                    const quantityCell = document.createElement('td');
+                                    quantityCell.className = 'px-2 py-1 whitespace-nowrap';
+                                    quantityCell.innerHTML = `
+                                        <input type="number" min="0" 
+                                            name="MaterialQuantities[${material.id}]" 
+                                            value="${quantity}" 
+                                            class="w-20 text-right border rounded px-1 py-1 material-quantity" 
+                                            data-material-id="${material.id}" />
+                                    `;
+                                    
+                                    // Amount cell
+                                    const amountCell = document.createElement('td');
+                                    amountCell.className = 'px-2 py-1 whitespace-nowrap text-right';
+                                    amountCell.innerHTML = `<span class="amount" data-material-id="${material.id}">${(quantity * dealerPrice).toFixed(2)}</span>`;
+                                    
+                                    // Append cells to row
+                                    row.appendChild(materialNameCell);
+                                    row.appendChild(shortCodeCell);
+                                    row.appendChild(dealerPriceCell);
+                                    row.appendChild(quantityCell);
+                                    row.appendChild(amountCell);
+                                    
+                                    // Append row to table body
+                                    materialsTableBody.appendChild(row);
                                 });
-                            });
+                                
+                                // Add event listeners for quantity and price changes
+                                document.querySelectorAll('.material-quantity, .material-price').forEach(input => {
+                                    input.addEventListener('input', calculateTotals);
+                                });
+                                
+                                // Calculate initial totals
+                                calculateTotals();
+                            })
+                            .catch(error => console.error('Error fetching materials:', error));
+                    } else {
+                        // Clear table if no customer selected
+                        materialsTableBody.innerHTML = '';
+                        calculateTotals();
                     }
                 });
+                
+                // Trigger change event on page load if editing existing dealer
+                if (dealerId > 0 && customerSelect.value) {
+                    customerSelect.dispatchEvent(new Event('change'));
+                }
+            }
+            
+            // Function to calculate totals
+            function calculateTotals() {
+                let totalQuantity = 0;
+                let totalAmount = 0;
+                
+                document.querySelectorAll('.material-quantity').forEach(input => {
+                    const quantity = parseInt(input.value) || 0;
+                    const materialId = input.dataset.materialId;
+                    const priceInput = document.querySelector(`.material-price[data-material-id="${materialId}"]`);
+                    const price = parseFloat(priceInput?.value) || 0;
+                    const amountElement = document.querySelector(`.amount[data-material-id="${materialId}"]`);
+                    
+                    totalQuantity += quantity;
+                    const amount = quantity * price;
+                    totalAmount += amount;
+                    
+                    if (amountElement) {
+                        amountElement.textContent = amount.toFixed(2);
+                    }
+                });
+                
+                if (totalQuantityElement) {
+                    totalQuantityElement.textContent = totalQuantity;
+                }
+                
+                if (totalAmountElement) {
+                    totalAmountElement.textContent = totalAmount.toFixed(2);
+                }
             }
         });
     </script>

@@ -79,6 +79,11 @@ namespace Milk_Bakery.Controllers
 						.ToListAsync();
 
 					ViewBag.SelectedCustomerId = customerIdToShow.ToString();
+					
+					// Pass customer data to view for displaying customer names
+					var customers = await _context.Customer_Master.ToListAsync();
+					ViewBag.CustomerList = customers;
+					
 					return View(dealers);
 				}
 				else
@@ -86,6 +91,7 @@ namespace Milk_Bakery.Controllers
 					// If customer not found, return empty list
 					ViewBag.Customers = new List<SelectListItem>();
 					ViewBag.SelectedCustomerId = "";
+					ViewBag.CustomerList = new List<Customer_Master>();
 					return View(new List<DealerMaster>());
 				}
 			}
@@ -95,6 +101,10 @@ namespace Milk_Bakery.Controllers
 				var dealers = await _context.DealerMasters
 					.Include(d => d.DealerBasicOrders)
 					.ToListAsync();
+					
+				// Pass customer data to view for displaying customer names
+				var customers = await _context.Customer_Master.ToListAsync();
+				ViewBag.CustomerList = customers;
 
 				return View(dealers);
 			}
@@ -168,10 +178,12 @@ namespace Milk_Bakery.Controllers
 				}
 
 				// For materials that don't have existing orders, use the material's default dealer price
+				// This ensures that new materials show the default dealer price from MaterialMaster
 				foreach (var material in viewModel.AvailableMaterials)
 				{
 					if (!viewModel.MaterialDealerPrices.ContainsKey(material.Id))
 					{
+						// Use the default dealer price from MaterialMaster when no specific dealer price exists
 						viewModel.MaterialDealerPrices[material.Id] = material.dealerprice;
 					}
 				}
@@ -957,15 +969,18 @@ namespace Milk_Bakery.Controllers
 						if (material != null)
 						{
 							materialQuantities[material.Id] = order.Quantity;
+							// Use the rate from DealerBasicOrder (saved dealer-specific rate)
 							materialDealerPrices[material.Id] = order.Rate;
 						}
 					}
 
-					// For materials without existing orders, use default dealer price
+					// For materials without existing orders, use default dealer price from MaterialMaster
+					// This ensures that new materials show the default dealer price
 					foreach (var material in materialDisplayModels)
 					{
 						if (!materialDealerPrices.ContainsKey(material.Id))
 						{
+							// Use the default dealer price from MaterialMaster when no specific dealer price exists
 							materialDealerPrices[material.Id] = material.dealerprice;
 						}
 					}
@@ -979,7 +994,7 @@ namespace Milk_Bakery.Controllers
 				}
 			}
 
-			// For new dealers, initialize with default dealer prices
+			// For new dealers, initialize with default dealer prices from MaterialMaster
 			var defaultDealerPrices = materialDisplayModels.ToDictionary(m => m.Id, m => m.dealerprice);
 
 			return Json(new

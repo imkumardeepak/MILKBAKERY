@@ -6,6 +6,12 @@ using Milk_Bakery.ViewModels;
 using AspNetCoreHero.ToastNotification.Abstractions;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
+using OfficeOpenXml;
+using System.IO;
+using System.Text;
 
 namespace Milk_Bakery.Controllers
 {
@@ -19,7 +25,9 @@ namespace Milk_Bakery.Controllers
 		{
 			_context = context;
 			_notifyService = notifyService;
-		}
+            // Set the license context for EPPlus
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        }
 
 		// GET: DealerOrders
 		public async Task<IActionResult> Index()
@@ -31,6 +39,182 @@ namespace Milk_Bakery.Controllers
 
 			return View(viewModel);
 		}
+
+        // GET: DealerOrders/DispatchRouteSheet
+        public async Task<IActionResult> DispatchRouteSheet()
+        {
+            return View();
+        }
+
+        // GET: DealerOrders/GetAllCustomers
+        [HttpGet]
+        public async Task<IActionResult> GetAllCustomers()
+        {
+            try
+            {
+                var customers = await GetAvailableDistributors();
+                var customerList = customers.Select(c => new { id = c.Id, name = c.Name }).ToList();
+                return Json(new { success = true, customers = customerList });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: DealerOrders/GetDispatchData
+        [HttpGet]
+        public async Task<IActionResult> GetDispatchData(DateTime? date, int? customerId)
+        {
+            try
+            {
+                var dispatchDate = date ?? DateTime.Now.Date;
+                
+                // Get dealer orders for the specified date
+                var dealerOrdersQuery = _context.DealerOrders
+                    .Include(o => o.Dealer)
+                    .Where(o => o.OrderDate == dispatchDate);
+
+                // Filter by customer if specified
+                if (customerId.HasValue && customerId.Value > 0)
+                {
+                    dealerOrdersQuery = dealerOrdersQuery.Where(o => o.DistributorId == customerId.Value);
+                }
+
+                var dealerOrders = await dealerOrdersQuery.ToListAsync();
+
+                var dispatchData = new List<object>();
+
+                foreach (var order in dealerOrders)
+                {
+                    // Get order items for this order
+                    var orderItems = await _context.DealerOrderItems
+                        .Where(i => i.DealerOrderId == order.Id)
+                        .ToListAsync();
+
+                    foreach (var item in orderItems)
+                    {
+                        // Get material to get unit information
+                        var material = await _context.MaterialMaster
+                            .FirstOrDefaultAsync(m => m.Materialname == item.MaterialName);
+
+                        dispatchData.Add(new
+                        {
+                            routeCode = order.Dealer?.RouteCode ?? "",
+                            dealerName = order.Dealer?.Name ?? "",
+                            phoneNo = order.Dealer?.PhoneNo ?? "",
+                            address = order.Dealer?.Address ?? "",
+                            materialName = item.MaterialName,
+                            quantity = item.Qty,
+                            unit = material?.Unit ?? ""
+                        });
+                    }
+                }
+
+                return Json(new { success = true, data = dispatchData });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: DealerOrders/ExportDispatchToExcel
+        [HttpGet]
+        public async Task<IActionResult> ExportDispatchToExcel(DateTime? date, int? customerId)
+        {
+            try
+            {
+                var dispatchDate = date ?? DateTime.Now.Date;
+
+                // Get dealer orders for the specified date
+                var dealerOrdersQuery = _context.DealerOrders
+                    .Include(o => o.Dealer)
+                    .Where(o => o.OrderDate == dispatchDate);
+
+                // Filter by customer if specified
+                if (customerId.HasValue && customerId.Value > 0)
+                {
+                    dealerOrdersQuery = dealerOrdersQuery.Where(o => o.DistributorId == customerId.Value);
+                }
+
+                var dealerOrders = await dealerOrdersQuery.ToListAsync();
+
+                var dispatchData = new List<object>();
+
+                foreach (var order in dealerOrders)
+                {
+                    // Get order items for this order
+                    var orderItems = await _context.DealerOrderItems
+                        .Where(i => i.DealerOrderId == order.Id)
+                        .ToListAsync();
+
+                    foreach (var item in orderItems)
+                    {
+                        // Get material to get unit information
+                        var material = await _context.MaterialMaster
+                            .FirstOrDefaultAsync(m => m.Materialname == item.MaterialName);
+
+                        dispatchData.Add(new
+                        {
+                            routeCode = order.Dealer?.RouteCode ?? "",
+                            dealerName = order.Dealer?.Name ?? "",
+                            phoneNo = order.Dealer?.PhoneNo ?? "",
+                            address = order.Dealer?.Address ?? "",
+                            materialName = item.MaterialName,
+                            quantity = item.Qty,
+                            unit = material?.Unit ?? ""
+                        });
+                    }
+                }
+
+                // Create Excel file
+                using (var package = new ExcelPackage())
+                {
+                    var worksheet = package.Workbook.Worksheets.Add("Dispatch Route Sheet");
+
+                    // Add headers
+                    worksheet.Cells[1, 1].Value = "Route Code";
+                    worksheet.Cells[1, 2].Value = "Dealer Name";
+                    worksheet.Cells[1, 3].Value = "Phone No";
+                    worksheet.Cells[1, 4].Value = "Address";
+                    worksheet.Cells[1, 5].Value = "Material";
+                    worksheet.Cells[1, 6].Value = "Quantity";
+                    worksheet.Cells[1, 7].Value = "Unit";
+
+                    // Add data
+                    for (int i = 0; i < dispatchData.Count; i++)
+                    {
+                        var item = dispatchData[i];
+                        var itemType = item.GetType();
+                        var properties = itemType.GetProperties();
+
+                        worksheet.Cells[i + 2, 1].Value = itemType.GetProperty("routeCode")?.GetValue(item)?.ToString() ?? "";
+                        worksheet.Cells[i + 2, 2].Value = itemType.GetProperty("dealerName")?.GetValue(item)?.ToString() ?? "";
+                        worksheet.Cells[i + 2, 3].Value = itemType.GetProperty("phoneNo")?.GetValue(item)?.ToString() ?? "";
+                        worksheet.Cells[i + 2, 4].Value = itemType.GetProperty("address")?.GetValue(item)?.ToString() ?? "";
+                        worksheet.Cells[i + 2, 5].Value = itemType.GetProperty("materialName")?.GetValue(item)?.ToString() ?? "";
+                        worksheet.Cells[i + 2, 6].Value = itemType.GetProperty("quantity")?.GetValue(item)?.ToString() ?? "";
+                        worksheet.Cells[i + 2, 7].Value = itemType.GetProperty("unit")?.GetValue(item)?.ToString() ?? "";
+                    }
+
+                    // Auto-fit columns
+                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                    // Convert to bytes
+                    var fileBytes = package.GetAsByteArray();
+
+                    // Return file
+                    var fileName = $"DispatchRouteSheet_{dispatchDate:yyyyMMdd}.xlsx";
+                    return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _notifyService.Error("Error exporting to Excel: " + ex.Message);
+                return RedirectToAction("DispatchRouteSheet");
+            }
+        }
 
 		// GET: DealerOrders/GetDealersByDistributor
 		[HttpGet]
@@ -81,10 +265,9 @@ namespace Milk_Bakery.Controllers
 				var existingOrder = await _context.DealerOrders
 					.FirstOrDefaultAsync(d => d.DealerId == dealerId && d.DistributorId == distributorId && d.OrderDate == today);
 
-				if (existingOrder != null)
-				{
-					return Json(new { success = false, message = "An order has already been placed for this dealer today. Only one order per dealer is allowed per day." });
-				}
+				// If an order exists for today, we'll load it for viewing/editing
+				// If no order exists, we'll check if we can create a new one (based on basic orders)
+				// The restriction is still in place for creating new orders on the same day
 
 				var viewModel = new DealerOrdersViewModel
 				{
@@ -116,9 +299,45 @@ namespace Milk_Bakery.Controllers
 					viewModel.DealerOrderItemQuantities[dealer.Id] = new Dictionary<int, int>();
 				}
 
-				foreach (var order in basicOrders)
+				// If there's an existing order for today, populate quantities from that order
+				// Otherwise, populate from basic orders
+				if (existingOrder != null)
 				{
-					viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = order.Quantity;
+					// Load quantities from existing order
+					var existingOrderItems = await _context.DealerOrderItems
+						.Where(item => item.DealerOrderId == existingOrder.Id)
+						.ToListAsync();
+					
+					// Create a mapping of material name to ordered quantity
+					var materialQuantities = existingOrderItems.ToDictionary(item => item.MaterialName, item => item.Qty);
+					
+					// Populate quantities from existing order
+					foreach (var order in basicOrders)
+					{
+						if (materialQuantities.ContainsKey(order.MaterialName))
+						{
+							viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = materialQuantities[order.MaterialName];
+						}
+						else
+						{
+							viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = 0;
+						}
+					}
+					
+					// Add flag to indicate this is an existing order
+					ViewBag.IsExistingOrder = true;
+					ViewBag.ExistingOrderId = existingOrder.Id;
+				}
+				else
+				{
+					// Populate quantities from basic orders (new order)
+					foreach (var order in basicOrders)
+					{
+						viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = order.Quantity;
+					}
+					
+					// Add flag to indicate this is a new order
+					ViewBag.IsExistingOrder = false;
 				}
 
 				// Get available materials
@@ -148,7 +367,10 @@ namespace Milk_Bakery.Controllers
 				.Where(d => d.DistributorId == distributorId)
 				.ToListAsync();
 
-			// Get basic orders for each dealer
+			// Get the current date for order date
+			var today = DateTime.Now.Date;
+
+			// Get basic orders and current order quantities for each dealer
 			foreach (var dealer in viewModel.Dealers)
 			{
 				var basicOrders = await _context.DealerBasicOrders
@@ -163,9 +385,42 @@ namespace Milk_Bakery.Controllers
 					viewModel.DealerOrderItemQuantities[dealer.Id] = new Dictionary<int, int>();
 				}
 
-				foreach (var order in basicOrders)
+				// Check if an order already exists for this dealer today
+				var existingOrder = await _context.DealerOrders
+					.FirstOrDefaultAsync(d => d.DealerId == dealer.Id && d.DistributorId == distributorId && d.OrderDate == today);
+
+				// If an order exists for today, show the updated quantities from that order
+				// Otherwise, show the default quantities from basic orders
+				if (existingOrder != null)
 				{
-					viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = order.Quantity;
+					// Load quantities from existing order (these are the updated quantities)
+					var existingOrderItems = await _context.DealerOrderItems
+						.Where(item => item.DealerOrderId == existingOrder.Id)
+						.ToListAsync();
+					
+					// Create a mapping of material name to ordered quantity
+					var materialQuantities = existingOrderItems.ToDictionary(item => item.MaterialName, item => item.Qty);
+					
+					// Populate quantities from existing order (updated quantities)
+					foreach (var order in basicOrders)
+					{
+						if (materialQuantities.ContainsKey(order.MaterialName))
+						{
+							viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = materialQuantities[order.MaterialName];
+						}
+						else
+						{
+							viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = 0;
+						}
+					}
+				}
+				else
+				{
+					// Populate quantities from basic orders (default quantities)
+					foreach (var order in basicOrders)
+					{
+						viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = order.Quantity;
+					}
 				}
 			}
 
@@ -308,63 +563,153 @@ namespace Milk_Bakery.Controllers
 						var existingOrder = await _context.DealerOrders
 							.FirstOrDefaultAsync(d => d.DealerId == dealerId && d.DistributorId == SelectedDistributorId && d.OrderDate == orderDate);
 
+						// If an order exists, we're updating it
+						// If no order exists, we're creating a new one (but only if quantities > 0)
 						if (existingOrder != null)
 						{
-							var dealer = await _context.DealerMasters.FindAsync(dealerId);
-							_notifyService.Error($"An order has already been placed for {dealer?.Name ?? "this dealer"} today. Only one order per dealer is allowed per day.");
-							return Json(new { success = false, message = $"An order has already been placed for {dealer?.Name ?? "this dealer"} today. Only one order per dealer is allowed per day." });
-						}
-
-						hasSavedOrders = true;
-                        savedDealerIds.Add(dealerId);
-                        
-						// Create DealerOrder
-						var dealerOrder = new DealerOrder
-						{
-							OrderDate = orderDate,
-							DistributorId = SelectedDistributorId,
-							DealerId = dealerId,
-							DistributorCode = GetDistributorCode(SelectedDistributorId),
-							ProcessFlag = 0 // Default to not processed
-						};
-
-						_context.DealerOrders.Add(dealerOrder);
-						await _context.SaveChangesAsync();
-
-						// Process order items based on quantities
-						foreach (var itemKvp in orderItems)
-						{
-							var basicOrderId = itemKvp.Key;
-							var quantity = itemKvp.Value;
-
-							// Only create order items for quantities > 0
-							if (quantity > 0)
+							// Update existing order
+							var existingOrderItems = await _context.DealerOrderItems
+								.Where(item => item.DealerOrderId == existingOrder.Id)
+								.ToListAsync();
+							
+							// Create a mapping of material name to existing items for easy lookup
+							var existingItemsByMaterial = existingOrderItems.ToDictionary(item => item.MaterialName, item => item);
+							
+							// Get basic orders to match with order items
+							var basicOrders = await _context.DealerBasicOrders
+								.Where(dbo => dbo.DealerId == dealerId)
+								.ToListAsync();
+							
+							// Update or create order items
+							foreach (var itemKvp in orderItems)
 							{
-								// Get the basic order to get material details
-								var basicOrder = await _context.DealerBasicOrders
-									.FirstOrDefaultAsync(dbo => dbo.Id == basicOrderId);
-
+								var basicOrderId = itemKvp.Key;
+								var quantity = itemKvp.Value;
+								
+								// Find the basic order to get material details
+								var basicOrder = basicOrders.FirstOrDefault(bo => bo.Id == basicOrderId);
 								if (basicOrder != null)
 								{
-									// Determine the rate to use - dealer price if provided, otherwise basic order rate
-									var rate = basicOrder.Rate;
-									if (dealerPrices.ContainsKey(basicOrder.MaterialName))
+									// Check if an item already exists for this material
+									if (existingItemsByMaterial.TryGetValue(basicOrder.MaterialName, out DealerOrderItem existingItem))
 									{
-										rate = dealerPrices[basicOrder.MaterialName];
+										// Update existing item
+										existingItem.Qty = quantity;
+										
+										// Determine the rate to use - dealer price if provided, otherwise basic order rate
+										var rate = basicOrder.Rate;
+										if (dealerPrices.ContainsKey(basicOrder.MaterialName))
+										{
+											rate = dealerPrices[basicOrder.MaterialName];
+										}
+										existingItem.Rate = rate;
+										
+										_context.DealerOrderItems.Update(existingItem);
 									}
-
-									var orderItem = new DealerOrderItem
+									else if (quantity > 0)
 									{
-										DealerOrderId = dealerOrder.Id,
-										MaterialName = basicOrder.MaterialName,
-										ShortCode = basicOrder.ShortCode,
-										SapCode = basicOrder.SapCode,
-										Qty = quantity,
-										Rate = rate,
-										DeliverQnty = 0
-									};
+										// Create new item only if quantity > 0
+										// Determine the rate to use - dealer price if provided, otherwise basic order rate
+										var rate = basicOrder.Rate;
+										if (dealerPrices.ContainsKey(basicOrder.MaterialName))
+										{
+											rate = dealerPrices[basicOrder.MaterialName];
+										}
+										
+										var orderItem = new DealerOrderItem
+										{
+											DealerOrderId = existingOrder.Id,
+											MaterialName = basicOrder.MaterialName,
+											ShortCode = basicOrder.ShortCode,
+											SapCode = basicOrder.SapCode,
+											Qty = quantity,
+											Rate = rate,
+											DeliverQnty = 0
+										};
+										
+										_context.DealerOrderItems.Add(orderItem);
+									}
+								}
+							}
+							
+							// Remove items that are no longer in the order (quantity = 0)
+							foreach (var existingItem in existingOrderItems)
+							{
+								// Check if this item's material is in the current order
+								var isMaterialInOrder = basicOrders.Any(bo => 
+									bo.MaterialName == existingItem.MaterialName && 
+									orderItems.ContainsKey(bo.Id) && 
+									orderItems[bo.Id] > 0);
+								
+								if (!isMaterialInOrder)
+								{
+									// Remove the item
+									_context.DealerOrderItems.Remove(existingItem);
+								}
+							}
+							
+							hasSavedOrders = true;
+                            savedDealerIds.Add(dealerId);
+						}
+						else
+						{
+							// Creating a new order - check if we have quantities > 0
+							bool hasQuantities = orderItems.Values.Any(q => q > 0);
+							
+							if (hasQuantities)
+							{
+								hasSavedOrders = true;
+                                savedDealerIds.Add(dealerId);
+                                
+								// Create DealerOrder
+								var dealerOrder = new DealerOrder
+								{
+									OrderDate = orderDate,
+									DistributorId = SelectedDistributorId,
+									DealerId = dealerId,
+									DistributorCode = GetDistributorCode(SelectedDistributorId),
+									ProcessFlag = 0 // Default to not processed
+								};
 
-									_context.DealerOrderItems.Add(orderItem);
+								_context.DealerOrders.Add(dealerOrder);
+								await _context.SaveChangesAsync();
+
+								// Process order items based on quantities
+								foreach (var itemKvp in orderItems)
+								{
+									var basicOrderId = itemKvp.Key;
+									var quantity = itemKvp.Value;
+
+									// Only create order items for quantities > 0
+									if (quantity > 0)
+									{
+										// Get the basic order to get material details
+										var basicOrder = await _context.DealerBasicOrders
+											.FirstOrDefaultAsync(dbo => dbo.Id == basicOrderId);
+
+										if (basicOrder != null)
+										{
+											// Determine the rate to use - dealer price if provided, otherwise basic order rate
+											var rate = basicOrder.Rate;
+											if (dealerPrices.ContainsKey(basicOrder.MaterialName))
+											{
+												rate = dealerPrices[basicOrder.MaterialName];
+											}
+
+											var orderItem = new DealerOrderItem
+											{
+												DealerOrderId = dealerOrder.Id,
+												MaterialName = basicOrder.MaterialName,
+												ShortCode = basicOrder.ShortCode,
+												SapCode = basicOrder.SapCode,
+												Qty = quantity,
+												Rate = rate,
+												DeliverQnty = 0
+											};
+
+											_context.DealerOrderItems.Add(orderItem);
+										}
+									}
 								}
 							}
 						}

@@ -93,11 +93,21 @@ namespace Milk_Bakery.Controllers
 
 				viewModel.Dealers = new List<DealerMaster> { dealer };
 
-				// Get dealer orders for this dealer
-				var orders = await _context.DealerOrders
-					.Where(dbo => dbo.DealerId == dealer.Id && dbo.DistributorId == distributorId && dbo.OrderDate == DateTime.Now.Date)
-					.Include(dbo => dbo.DealerOrderItems)
-					.ToListAsync();
+				// Get the most recent dealer order for this dealer (not just today's orders)
+				var latestOrder = await _context.DealerOrders
+					.Where(dbo => dbo.DealerId == dealer.Id && dbo.DistributorId == distributorId)
+					.OrderByDescending(dbo => dbo.OrderDate)
+					.FirstOrDefaultAsync();
+
+				// If there's a latest order, get all orders for that date
+				List<DealerOrder> orders = new List<DealerOrder>();
+				if (latestOrder != null)
+				{
+					orders = await _context.DealerOrders
+						.Where(dbo => dbo.DealerId == dealer.Id && dbo.DistributorId == distributorId && dbo.OrderDate == latestOrder.OrderDate)
+						.Include(dbo => dbo.DealerOrderItems)
+						.ToListAsync();
+				}
 
 				viewModel.DealerOrders[dealer.Id] = orders;
 

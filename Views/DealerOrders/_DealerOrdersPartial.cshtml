@@ -38,9 +38,21 @@
                                             <tbody>
                                                 @foreach (var basicOrder in Model.DealerBasicOrders[dealer.Id])
                                                 {
+                                                    // Get the quantity for this item - either from existing order or basic order
+                                                    int quantity = 0;
+                                                    if (Model.DealerOrderItemQuantities.ContainsKey(dealer.Id) && 
+                                                        Model.DealerOrderItemQuantities[dealer.Id].ContainsKey(basicOrder.Id))
+                                                    {
+                                                        quantity = Model.DealerOrderItemQuantities[dealer.Id][basicOrder.Id];
+                                                    }
+                                                    else
+                                                    {
+                                                        quantity = basicOrder.Quantity;
+                                                    }
+                                                    
                                                     // Calculate rate and price
                                                     decimal rate = basicOrder.Rate;
-                                                    decimal price = rate * basicOrder.Quantity;
+                                                    decimal price = rate * quantity;
                                                     dealerTotal += price;
                                                     
                                                     <tr>
@@ -50,7 +62,7 @@
                                                             <input type="number" 
                                                                    name="DealerOrderItemQuantities[@dealer.Id][@basicOrder.Id]" 
                                                                    class="form-control form-control-sm text-center quantity-input" 
-                                                                   value="@basicOrder.Quantity" 
+                                                                   value="@quantity" 
                                                                    min="0" 
                                                                    data-dealer-id="@dealer.Id"
                                                                    data-basic-order-id="@basicOrder.Id"

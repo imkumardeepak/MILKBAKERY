@@ -58,13 +58,7 @@
                               <div class="row">
                                 <div class="col-md-6">
                                   <label asp-for="UserType" class="control-label"></label>
-                                  <select asp-for="UserType" class="form-control">
-                                      <option>--Select UserLogin Type--</option>
-                                      <option>Admin</option>
-                                    <option>Sales</option>  
-                                    <option>Plant</option>
-                                    <option>Manager</option>
-                                </select>
+                                <select asp-for="UserType" class="form-control" asp-items="@ViewBag.depart"></select>
                                   <span asp-validation-for="UserType" class="text-danger"></span>
                                 </div>
                                 <div class="col-md-6">

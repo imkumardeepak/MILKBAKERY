@@ -23,7 +23,7 @@ namespace Milk_Bakery.Models
 		[Required]
 		[StringLength(200)]
 		[Display(Name = "Contact Person")]
-		public string ContactPerson { get; set; }
+		public string? ContactPerson { get; set; } = "NA";
 
 
 		[Required]

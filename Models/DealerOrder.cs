@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -30,6 +32,10 @@ namespace Milk_Bakery.Models
 		[Required]
 		[Display(Name = "Process Flag")]
 		public int ProcessFlag { get; set; }
+
+		// Navigation property for related dealer
+		[ForeignKey("DealerId")]
+		public virtual DealerMaster Dealer { get; set; }
 
 		// Navigation property for related order items
 		public virtual ICollection<DealerOrderItem> DealerOrderItems { get; set; } = new List<DealerOrderItem>();
