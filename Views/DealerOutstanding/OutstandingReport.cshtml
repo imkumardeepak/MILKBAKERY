@@ -24,6 +24,7 @@
                 <div class="col-12 col-md-4 mb-2 mb-md-0">
                     <label for="dealerFilter" class="form-label font-weight-bold mb-1">Select Dealer:</label>
                     <select id="dealerFilter" class="form-control form-control-sm select2" disabled>
+                        <option value="0">-- Select All Dealers --</option>
                         <option value="">-- Select Dealer --</option>
                     </select>
                 </div>
@@ -143,7 +144,7 @@
                     success: function (result) {
                         if (result.success) {
                             var select = $('#dealerFilter');
-                            select.empty().append('<option value="">-- Select Dealer --</option>');
+                            select.empty().append('<option value="0">-- Select All Dealers --</option>');
 
                             $.each(result.dealers, function (index, dealer) {
                                 select.append('<option value="' + dealer.id + '">' + dealer.name + '</option>');
@@ -173,11 +174,11 @@
                     return;
                 }
 
-                if (!dealerId) {
+                if (dealerId === '') {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Missing Filter',
-                        text: 'Please select a dealer.',
+                        text: 'Please select a dealer or "Select All Dealers".',
                         confirmButtonText: 'OK'
                     });
                     return;
@@ -198,6 +199,7 @@
                     type: 'GET',
                     data: {
                         dealerId: dealerId,
+                        customerId: customerId,
                         fromDate: fromDate,
                         toDate: toDate
                     },

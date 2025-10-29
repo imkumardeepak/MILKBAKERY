@@ -187,25 +187,57 @@ namespace Milk_Bakery.Controllers
 
         // GET: DealerOutstanding/GenerateOutstandingReport
         [HttpGet]
-        public async Task<IActionResult> GenerateOutstandingReport(int dealerId, DateTime fromDate, DateTime toDate)
+        public async Task<IActionResult> GenerateOutstandingReport(int dealerId, int customerId, DateTime fromDate, DateTime toDate)
         {
             try
             {
-                var outstandings = await _context.DealerOutstandings
-                    .Where(d => d.DealerId == dealerId && d.DeliverDate.Date >= fromDate.Date && d.DeliverDate.Date <= toDate.Date)
-                    .OrderBy(d => d.DeliverDate)
-                    .ToListAsync();
-
-                var dealerName = _context.DealerMasters.FirstOrDefault(dm => dm.Id == dealerId)?.Name;
-
-                var reportData = outstandings.Select(o => new
+                // Validate customer access
+                var availableCustomers = await GetAvailableDistributors();
+                if (!availableCustomers.Any(c => c.Id == customerId))
                 {
-                    dealerName = dealerName,
-                    deliverDate = o.DeliverDate.ToString("dd/MM/yyyy"),
-                    invoiceAmount = o.InvoiceAmount,
-                    paidAmount = o.PaidAmount,
-                    balanceAmount = o.BalanceAmount
-                }).ToList();
+                    return Json(new { success = false, message = "Unauthorized access to customer data." });
+                }
+
+                List<DealerOutstanding> outstandings;
+
+                if (dealerId == 0)
+                {
+                    // "Select All" option - get all dealers for the selected customer
+                    var dealers = await _context.DealerMasters
+                        .Where(d => d.DistributorId == customerId)
+                        .Select(d => d.Id)
+                        .ToListAsync();
+
+                    outstandings = await _context.DealerOutstandings
+                        .Where(d => dealers.Contains(d.DealerId) && d.DeliverDate.Date >= fromDate.Date && d.DeliverDate.Date <= toDate.Date)
+                        .OrderBy(d => d.DealerId)
+                        .ThenBy(d => d.DeliverDate)
+                        .ToListAsync();
+                }
+                else
+                {
+                    // Specific dealer selected
+                    outstandings = await _context.DealerOutstandings
+                        .Where(d => d.DealerId == dealerId && d.DeliverDate.Date >= fromDate.Date && d.DeliverDate.Date <= toDate.Date)
+                        .OrderBy(d => d.DeliverDate)
+                        .ToListAsync();
+                }
+
+                var reportData = new List<object>();
+
+                foreach (var outstanding in outstandings)
+                {
+                    var dealerName = _context.DealerMasters.FirstOrDefault(dm => dm.Id == outstanding.DealerId)?.Name;
+
+                    reportData.Add(new
+                    {
+                        dealerName = dealerName,
+                        deliverDate = outstanding.DeliverDate.ToString("dd/MM/yyyy"),
+                        invoiceAmount = outstanding.InvoiceAmount,
+                        paidAmount = outstanding.PaidAmount,
+                        balanceAmount = outstanding.BalanceAmount
+                    });
+                }
 
                 return Json(new { success = true, outstandings = reportData });
             }
@@ -213,6 +245,13 @@ namespace Milk_Bakery.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        private int GetCustomerIdFromContext()
+        {
+            // This is a simplified implementation
+            // In a real scenario, you would get this from session or user context
+            return 1; // Default to first customer for now
         }
 
         // POST: DealerOutstanding/SaveReceivedAmount

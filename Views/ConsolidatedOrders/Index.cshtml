@@ -358,7 +358,6 @@
                                             <tr><td>Total Quantity:</td><td class="text-primary font-weight-bold">${totalQuantity}</td></tr>
                                             <tr><td>Items per Crate:</td><td class="text-success font-weight-bold">${totalQuantityPerUnit}</td></tr>
                                             <tr><td>Complete Crates:</td><td class="text-info font-weight-bold">${crates}</td></tr>
-                                            <tr><td>Leftover Items:</td><td class="text-warning font-weight-bold">${leftoverItems}</td></tr>
                                             <tr><td>Action Required:</td><td class="text-danger font-weight-bold">${leftoverItems > 0 ? 'Add ' + (totalQuantityPerUnit - leftoverItems) + ' items to complete next crate' : (leftoverItems === 0 ? 'No action needed' : '')}</td></tr>
                                         </table>
                                     </div>
