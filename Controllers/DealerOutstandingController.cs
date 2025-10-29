@@ -26,6 +26,12 @@ namespace Milk_Bakery.Controllers
             return View();
         }
 
+        // GET: DealerOutstanding/OutstandingReport
+        public async Task<IActionResult> OutstandingReport()
+        {
+            return View();
+        }
+
         // GET: DealerOutstanding/GetCustomers
         [HttpGet]
         public async Task<IActionResult> GetCustomers()
@@ -179,9 +185,35 @@ namespace Milk_Bakery.Controllers
             }
         }
 
+        // GET: DealerOutstanding/GenerateOutstandingReport
+        [HttpGet]
+        public async Task<IActionResult> GenerateOutstandingReport(int dealerId, DateTime fromDate, DateTime toDate)
+        {
+            try
+            {
+                var outstandings = await _context.DealerOutstandings
+                    .Where(d => d.DealerId == dealerId && d.DeliverDate.Date >= fromDate.Date && d.DeliverDate.Date <= toDate.Date)
+                    .OrderBy(d => d.DeliverDate)
+                    .ToListAsync();
 
+                var dealerName = _context.DealerMasters.FirstOrDefault(dm => dm.Id == dealerId)?.Name;
 
+                var reportData = outstandings.Select(o => new
+                {
+                    dealerName = dealerName,
+                    deliverDate = o.DeliverDate.ToString("dd/MM/yyyy"),
+                    invoiceAmount = o.InvoiceAmount,
+                    paidAmount = o.PaidAmount,
+                    balanceAmount = o.BalanceAmount
+                }).ToList();
 
+                return Json(new { success = true, outstandings = reportData });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
 
         // POST: DealerOutstanding/SaveReceivedAmount
         [HttpPost]

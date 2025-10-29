@@ -6,11 +6,16 @@
 <div class="mt-2">
     <div class="card mb-2">
         <div class="card-header text-white p-2" style="background-color:#007bff;">
-            <div class="d-flex align-items-center">
-                <a href="@Url.Action("Index", "Home")" class="btn btn-link text-white p-0 mr-2">
-                    <i class="fa fa-arrow-left"></i>
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-link text-white p-0 mr-2">
+                        <i class="fa fa-arrow-left"></i>
+                    </a>
+                    <h5 class="mb-0 text-white font-weight-bold">Dealer Outstanding</h5>
+                </div>
+                <a href="@Url.Action("OutstandingReport", "DealerOutstanding")" class="btn btn-light btn-sm">
+                    <i class="fas fa-file-alt"></i> Outstanding Report
                 </a>
-                <h5 class="mb-0 text-white font-weight-bold">Dealer Outstanding</h5>
             </div>
         </div>
         <div class="card-body p-2">
@@ -191,6 +196,9 @@
                         } else {
                             tbody.append('<tr><td colspan="6" class="text-center">No orders today</td></tr>');
                         }
+                    }
+                });
+            }
 
             // Handle save received amount button click
             $(document).on('click', '.save-received-btn', function () {
