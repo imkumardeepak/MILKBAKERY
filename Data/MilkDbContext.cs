@@ -1,4 +1,4 @@
-﻿﻿using Microsoft.EntityFrameworkCore;
+﻿﻿﻿﻿using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Models;
 using static Milk_Bakery.Models.InvoiceDetails;
 
@@ -47,6 +47,7 @@ namespace Milk_Bakery.Data
 		public DbSet<InvoiceMaterialDetail> InvoiceMaterials { get; set; } = default!;
 		public DbSet<CreditDebitRecord> CreditDebitRecords { get; set; } = default!;
 		public DbSet<ConversionTable> ConversionTables { get; set; } = default!;
+		public DbSet<DealerOutstanding> DealerOutstandings { get; set; } = default!;
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

@@ -1,0 +1,1015 @@
+@{
+    ViewData["Title"] = "Consolidated Order";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-2">
+    <div class="card mb-2">
+        <div class="card-header text-white p-2" style="background-color:#FC2947;">
+            <div class="d-flex align-items-center">
+                <a href="@Url.Action("Index", "DealerOrders")" class="btn btn-link text-white p-0 mr-2">
+                    <i class="fa fa-arrow-left"></i>
+                </a>
+                <h5 class="mb-0 text-white font-weight-bold">Consolidated Order</h5>
+            </div>
+        </div>
+        <div class="card-body p-2">
+            <div class="row mb-2">
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                    <label for="orderDate" class="form-label font-weight-bold mb-1">Order Date:</label>
+                    <input type="date" id="orderDate" class="form-control form-control-sm" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                    <label for="customerFilter" class="form-label font-weight-bold mb-1">Customer/Distributor:</label>
+                    <select id="customerFilter" class="form-control form-control-sm select2">
+                        <option value="">-- Select Customer --</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="d-flex flex-column h-100 justify-content-end">
+                        <div class="d-flex justify-content-between justify-content-md-end align-items-center">
+                            <div class="d-flex mr-2">
+                                <span class="badge badge-warning mr-1 p-1 cursor-pointer" id="pendingBadge" data-toggle="modal" data-target="#dealerListModal" data-status="pending">Pending: <span id="pendingOrdersCount">0</span></span>
+                                <span class="badge badge-success p-1 cursor-pointer" id="completedBadge" data-toggle="modal" data-target="#dealerListModal" data-status="completed">Completed: <span id="completedOrdersCount">0</span></span>
+                            </div>
+                            <button id="filterBtn" class="btn btn-primary btn-sm mr-1">
+                                <i class="fas fa-filter"></i> <span class="d-none d-sm-inline">Filter</span>
+                            </button>
+                            <button id="exportBtn" class="btn btn-success btn-sm" disabled>
+                                <i class="fas fa-file-excel"></i> <span class="d-none d-sm-inline">Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-2">
+                <div class="col-12">
+                    <div class="d-flex flex-wrap">
+                        <button id="saveOrderBtn" class="btn btn-success btn-sm mr-2 mb-2" disabled>
+                            <i class="fas fa-save"></i> Save Order
+                        </button>
+                        <a href="@Url.Action("Index", "DealerOrders")" class="btn btn-secondary btn-sm mb-2">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dealer Details Section -->
+            <div class="row mb-2">
+                <div class="col-12">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white p-2">
+                            <h6 class="mb-0">Dealer Order Status</h6>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="d-flex justify-content-around flex-wrap">
+                                <div class="p-1 text-center cursor-pointer" id="pendingCard" data-status="pending" data-toggle="modal" data-target="#dealerListModal">
+                                    <h5 class="mb-0 font-weight-bold text-warning"><span id="pendingOrdersCountLarge">0</span></h5>
+                                    <p class="mb-0 small">Pending</p>
+                                </div>
+                                <div class="p-1 text-center cursor-pointer" id="completedCard" data-status="completed" data-toggle="modal" data-target="#dealerListModal">
+                                    <h5 class="mb-0 font-weight-bold text-success"><span id="completedOrdersCountLarge">0</span></h5>
+                                    <p class="mb-0 small">Completed</p>
+                                </div>
+                                <div class="p-1 text-center">
+                                    <h5 class="mb-0 font-weight-bold text-primary"><span id="totalDealersCount">0</span></h5>
+                                    <p class="mb-0 small">Total</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table id="consolidatedTable" class="table table-striped table-bordered table-sm" style="width:100%">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <!-- Material name column hidden on small screens, visible on medium and up -->
+                                    <th class="d-none d-md-table-cell">Material</th>
+                                    <th>Code</th>
+                                    <th>Qty</th>
+                                    <th>Unit</th>
+                                    <th>Items per Crate</th>
+                                    <th>Crates</th>
+                                    <th>Action Required</th>
+                                    <th>Action</th> <!-- New column for manage button -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="8" class="text-center">Select date & customer, click Filter</td></tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <!-- Material name column hidden on small screens, visible on medium and up -->
+                                    <th class="d-none d-md-table-cell" colspan="3" class="text-right">Total:</th>
+                                    <th class="d-md-none">Total:</th>
+                                    <th id="grandTotal">0</th>
+                                    <th></th>
+                                    <th id="totalItemsPerCrate">0</th>
+                                    <th id="totalLeftoverItems">0</th>
+                                    <th></th> <!-- Empty footer for action column -->
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2
+            $('.select2').select2({
+                width: '100%',
+                placeholder: "-- Select Customer --",
+                allowClear: true
+            });
+            
+            // Load customers/distributors
+            loadCustomers();
+            
+            // Remove automatic data loading on page load
+            // loadData(); // This line is removed
+            
+            // Filter button click event
+            $('#filterBtn').on('click', function () {
+                loadData();
+            });
+            
+            // Export button click event
+            $('#exportBtn').on('click', function () {
+                exportToExcel();
+            });
+            
+            // Save Order button click event
+            $('#saveOrderBtn').on('click', function () {
+                saveOrder();
+            });
+            
+            // Date change event
+            $('#orderDate').on('change', function () {
+                // User needs to click the Filter button to refresh data
+            });
+            
+            // Customer filter change event
+            $('#customerFilter').on('change', function () {
+                // User needs to click the Filter button to refresh data
+            });
+            
+            function loadCustomers() {
+                $.ajax({
+                    url: '@Url.Action("GetAllCustomers", "ConsolidatedOrders")',
+                    type: 'GET',
+                    success: function (result) {
+                        if (result.success) {
+                            var select = $('#customerFilter');
+                            select.empty().append('<option value="">-- Select Customer --</option>');
+                            
+                            $.each(result.customers, function (index, customer) {
+                                select.append('<option value="' + customer.id + '">' + customer.name + '</option>');
+                            });
+                        }
+                    },
+                    error: function () {
+                        console.log('Error loading customers');
+                    }
+                });
+            }
+            
+            function loadData() {
+                var date = $('#orderDate').val();
+                var customerId = $('#customerFilter').val();
+                
+                // Validate that both date and customer are selected
+                if (!date || !customerId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Filters',
+                        text: 'Please select both a date and a customer to load data.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                $.ajax({
+                    url: '@Url.Action("GetConsolidatedOrderData", "ConsolidatedOrders")',
+                    type: 'GET',
+                    data: {
+                        date: date,
+                        customerId: customerId
+                    },
+                    success: function (result) {
+                        if (result.success) {
+                            var tbody = $('#consolidatedTable tbody');
+                            tbody.empty();
+                            
+                            // Update dealer details section with counts
+                            updateDealerDetails(result.dealerDetails, customerId);
+                            
+                            if (result.data && result.data.length > 0) {
+                                var hasLeftoverItems = false;
+                                
+                                $.each(result.data, function (index, item) {
+                                    var leftoverItems = item.leftoverItems || 0;
+                                    
+                                    // Check if there are any leftover items
+                                    if (leftoverItems > 0) {
+                                        hasLeftoverItems = true;
+                                    }
+                                    
+                                    // Material name cell hidden on small screens, visible on medium and up
+                                    var materialCell = '<td class="d-none d-md-table-cell">' + (item.materialName || '') + '</td>';
+                                    
+                                    // Add manage button only for items with leftover items
+                                    var actionCell = '';
+                                    if (leftoverItems > 0) {
+                                        actionCell = '<td><button class="btn btn-sm btn-primary manage-quantity-btn" ' +
+                                            'data-material-name="' + (item.materialName || '') + '" ' +
+                                            'data-short-code="' + (item.shortCode || '') + '" ' +
+                                            'data-unit-type="' + (item.unitType || 'PCS') + '" ' +
+                                            'data-total-quantity="' + (item.quantity || 0) + '" ' +
+                                            'data-total-quantity-per-unit="' + (item.totalQuantityPerUnit || 1) + '" ' +
+                                            'data-leftover-items="' + leftoverItems + '" ' +
+                                            'data-crates="' + (item.crates || 0) + '" ' +
+                                            'data-customer-id="' + customerId + '" ' +
+                                            'data-date="' + date + '" ' +
+                                            'title="Manage Quantity">' +
+                                            '<i class="fas fa-edit"></i>' +
+                                            '</button></td>';
+                                    } else {
+                                        actionCell = '<td></td>';
+                                    }
+                                    
+                                    var row = '<tr>' +
+                                        materialCell +
+                                        '<td>' + (item.shortCode || '') + '</td>' +
+                                        '<td>' + (item.quantity || 0) + '</td>' +
+                                        '<td>' + (item.unitType || 'PCS') + '</td>' +
+                                        '<td>' + (item.totalQuantityPerUnit || 0) + '</td>' +
+                                        '<td>' + (item.crates || 0) + '</td>' +
+                                        '<td class="text-center ' + (leftoverItems > 0 ? 'text-danger font-weight-bold' : (leftoverItems === 0 ? 'text-success font-weight-bold' : '')) + '">' + 
+                                        (leftoverItems > 0 ? '<span class="badge badge-warning">Add ' + (item.totalQuantityPerUnit - leftoverItems) + ' items</span>' : 
+                                         (leftoverItems === 0 ? '<span class="badge badge-success">Complete</span>' : '')) + '</td>' +
+                                        actionCell +
+                                        '</tr>';
+                                    tbody.append(row);
+                                });
+                                
+                                // Enable or disable the save button based on leftover items
+                                if (hasLeftoverItems) {
+                                    $('#saveOrderBtn').prop('disabled', true);
+                                    $('#saveOrderBtn').attr('title', 'Cannot save order while there are leftover items');
+                                } else {
+                                    $('#saveOrderBtn').prop('disabled', false);
+                                    $('#saveOrderBtn').removeAttr('title');
+                                }
+                                
+                                // Enable export button
+                                $('#exportBtn').prop('disabled', false);
+                                
+                                // Update grand totals
+                                $('#grandTotal').text(result.grandTotal);
+                                $('#totalItemsPerCrate').text(result.totalItemsPerCrate);
+                                $('#totalLeftoverItems').text(result.totalLeftoverItems);
+                            } else {
+                                // Adjust colspan based on screen size
+                                var colspan = $(window).width() < 768 ? 8 : 9;
+                                tbody.append('<tr><td colspan="' + colspan + '" class="text-center">No data found</td></tr>');
+                                $('#grandTotal').text('0');
+                                $('#totalItemsPerCrate').text('0');
+                                $('#totalLeftoverItems').text('0');
+                                
+                                // Disable buttons when no data
+                                $('#saveOrderBtn').prop('disabled', true);
+                                $('#exportBtn').prop('disabled', true);
+                            }
+                        } else {
+                            // Adjust colspan based on screen size
+                            var colspan = $(window).width() < 768 ? 8 : 9;
+                            $('#consolidatedTable tbody').empty().append('<tr><td colspan="' + colspan + '" class="text-center">Error: ' + result.message + '</td></tr>');
+                            $('#grandTotal').text('0');
+                            $('#totalItemsPerCrate').text('0');
+                            $('#totalLeftoverItems').text('0');
+                            
+                            // Disable buttons on error
+                            $('#saveOrderBtn').prop('disabled', true);
+                            $('#exportBtn').prop('disabled', true);
+                        }
+                    },
+                    error: function () {
+                        // Adjust colspan based on screen size
+                        var colspan = $(window).width() < 768 ? 8 : 9;
+                        $('#consolidatedTable tbody').empty().append('<tr><td colspan="' + colspan + '" class="text-center">Error loading data</td></tr>');
+                        $('#grandTotal').text('0');
+                        $('#totalItemsPerCrate').text('0');
+                        $('#totalLeftoverItems').text('0');
+                        
+                        // Disable buttons on error
+                        $('#saveOrderBtn').prop('disabled', true);
+                        $('#exportBtn').prop('disabled', true);
+                    }
+                });
+            }
+            
+            // Handle manage quantity button click
+            $(document).on('click', '.manage-quantity-btn', function() {
+                var materialName = $(this).data('material-name');
+                var shortCode = $(this).data('short-code');
+                var unitType = $(this).data('unit-type');
+                var totalQuantity = $(this).data('total-quantity');
+                var totalQuantityPerUnit = $(this).data('total-quantity-per-unit');
+                var leftoverItems = $(this).data('leftover-items');
+                var crates = $(this).data('crates');
+                var customerId = $(this).data('customer-id');
+                var date = $(this).data('date');
+                
+                // Show the manage quantity modal
+                showManageQuantityModal(materialName, shortCode, unitType, totalQuantity, totalQuantityPerUnit, leftoverItems, crates, customerId, date);
+            });
+            
+            function showManageQuantityModal(materialName, shortCode, unitType, totalQuantity, totalQuantityPerUnit, leftoverItems, crates, customerId, date) {
+                // Create the modal HTML
+                var modalHtml = `
+                <div class="modal fade" id="manageQuantityModal" tabindex="-1" role="dialog" aria-labelledby="manageQuantityModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="manageQuantityModalLabel">Manage Quantity for ${materialName}</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6>Current Information</h6>
+                                        <table class="table table-sm table-bordered">
+                                            <tr><td>Material:</td><td><strong>${materialName}</strong></td></tr>
+                                            <tr><td>Code:</td><td>${shortCode}</td></tr>
+                                            <tr><td>Unit Type:</td><td>${unitType}</td></tr>
+                                            <tr><td>Total Quantity:</td><td class="text-primary font-weight-bold">${totalQuantity}</td></tr>
+                                            <tr><td>Items per Crate:</td><td class="text-success font-weight-bold">${totalQuantityPerUnit}</td></tr>
+                                            <tr><td>Complete Crates:</td><td class="text-info font-weight-bold">${crates}</td></tr>
+                                            <tr><td>Leftover Items:</td><td class="text-warning font-weight-bold">${leftoverItems}</td></tr>
+                                            <tr><td>Action Required:</td><td class="text-danger font-weight-bold">${leftoverItems > 0 ? 'Add ' + (totalQuantityPerUnit - leftoverItems) + ' items to complete next crate' : (leftoverItems === 0 ? 'No action needed' : '')}</td></tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card border-primary">
+                                            <div class="card-header bg-primary text-white">
+                                                <h6 class="mb-0">Target Information</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="form-group">
+                                                    <label for="targetCrates"><strong>Target Crates:</strong></label>
+                                                    <input type="number" class="form-control form-control-lg text-center font-weight-bold" id="targetCrates" min="${crates}" value="${crates + 1}">
+                                                    <small class="form-text text-muted">Enter the number of complete crates you want to achieve</small>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="targetQuantity"><strong>Target Quantity:</strong></label>
+                                                    <input type="number" class="form-control form-control-lg text-center font-weight-bold text-success" id="targetQuantity" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-12">
+                                        <h6>Dealer Orders Adjustment</h6>
+                                        <div id="dealerOrdersContainer">
+                                            <div class="text-center">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="sr-only">Loading...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="saveQuantityChanges">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                
+                // Remove any existing modal
+                $('#manageQuantityModal').remove();
+                
+                // Append the modal to the body
+                $('body').append(modalHtml);
+                
+                // Show the modal
+                $('#manageQuantityModal').modal('show');
+                
+                // Calculate target quantity when target crates change
+                $('#targetCrates').on('input', function() {
+                    var targetCrates = parseInt($(this).val()) || 0;
+                    var targetQuantity = targetCrates * totalQuantityPerUnit;
+                    $('#targetQuantity').val(targetQuantity);
+                });
+                
+                // Trigger initial calculation
+                $('#targetCrates').trigger('input');
+                
+                // Load dealer orders for this material
+                loadDealerOrdersForMaterial(materialName, shortCode, totalQuantity, totalQuantityPerUnit, customerId, date);
+            }
+            
+            function loadDealerOrdersForMaterial(materialName, shortCode, totalQuantity, totalQuantityPerUnit, customerId, date) {
+                $.ajax({
+                    url: '@Url.Action("GetDealerOrdersForMaterial", "ConsolidatedOrders")',
+                    type: 'GET',
+                    data: {
+                        materialName: materialName,
+                        customerId: customerId,
+                        date: date
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            var container = $('#dealerOrdersContainer');
+                            var html = '';
+                            
+                            if (result.dealerOrders && result.dealerOrders.length > 0) {
+                                html += '<table class="table table-sm table-bordered">';
+                                html += '<thead><tr><th class="col-md-3">Dealer</th><th class="col-md-2">Current Qty</th><th class="col-md-4 w-50 text-center font-weight-bold text-primary">Adjustment<br/><small class="text-muted">(Increase/Decrease)</small></th><th class="col-md-3">New Qty</th></tr></thead>';
+                                html += '<tbody>';
+                                
+                                $.each(result.dealerOrders, function(index, order) {
+                                    var currentQty = order.quantity || 0;
+                                    var shortCode = order.shortCode || ''; // Get shortCode from the response
+                                    html += '<tr>';
+                                    html += '<td>' + order.dealerName + '</td>';
+                                    html += '<td>' + currentQty + '</td>';
+                                    html += '<td>';
+                                    html += '<div class="input-group input-group-sm adjustment-controls">';
+                                    html += '<div class="input-group-prepend">';
+                                    html += '<button class="btn btn-outline-secondary qty-decrease" type="button" data-dealer-id="' + order.dealerId + '" data-basic-order-id="' + order.basicOrderId + '">-</button>';
+                                    html += '</div>';
+                                    html += '<input type="number" class="form-control text-center dealer-quantity-adjustment" ';
+                                    html += 'data-dealer-id="' + order.dealerId + '" ';
+                                    html += 'data-basic-order-id="' + order.basicOrderId + '" ';
+                                    html += 'data-short-name="' + shortCode + '" '; // Use shortCode from the response
+                                    html += 'data-current-quantity="' + currentQty + '" ';
+                                    html += 'value="0" min="-' + currentQty + '">';
+                                    html += '<div class="input-group-append">';
+                                    html += '<button class="btn btn-outline-secondary qty-increase" type="button" data-dealer-id="' + order.dealerId + '" data-basic-order-id="' + order.basicOrderId + '">+</button>';
+                                    html += '</div>';
+                                    html += '</div>';
+                                    html += '</td>';
+                                    html += '<td class="new-quantity-' + order.dealerId + '-' + order.basicOrderId + '">' + currentQty + '</td>';
+                                    html += '</tr>';
+                                });
+                                
+                                html += '</tbody></table>';
+                            } else {
+                                html = '<p class="text-center">No dealer orders found for this material.</p>';
+                            }
+                            
+                            container.html(html);
+                        } else {
+                            $('#dealerOrdersContainer').html('<p class="text-danger">Error loading dealer orders: ' + result.message + '</p>');
+                        }
+                    },
+                    error: function() {
+                        $('#dealerOrdersContainer').html('<p class="text-danger">Error loading dealer orders.</p>');
+                    }
+                });
+            }
+            
+            // Handle quantity increase button
+            $(document).on('click', '.qty-increase', function() {
+                var inputField = $(this).closest('.input-group').find('.dealer-quantity-adjustment');
+                var currentValue = parseInt(inputField.val()) || 0;
+                inputField.val(currentValue + 1);
+                
+                // Trigger the input event to update the new quantity display
+                inputField.trigger('input');
+            });
+            
+            // Handle quantity decrease button
+            $(document).on('click', '.qty-decrease', function() {
+                var inputField = $(this).closest('.input-group').find('.dealer-quantity-adjustment');
+                var currentValue = parseInt(inputField.val()) || 0;
+                var minValue = parseInt(inputField.attr('min')) || 0;
+                if (currentValue > minValue) {
+                    inputField.val(currentValue - 1);
+                    
+                    // Trigger the input event to update the new quantity display
+                    inputField.trigger('input');
+                }
+            });
+            
+            // Handle quantity adjustment input changes
+            $(document).on('input', '.dealer-quantity-adjustment', function() {
+                var dealerId = $(this).data('dealer-id');
+                var basicOrderId = $(this).data('basic-order-id');
+                var currentQuantity = parseInt($(this).data('current-quantity')) || 0;
+                var adjustment = parseInt($(this).val()) || 0;
+                var newQuantity = currentQuantity + adjustment;
+                
+                // Update the new quantity display with animation
+                var $newQtyCell = $('.new-quantity-' + dealerId + '-' + basicOrderId);
+                $newQtyCell.text(newQuantity);
+                $newQtyCell.addClass('quantity-update');
+                
+                // Remove the animation class after the animation completes
+                setTimeout(function() {
+                    $newQtyCell.removeClass('quantity-update');
+                }, 500);
+            });
+            
+            // Handle save quantity changes button
+            $(document).on('click', '#saveQuantityChanges', function() {
+                var adjustments = [];
+                var customerId = $('#customerFilter').val() || 0; // Get customerId from customer filter
+                $('.dealer-quantity-adjustment').each(function() {
+                    var dealerId = $(this).data('dealer-id');
+                    var dealerOrderId = parseInt(customerId); // Use customerId as dealerOrderId
+                    var shortName = $(this).data('short-name') || ''; // Get ShortName from data attribute
+                    
+                    // Ensure shortName is always a string, even if it's numeric
+                    if (typeof shortName === 'number') {
+                        shortName = shortName.toString();
+                    } else if (typeof shortName !== 'string') {
+                        shortName = String(shortName);
+                    }
+                    
+                    var adjustment = parseInt($(this).val()) || 0;
+                    
+                    if (adjustment !== 0) {
+                        adjustments.push({
+                            dealerId: dealerId,
+                            dealerOrderId: dealerOrderId,
+                            shortName: shortName,
+                            adjustment: adjustment
+                        });
+                    }
+                });
+                
+                if (adjustments.length === 0) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No Changes',
+                        text: 'No quantity adjustments were made.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                // Send the adjustments to the server
+                $.ajax({
+                    url: '@Url.Action("AdjustDealerOrderQuantities", "ConsolidatedOrders")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        adjustments: adjustments
+                    }),
+                    success: function(result) {
+                        if (result.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Dealer order quantities updated successfully.',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                // Close the modal
+                                $('#manageQuantityModal').modal('hide');
+                                // Reload the data
+                                loadData();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: result.message || 'Failed to update dealer order quantities.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to update dealer order quantities.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            });
+            
+            function updateDealerDetails(dealerDetails, customerId) {
+                // Fetch dealer order status counts
+                $.ajax({
+                    url: '@Url.Action("GetDealersByDistributor", "ConsolidatedOrders")',
+                    type: 'GET',
+                    data: {
+                        distributorId: customerId
+                    },
+                    success: function (result) {
+                        if (result.success) {
+                            // Count dealers with and without orders
+                            var pendingCount = 0;
+                            var completedCount = 0;
+                            var pendingDealers = [];
+                            var completedDealers = [];
+                            
+                            $.each(result.dealers, function (index, dealer) {
+                                if (dealer.hasOrderedToday) {
+                                    completedCount++;
+                                    completedDealers.push(dealer);
+                                } else {
+                                    pendingCount++;
+                                    pendingDealers.push(dealer);
+                                }
+                            });
+                            
+                            var totalCount = pendingCount + completedCount;
+                            
+                            // Update the counts in the badges (top right)
+                            $('#pendingOrdersCount').text(pendingCount);
+                            $('#completedOrdersCount').text(completedCount);
+                            
+                            // Update the counts in the large cards
+                            $('#pendingOrdersCountLarge').text(pendingCount);
+                            $('#completedOrdersCountLarge').text(completedCount);
+                            $('#totalDealersCount').text(totalCount);
+                            
+                            // Store dealer lists for modal
+                            $('#pendingCard').data('dealers', pendingDealers);
+                            $('#completedCard').data('dealers', completedDealers);
+                        } else {
+                            console.log('Error loading dealer status: ' + result.message);
+                        }
+                    },
+                    error: function () {
+                        console.log('Error loading dealer status');
+                    }
+                });
+            }
+            
+            // Handle card clicks to show dealer list in modal
+            $('#dealerListModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var status = button.data('status') || $('.cursor-pointer:hover').data('status'); // Extract info from data-* attributes
+                var dealers = [];
+                
+                // Get dealers based on which element was clicked
+                if (status === 'pending') {
+                    dealers = $('#pendingCard').data('dealers') || [];
+                    $('.modal-title').text('Pending Dealers (Not Ordered Yet)');
+                } else if (status === 'completed') {
+                    dealers = $('#completedCard').data('dealers') || [];
+                    $('.modal-title').text('Completed Dealers (Already Ordered)');
+                } else {
+                    // Default to pending if status not found
+                    dealers = $('#pendingCard').data('dealers') || [];
+                    $('.modal-title').text('Pending Dealers (Not Ordered Yet)');
+                }
+                
+                var modal = $(this);
+                var listHtml = '';
+                
+                // Populate dealer list
+                if (dealers.length > 0) {
+                    listHtml = '<ul class="list-group">';
+                    $.each(dealers, function(index, dealer) {
+                        listHtml += '<li class="list-group-item">' + dealer.name + '</li>';
+                    });
+                    listHtml += '</ul>';
+                } else {
+                    listHtml = '<p class="text-center">No dealers found.</p>';
+                }
+                
+                modal.find('.modal-body #dealerList').html(listHtml);
+            });
+            
+            function exportToExcel() {
+                var date = $('#orderDate').val();
+                var customerId = $('#customerFilter').val();
+                var url = '@Url.Action("ExportConsolidatedToExcel", "ConsolidatedOrders")' + 
+                          '?date=' + encodeURIComponent(date) + 
+                          '&customerId=' + encodeURIComponent(customerId || '');
+                window.location.href = url;
+            }
+            
+            function saveOrder() {
+                var date = $('#orderDate').val();
+                var customerId = $('#customerFilter').val();
+                
+                if (!date) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Date',
+                        text: 'Please select an order date.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                if (!customerId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Customer',
+                        text: 'Please select a customer/distributor.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                // Check if there are any leftover items
+                var totalLeftoverItems = parseInt($('#totalLeftoverItems').text()) || 0;
+                if (totalLeftoverItems > 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Leftover Items',
+                        text: 'Cannot save order while there are leftover items. Please adjust quantities to fill complete crates.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                Swal.fire({
+                    title: 'Save Consolidated Order?',
+                    text: "This will save the consolidated order data to the purchase table.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, save it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("SaveConsolidatedOrder", "ConsolidatedOrders")',
+                            type: 'POST',
+                            data: {
+                                date: date,
+                                customerId: customerId
+                            },
+                            success: function (result) {
+                                if (result.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Order Saved!',
+                                        text: 'The consolidated order has been saved successfully.',
+                                        confirmButtonText: 'OK'
+                                    }).then(() => {
+                                        // Refresh the page after successful save
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: result.message || 'An error occurred while saving the order.',
+                                        confirmButtonText: 'OK'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred while saving the order.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <style>
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        
+        /* Responsive adjustments for small screens */
+        @@media (max-width: 575.98px) {
+            .card-body {
+                padding: 0.5rem !important;
+            }
+            
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+            
+            .mb-2 {
+                margin-bottom: 0.5rem !important;
+            }
+            
+            .p-2 {
+                padding: 0.5rem !important;
+            }
+            
+            .table th, .table td {
+                padding: 0.25rem !important;
+                font-size: 0.8rem;
+            }
+            
+            .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Custom styles for consolidated orders */
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+        }
+        
+        .table .badge {
+            font-size: 0.75rem;
+            padding: 0.4em 0.6em;
+        }
+        
+        /* Modal improvements */
+        .modal .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        .modal .table td:first-child {
+            width: 40%;
+            font-weight: 500;
+        }
+        
+        .modal .table td:last-child {
+            width: 60%;
+        }
+        
+        /* Highlight important values */
+        .text-primary {
+            color: #007bff !important;
+        }
+        
+        .text-success {
+            color: #28a745 !important;
+        }
+        
+        .text-info {
+            color: #17a2b8 !important;
+        }
+        
+        .text-warning {
+            color: #ffc107 !important;
+        }
+        
+        .text-danger {
+            color: #dc3545 !important;
+        }
+        
+        /* Larger input fields in modal */
+        .modal .form-control-lg {
+            font-size: 1.2rem;
+            height: calc(2.5rem + 2px);
+        }
+        
+        /* Adjustment column improvements */
+        .w-50 {
+            width: 50% !important;
+        }
+        
+        .modal .input-group {
+            display: flex;
+            justify-content: center;
+        }
+        
+        .modal .input-group .form-control {
+            flex: 1;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .modal .table th.w-50 {
+            width: 50%;
+        }
+        
+        /* Ensure proper spacing for adjustment controls */
+        .modal .input-group-prepend,
+        .modal .input-group-append {
+            flex: 0 0 auto;
+        }
+        
+        .modal .input-group .btn {
+            min-width: 40px;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        /* Enhanced adjustment column styles */
+        .modal .adjustment-controls {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .modal .adjustment-controls .form-control {
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .modal .adjustment-controls .input-group-prepend,
+        .modal .adjustment-controls .input-group-append {
+            flex: 0 0 auto;
+        }
+        
+        .modal .adjustment-controls .btn {
+            min-width: 45px;
+            padding: 0.375rem 0.75rem;
+            font-weight: bold;
+        }
+        
+        /* Make the Adjustment column header more prominent */
+        .modal th.w-50 {
+            width: 50% !important;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* Additional enhancement for adjustment column */
+        .modal .col-md-4.w-50 {
+            width: 50% !important;
+            min-width: 200px;
+        }
+        
+        .modal .adjustment-controls .form-control {
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        /* Enhanced styling for adjustment column header */
+        .modal th.text-center.font-weight-bold.text-primary {
+            background-color: #e9ecef;
+            padding: 0.5rem !important;
+            border-radius: 0.2rem;
+        }
+        
+        /* Styling for New Qty column */
+        .modal .table td:last-child {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 1.1em;
+            text-align: center;
+        }
+        
+        /* Animation for quantity updates */
+        .quantity-update {
+            animation: highlight 0.5s ease-in-out;
+        }
+        
+        @@keyframes highlight {
+            0% { background-color: #ffc107; }
+            100% { background-color: transparent; }
+        }
+    </style>
+}
+
+<!-- Dealer List Modal -->
+<div class="modal fade" id="dealerListModal" tabindex="-1" role="dialog" aria-labelledby="dealerListModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dealerListModalLabel">Dealer List</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <ul id="dealerList" class="list-group">
+                            <!-- Dealer names will be populated here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -33,6 +33,9 @@ namespace Milk_Bakery.Models
 		[Display(Name = "Process Flag")]
 		public int ProcessFlag { get; set; }
 
+		[Display(Name = "Deliver Flag")]
+		public int DeliverFlag { get; set; } = 0;
+
 		// Navigation property for related dealer
 		[ForeignKey("DealerId")]
 		public virtual DealerMaster Dealer { get; set; }

@@ -88,10 +88,12 @@
             @{
                 var totalOrdered = Model.ReportItems.Sum(r => r.OrderedQuantity);
                 var totalDelivered = Model.ReportItems.Sum(r => r.DeliveredQuantity);
-                var totalVariance = totalOrdered - totalDelivered;
+                // Changed to Delivered - Ordered to show positive values when delivered exceeds ordered
+                var totalVariance = totalDelivered - totalOrdered;
                 var totalOrderedAmount = Model.ReportItems.Sum(r => r.OrderedAmount);
                 var totalDeliveredAmount = Model.ReportItems.Sum(r => r.DeliveredAmount);
-                var totalAmountVariance = totalOrderedAmount - totalDeliveredAmount;
+                // Changed to Delivered - Ordered for amount as well
+                var totalAmountVariance = totalDeliveredAmount - totalOrderedAmount;
             }
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-primary shadow h-100 py-2">
@@ -125,14 +127,14 @@
             </div>
             <div class="col-xl-3 col-md-6 mb-4">
                 <div
-                    class="card border-left-@(totalVariance == 0 ? "success" : totalVariance > 0 ? "warning" : "danger") shadow h-100 py-2">
+                    class="card border-left-@(totalVariance == 0 ? "secondary" : totalVariance > 0 ? "success" : "danger") shadow h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div
-                                    class="text-xs font-weight-bold text-@(totalVariance == 0 ? "success" : totalVariance > 0 ? "warning" : "danger") text-uppercase mb-1">
+                                    class="text-xs font-weight-bold text-@(totalVariance == 0 ? "secondary" : totalVariance > 0 ? "success" : "danger") text-uppercase mb-1">
                                     Quantity Variance</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">@totalVariance.ToString("N0")</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">@(totalVariance > 0 ? "+" : "")@totalVariance.ToString("N0")</div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-balance-scale fa-2x text-gray-300"></i>
@@ -143,14 +145,14 @@
             </div>
             <div class="col-xl-3 col-md-6 mb-4">
                 <div
-                    class="card border-left-@(totalAmountVariance == 0 ? "success" : totalAmountVariance > 0 ? "warning" : "danger") shadow h-100 py-2">
+                    class="card border-left-@(totalAmountVariance == 0 ? "secondary" : totalAmountVariance > 0 ? "success" : "danger") shadow h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div
-                                    class="text-xs font-weight-bold text-@(totalAmountVariance == 0 ? "success" : totalAmountVariance > 0 ? "warning" : "danger") text-uppercase mb-1">
+                                    class="text-xs font-weight-bold text-@(totalAmountVariance == 0 ? "secondary" : totalAmountVariance > 0 ? "success" : "danger") text-uppercase mb-1">
                                     Amount Variance</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">₹@totalAmountVariance.ToString("N2")
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">@(totalAmountVariance > 0 ? "+" : "")₹@totalAmountVariance.ToString("N2")
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -213,6 +215,10 @@
                                     grandTotalOrderedAmount += item.OrderedAmount;
                                     grandTotalDeliveredAmount += item.DeliveredAmount;
 
+                                    // Calculate variance as Delivered - Ordered
+                                    var quantityVariance = item.DeliveredQuantity - item.OrderedQuantity;
+                                    var amountVariance = item.DeliveredAmount - item.OrderedAmount;
+
                                     <tr>
 
                                         <td>@item.DealerName</td>
@@ -221,15 +227,15 @@
                                         <td class="text-right">@item.OrderedQuantity.ToString("N0")</td>
                                         <td class="text-right">@item.DeliveredQuantity.ToString("N0")</td>
                                         <td
-                                            class="text-right font-weight-bold @(item.QuantityVariance == 0 ? "text-success" : item.QuantityVariance > 0 ? "text-danger" : "text-danger")">
-                                            @item.QuantityVariance.ToString("N0")
+                                            class="text-right font-weight-bold @(quantityVariance == 0 ? "text-secondary" : quantityVariance > 0 ? "text-success" : "text-danger")">
+                                            @(quantityVariance > 0 ? "+" : "")@quantityVariance.ToString("N0")
                                         </td>
                                         <td class="text-right">₹@item.UnitPrice.ToString("F2")</td>
                                         <td class="text-right">₹@item.OrderedAmount.ToString("F2")</td>
                                         <td class="text-right">₹@item.DeliveredAmount.ToString("F2")</td>
                                         <td
-                                            class="text-right font-weight-bold  @(item.AmountVariance == 0 ? "text-success" : item.AmountVariance > 0 ? "text-danger" : "text-danger")">
-                                            ₹@item.AmountVariance.ToString("F2")
+                                            class="text-right font-weight-bold  @(amountVariance == 0 ? "text-secondary" : amountVariance > 0 ? "text-success" : "text-danger")">
+                                            @(amountVariance > 0 ? "+" : "")₹@amountVariance.ToString("F2")
                                         </td>
                                     </tr>
                                 }
@@ -239,13 +245,19 @@
                                     <td colspan="3">Dealer Total: @dealerGroup.Key</td>
                                     <td class="text-right">@dealerTotalOrdered.ToString("N0")</td>
                                     <td class="text-right">@dealerTotalDelivered.ToString("N0")</td>
-                                    <td class="text-right table-warning">@(dealerTotalOrdered -
-                                                                        dealerTotalDelivered)</td>
+                                    <!-- Changed to Delivered - Ordered -->
+                                    @{
+                                        var dealerQuantityVariance = dealerTotalDelivered - dealerTotalOrdered;
+                                    }
+                                    <td class="text-right font-weight-bold @(dealerQuantityVariance == 0 ? "text-secondary" : dealerQuantityVariance > 0 ? "text-success" : "text-danger")">@(dealerQuantityVariance > 0 ? "+" : "")@dealerQuantityVariance.ToString("N0")</td>
                                     <td></td>
                                     <td class="text-right">₹@dealerTotalOrderedAmount.ToString("F2")</td>
                                     <td class="text-right">₹@dealerTotalDeliveredAmount.ToString("F2")</td>
-                                    <td class="text-right table-warning">₹@(dealerTotalOrderedAmount -
-                                                                        dealerTotalDeliveredAmount)</td>
+                                    <!-- Changed to Delivered - Ordered for amount -->
+                                    @{
+                                        var dealerAmountVariance = dealerTotalDeliveredAmount - dealerTotalOrderedAmount;
+                                    }
+                                    <td class="text-right font-weight-bold @(dealerAmountVariance == 0 ? "text-secondary" : dealerAmountVariance > 0 ? "text-success" : "text-danger")">@(dealerAmountVariance > 0 ? "+" : "")₹@dealerAmountVariance.ToString("F2")</td>
                                 </tr>
                             }
 
@@ -254,13 +266,19 @@
                                 <td colspan="3">Grand Total</td>
                                 <td class="text-right">@grandTotalOrdered.ToString("N0")</td>
                                 <td class="text-right">@grandTotalDelivered.ToString("N0")</td>
-                                <td class="text-right table-warning">@(grandTotalOrdered -
-                                                                    grandTotalDelivered)</td>
+                                <!-- Changed to Delivered - Ordered -->
+                                @{
+                                    var grandQuantityVariance = grandTotalDelivered - grandTotalOrdered;
+                                }
+                                <td class="text-right font-weight-bold @(grandQuantityVariance == 0 ? "text-secondary" : grandQuantityVariance > 0 ? "text-success" : "text-danger")">@(grandQuantityVariance > 0 ? "+" : "")@grandQuantityVariance.ToString("N0")</td>
                                 <td></td>
                                 <td class="text-right">₹@grandTotalOrderedAmount.ToString("F2")</td>
                                 <td class="text-right">₹@grandTotalDeliveredAmount.ToString("F2")</td>
-                                <td class="text-right table-warning">₹@(grandTotalOrderedAmount -
-                                                                    grandTotalDeliveredAmount)</td>
+                                <!-- Changed to Delivered - Ordered for amount -->
+                                @{
+                                    var grandAmountVariance = grandTotalDeliveredAmount - grandTotalOrderedAmount;
+                                }
+                                <td class="text-right font-weight-bold @(grandAmountVariance == 0 ? "text-secondary" : grandAmountVariance > 0 ? "text-success" : "text-danger")">@(grandAmountVariance > 0 ? "+" : "")₹@grandAmountVariance.ToString("F2")</td>
                             </tr>
                         </tbody>
                     </table>

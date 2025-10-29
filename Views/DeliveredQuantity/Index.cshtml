@@ -4,51 +4,55 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="mt-3">
-    <div class="card mb-3">
-        <div class="card-header text-white p-1" style="background-color:#FC2947;">
-            <div class="d-flex align-items-baseline">
-                <a href="/Home/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
-                <h5 class="mx-auto text-white text-2xl font-semibold">Delivered Quantity Entry</h5>
-                <a href="/DeliveredQuantityReport/Index" class="btn btn-light btn-sm">
-                    <i class="fas fa-chart-bar"></i> View Report
+<div class="mt-2">
+    <div class="card mb-2">
+        <div class="card-header text-white p-2" style="background-color:#FC2947;">
+            <div class="d-flex align-items-center">
+                <a href="/Home/Index" class="btn btn-link text-white p-0 mr-2">
+                    <i class="fa fa-arrow-left"></i>
+                </a>
+                <h5 class="mb-0 text-white font-weight-bold">Delivered Quantity Entry</h5>
+                <a href="/DeliveredQuantityReport/Index" class="btn btn-light btn-sm ml-auto">
+                    <i class="fas fa-chart-bar"></i> <span class="d-none d-sm-inline">View Report</span>
                 </a>
             </div>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Select Distributor and Dealer</h6>
-                        </div>
-                        <div class="card-body">
-                            <form id="deliveredQuantityForm">
-                                <div class="form-group">
-                                    <label for="distributorSelect" class="font-weight-bold">Select
-                                        Distributor/Customer:</label>
-                                    <select id="distributorSelect" class="form-control form-control-lg select2"
-                                        asp-items="@(new SelectList(Model.AvailableDistributors, "Id", "Name"))">
-                                        <option value="">-- Select Distributor --</option>
-                                    </select>
-                                    <small class="form-text text-muted">Please select a distributor first.</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="dealerSelect" class="font-weight-bold">Select Dealer:</label>
-                                    <select id="dealerSelect" class="form-control form-control-lg select2" disabled>
-                                        <option value="">-- Select Dealer --</option>
-                                    </select>
-                                    <small class="form-text text-muted">Please select a dealer after selecting a distributor.</small>
-                                </div>
-                            </form>
-                        </div>
+        <div class="card-body p-2">
+            <div class="row mb-2">
+                <div class="col-12 col-md-6 mb-2 mb-md-0">
+                    <label for="distributorSelect" class="form-label font-weight-bold mb-1">Distributor/Customer:</label>
+                    <select id="distributorSelect" class="form-control form-control-sm select2"
+                        asp-items="@(new SelectList(Model.AvailableDistributors, "Id", "Name"))">
+                        <option value="">-- Select Distributor --</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="dealerSelect" class="form-label font-weight-bold mb-1">Dealer:</label>
+                    <select id="dealerSelect" class="form-control form-control-sm select2" disabled>
+                        <option value="">-- Select Dealer --</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mb-2">
+                <div class="col-12">
+                    <div class="d-flex flex-wrap">
+                        <a href="/Home/Index" class="btn btn-secondary btn-sm mb-2">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
                     </div>
                 </div>
             </div>
 
             <div id="deliveredQuantityContainer">
                 <!-- Dealer orders will be loaded here via AJAX -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-info text-center py-3" role="alert">
+                            <i class="fas fa-info-circle"></i> Please select a distributor and dealer to load delivery details.
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -58,7 +62,11 @@
     <script>
         $(document).ready(function () {
             // Initialize Select2
-            $('.select2').select2();
+            $('.select2').select2({
+                width: '100%',
+                placeholder: "-- Select --",
+                allowClear: true
+            });
 
             // Handle distributor selection
             $('#distributorSelect').on('change', function () {
@@ -115,7 +123,7 @@
                 } else {
                     // Reset dealer dropdown if no distributor is selected
                     $('#dealerSelect').prop('disabled', true).html('<option value="">-- Select Dealer --</option>');
-                    $('#deliveredQuantityContainer').html('');
+                    $('#deliveredQuantityContainer').html('<div class="row"><div class="col-12"><div class="alert alert-info text-center py-3" role="alert"><i class="fas fa-info-circle"></i> Please select a distributor and dealer to load delivery details.</div></div></div>');
                 }
             });
             
@@ -128,7 +136,7 @@
                 
                 if (dealerId && distributorId) {
                     // Show loading indicator
-                    $('#deliveredQuantityContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p>Loading dealer order details...</p></div>');
+                    $('#deliveredQuantityContainer').html('<div class="row"><div class="col-12"><div class="text-center py-3"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p class="small mt-1">Loading details...</p></div></div></div>');
                     
                     $.ajax({
                         url: '@Url.Action("LoadDealerOrders", "DeliveredQuantity")',
@@ -147,23 +155,56 @@
                                     confirmButtonText: 'OK'
                                 });
                                 $('#dealerSelect').val('');
-                                $('#deliveredQuantityContainer').html('');
+                                $('#deliveredQuantityContainer').html('<div class="row"><div class="col-12"><div class="alert alert-info text-center py-3" role="alert"><i class="fas fa-info-circle"></i> Please select a distributor and dealer to load delivery details.</div></div></div>');
                             } else {
                                 $('#deliveredQuantityContainer').html(result);
                             }
                         },
                         error: function () {
-                            $('#deliveredQuantityContainer').html('<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation-triangle"></i> Error loading dealer order details. Please try again.</div>');
+                            $('#deliveredQuantityContainer').html('<div class="row"><div class="col-12"><div class="alert alert-danger small py-2" role="alert"><i class="fa fa-exclamation-triangle"></i> Error loading details. Try again.</div></div></div>');
                         }
                     });
                 } else {
-                    $('#deliveredQuantityContainer').html('');
+                    $('#deliveredQuantityContainer').html('<div class="row"><div class="col-12"><div class="alert alert-info text-center py-3" role="alert"><i class="fas fa-info-circle"></i> Please select a distributor and dealer to load delivery details.</div></div></div>');
                 }
             });
         });
     </script>
     
     <style>
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        
+        /* Responsive adjustments for small screens */
+        @@media (max-width: 575.98px) {
+            .card-body {
+                padding: 0.5rem !important;
+            }
+            
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+            
+            .mb-2 {
+                margin-bottom: 0.5rem !important;
+            }
+            
+            .p-2 {
+                padding: 0.5rem !important;
+            }
+            
+            .table th, .table td {
+                padding: 0.25rem !important;
+                font-size: 0.8rem;
+            }
+            
+            .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+        
         .ordered-dealer {
             color: #6c757d !important;
             font-style: italic;
@@ -171,6 +212,21 @@
         .select2-container--default .select2-results__option[aria-disabled=true] {
             font-weight: bold;
             color: #6c757d;
+        }
+        
+        /* Custom styles for delivered quantity */
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+        }
+        
+        .table .badge {
+            font-size: 0.75rem;
+            padding: 0.4em 0.6em;
         }
     </style>
 }

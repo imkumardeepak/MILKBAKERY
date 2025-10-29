@@ -135,6 +135,48 @@ namespace Milk_Bakery.Migrations
                     b.ToTable("Company_SegementMap");
                 });
 
+            modelBuilder.Entity("Milk_Bakery.Models.ConversionTable", b =>
+                {
+                    b.Property<string>("MaterialName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("materialname");
+
+                    b.Property<string>("SapCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("sapcode");
+
+                    b.Property<string>("ShortCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("shortcode");
+
+                    b.Property<int>("TotalQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("totalqnty");
+
+                    b.Property<int>("UnitQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("unitqnty");
+
+                    b.Property<string>("UnitType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("unittype");
+
+                    b.HasKey("MaterialName");
+
+                    b.ToTable("ConversionTable");
+                });
+
             modelBuilder.Entity("Milk_Bakery.Models.CratesManage", b =>
                 {
                     b.Property<int>("Id")
@@ -557,6 +599,9 @@ namespace Milk_Bakery.Migrations
                     b.Property<int>("DealerId")
                         .HasColumnType("int");
 
+                    b.Property<int>("DeliverFlag")
+                        .HasColumnType("int");
+
                     b.Property<string>("DistributorCode")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -572,6 +617,8 @@ namespace Milk_Bakery.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DealerId");
 
                     b.HasIndex("OrderDate", "DealerId", "DistributorId", "ProcessFlag");
 
@@ -620,6 +667,36 @@ namespace Milk_Bakery.Migrations
                     b.HasIndex("DealerOrderId", "SapCode", "ShortCode");
 
                     b.ToTable("DealerOrderItems");
+                });
+
+            modelBuilder.Entity("Milk_Bakery.Models.DealerOutstanding", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BalanceAmount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<int>("DealerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DeliverDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("InvoiceAmount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<decimal>("PaidAmount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DealerId");
+
+                    b.ToTable("DealerOutstandings");
                 });
 
             modelBuilder.Entity("Milk_Bakery.Models.DepartmentMaster", b =>
@@ -1437,6 +1514,17 @@ namespace Milk_Bakery.Migrations
                     b.Navigation("DealerMaster");
                 });
 
+            modelBuilder.Entity("Milk_Bakery.Models.DealerOrder", b =>
+                {
+                    b.HasOne("Milk_Bakery.Models.DealerMaster", "Dealer")
+                        .WithMany()
+                        .HasForeignKey("DealerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dealer");
+                });
+
             modelBuilder.Entity("Milk_Bakery.Models.DealerOrderItem", b =>
                 {
                     b.HasOne("Milk_Bakery.Models.DealerOrder", "DealerOrder")
@@ -1446,6 +1534,17 @@ namespace Milk_Bakery.Migrations
                         .IsRequired();
 
                     b.Navigation("DealerOrder");
+                });
+
+            modelBuilder.Entity("Milk_Bakery.Models.DealerOutstanding", b =>
+                {
+                    b.HasOne("Milk_Bakery.Models.DealerMaster", "Dealer")
+                        .WithMany()
+                        .HasForeignKey("DealerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dealer");
                 });
 
             modelBuilder.Entity("Milk_Bakery.Models.InvoiceDetails+InvoiceMaterialDetail", b =>

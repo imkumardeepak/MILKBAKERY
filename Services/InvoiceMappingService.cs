@@ -78,7 +78,7 @@ namespace Milk_Bakery.Services
 				ShipToCode = dto.ShipToCode,
 				ShipToRoute = dto.ShipToRoute,
 				CompanyName = dto.CompanyName,
-				CompanyCode = dto.CompanyCode,
+				CompanyCode = dto.CompanyCode.ToString(),
 				VehicleNo = dto.VehicleNo,
 				InvoiceMaterials = dto.InvoiceMaterials?.Select(MapToEntity).ToList() ?? new List<InvoiceMaterialDetail>()
 			};
@@ -92,7 +92,7 @@ namespace Milk_Bakery.Services
 				InvoiceNo = dto.InvoiceNo,
 				InvoiceDate = dto.InvoiceDate,
 				CustomerRefPO = dto.CustomerRefPO,
-				TotalAmount = dto.TotalAmount,
+				TotalAmount = Convert.ToDecimal(dto.TotalAmount),
 				OrderDate = dto.OrderDate,
 				BillToName = dto.BillToName,
 				BillToCode = dto.BillToCode,
@@ -114,9 +114,9 @@ namespace Milk_Bakery.Services
 				ProductDescription = dto.ProductDescription,
 				MaterialSapCode = dto.MaterialSapCode,
 				Batch = dto.Batch,
-				UnitPerCase = dto.UnitPerCase,
-				QuantityCases = dto.QuantityCases,
-				QuantityUnits = dto.QuantityUnits,
+				UnitPerCase = Convert.ToInt32(dto.UnitPerCase),
+				QuantityCases = Convert.ToInt32(dto.QuantityCases),
+				QuantityUnits = Convert.ToInt32(dto.QuantityUnits),
 				UOM = dto.UOM
 			};
 		}

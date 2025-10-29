@@ -25,9 +25,9 @@ namespace Milk_Bakery.Controllers
 		{
 			_context = context;
 			_notifyService = notifyService;
-            // Set the license context for EPPlus
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-        }
+			// Set the license context for EPPlus
+			ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+		}
 
 		// GET: DealerOrders
 		public async Task<IActionResult> Index()
@@ -40,181 +40,417 @@ namespace Milk_Bakery.Controllers
 			return View(viewModel);
 		}
 
-        // GET: DealerOrders/DispatchRouteSheet
-        public async Task<IActionResult> DispatchRouteSheet()
-        {
-            return View();
-        }
+		// GET: DealerOrders/DispatchRouteSheet
+		public async Task<IActionResult> DispatchRouteSheet()
+		{
+			return View();
+		}
 
-        // GET: DealerOrders/GetAllCustomers
-        [HttpGet]
-        public async Task<IActionResult> GetAllCustomers()
-        {
-            try
-            {
-                var customers = await GetAvailableDistributors();
-                var customerList = customers.Select(c => new { id = c.Id, name = c.Name }).ToList();
-                return Json(new { success = true, customers = customerList });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
+		// GET: DealerOrders/GetAllCustomers
+		[HttpGet]
+		public async Task<IActionResult> GetAllCustomers()
+		{
+			try
+			{
+				var customers = await GetAvailableDistributors();
+				var customerList = customers.Select(c => new { id = c.Id, name = c.Name }).ToList();
+				return Json(new { success = true, customers = customerList });
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
 
-        // GET: DealerOrders/GetDispatchData
-        [HttpGet]
-        public async Task<IActionResult> GetDispatchData(DateTime? date, int? customerId)
-        {
-            try
-            {
-                var dispatchDate = date ?? DateTime.Now.Date;
-                
-                // Get dealer orders for the specified date
-                var dealerOrdersQuery = _context.DealerOrders
-                    .Include(o => o.Dealer)
-                    .Where(o => o.OrderDate == dispatchDate);
+		// GET: DealerOrders/GetDispatchData
+		[HttpGet]
+		public async Task<IActionResult> GetDispatchData(DateTime? date, int? customerId)
+		{
+			try
+			{
+				var dispatchDate = date ?? DateTime.Now.Date;
 
-                // Filter by customer if specified
-                if (customerId.HasValue && customerId.Value > 0)
-                {
-                    dealerOrdersQuery = dealerOrdersQuery.Where(o => o.DistributorId == customerId.Value);
-                }
+				// Get dealer orders for the specified date
+				var dealerOrdersQuery = _context.DealerOrders
+					.Include(o => o.Dealer)
+					.Where(o => o.OrderDate == dispatchDate);
 
-                var dealerOrders = await dealerOrdersQuery.ToListAsync();
+				// Filter by customer if specified
+				if (customerId.HasValue && customerId.Value > 0)
+				{
+					dealerOrdersQuery = dealerOrdersQuery.Where(o => o.DistributorId == customerId.Value);
+				}
 
-                var dispatchData = new List<object>();
+				var dealerOrders = await dealerOrdersQuery.ToListAsync();
 
-                foreach (var order in dealerOrders)
-                {
-                    // Get order items for this order
-                    var orderItems = await _context.DealerOrderItems
-                        .Where(i => i.DealerOrderId == order.Id)
-                        .ToListAsync();
+				// Get all unique short codes for column headers
+				var shortCodes = new List<string>();
+				// Changed to store quantity and amount data
+				var dealerData = new Dictionary<string, Dictionary<string, int>>(); // dealer -> shortCode -> quantity
+				var dealerAmountData = new Dictionary<string, Dictionary<string, decimal>>(); // dealer -> shortCode -> amount
+				var dealerRoutes = new Dictionary<string, string>(); // dealer -> route code
+				var dealerPhones = new Dictionary<string, string>(); // dealer -> phone
 
-                    foreach (var item in orderItems)
-                    {
-                        // Get material to get unit information
-                        var material = await _context.MaterialMaster
-                            .FirstOrDefaultAsync(m => m.Materialname == item.MaterialName);
+				foreach (var order in dealerOrders)
+				{
+					var dealerKey = order.Dealer?.Name ?? "";
+					if (!string.IsNullOrEmpty(dealerKey))
+					{
+						// Initialize dealer data if not exists
+						if (!dealerData.ContainsKey(dealerKey))
+						{
+							dealerData[dealerKey] = new Dictionary<string, int>();
+							dealerAmountData[dealerKey] = new Dictionary<string, decimal>();
+							dealerRoutes[dealerKey] = order.Dealer?.RouteCode ?? "";
+							dealerPhones[dealerKey] = order.Dealer?.PhoneNo ?? "";
+						}
 
-                        dispatchData.Add(new
-                        {
-                            routeCode = order.Dealer?.RouteCode ?? "",
-                            dealerName = order.Dealer?.Name ?? "",
-                            phoneNo = order.Dealer?.PhoneNo ?? "",
-                            address = order.Dealer?.Address ?? "",
-                            materialName = item.MaterialName,
-                            quantity = item.Qty,
-                            unit = material?.Unit ?? ""
-                        });
-                    }
-                }
+						// Get order items for this order
+						var orderItems = await _context.DealerOrderItems
+							.Where(i => i.DealerOrderId == order.Id)
+							.ToListAsync();
 
-                return Json(new { success = true, data = dispatchData });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
+						foreach (var item in orderItems)
+						{
+							var shortCode = item.ShortCode ?? "";
+							var amount = item.Qty * item.Rate; // Calculate amount
 
-        // GET: DealerOrders/ExportDispatchToExcel
-        [HttpGet]
-        public async Task<IActionResult> ExportDispatchToExcel(DateTime? date, int? customerId)
-        {
-            try
-            {
-                var dispatchDate = date ?? DateTime.Now.Date;
+							// Add to short codes list if not exists
+							if (!string.IsNullOrEmpty(shortCode) && !shortCodes.Contains(shortCode))
+							{
+								shortCodes.Add(shortCode);
+							}
 
-                // Get dealer orders for the specified date
-                var dealerOrdersQuery = _context.DealerOrders
-                    .Include(o => o.Dealer)
-                    .Where(o => o.OrderDate == dispatchDate);
+							// Add quantity to dealer data
+							if (dealerData[dealerKey].ContainsKey(shortCode))
+							{
+								dealerData[dealerKey][shortCode] += item.Qty;
+								dealerAmountData[dealerKey][shortCode] += amount; // Add amount
+							}
+							else
+							{
+								dealerData[dealerKey][shortCode] = item.Qty;
+								dealerAmountData[dealerKey][shortCode] = amount; // Set amount
+							}
+						}
+					}
+				}
 
-                // Filter by customer if specified
-                if (customerId.HasValue && customerId.Value > 0)
-                {
-                    dealerOrdersQuery = dealerOrdersQuery.Where(o => o.DistributorId == customerId.Value);
-                }
+				// Sort short codes for consistent column order
+				shortCodes.Sort();
 
-                var dealerOrders = await dealerOrdersQuery.ToListAsync();
+				// Create pivot table data
+				var pivotData = new List<object>();
 
-                var dispatchData = new List<object>();
+				foreach (var kvp in dealerData)
+				{
+					var dealerName = kvp.Key;
+					var materials = kvp.Value;
+					var amounts = dealerAmountData[dealerName]; // Get amounts for this dealer
 
-                foreach (var order in dealerOrders)
-                {
-                    // Get order items for this order
-                    var orderItems = await _context.DealerOrderItems
-                        .Where(i => i.DealerOrderId == order.Id)
-                        .ToListAsync();
+					// Create row data with dealer info
+					var rowData = new Dictionary<string, object>
+					{
+						{ "dealerName", dealerName },
+						{ "routeCode", dealerRoutes[dealerName] },
+						{ "phoneNo", dealerPhones[dealerName] }
+					};
 
-                    foreach (var item in orderItems)
-                    {
-                        // Get material to get unit information
-                        var material = await _context.MaterialMaster
-                            .FirstOrDefaultAsync(m => m.Materialname == item.MaterialName);
+					// Add material quantities and amounts
+					foreach (var shortCode in shortCodes)
+					{
+						rowData[shortCode] = materials.ContainsKey(shortCode) ? materials[shortCode] : 0;
+						// Add amount with "Amt_" prefix to distinguish from quantity
+						rowData["Amt_" + shortCode] = amounts.ContainsKey(shortCode) ? Math.Round(amounts[shortCode], 2) : 0;
+					}
 
-                        dispatchData.Add(new
-                        {
-                            routeCode = order.Dealer?.RouteCode ?? "",
-                            dealerName = order.Dealer?.Name ?? "",
-                            phoneNo = order.Dealer?.PhoneNo ?? "",
-                            address = order.Dealer?.Address ?? "",
-                            materialName = item.MaterialName,
-                            quantity = item.Qty,
-                            unit = material?.Unit ?? ""
-                        });
-                    }
-                }
+					// Calculate row total (sum of all materials for this dealer)
+					var rowTotal = materials.Values.Sum();
+					var rowAmountTotal = Math.Round(amounts.Values.Sum(), 2); // Total amount for this dealer
+					rowData["total"] = rowTotal;
+					rowData["totalAmount"] = rowAmountTotal; // Add total amount
 
-                // Create Excel file
-                using (var package = new ExcelPackage())
-                {
-                    var worksheet = package.Workbook.Worksheets.Add("Dispatch Route Sheet");
+					pivotData.Add(rowData);
+				}
 
-                    // Add headers
-                    worksheet.Cells[1, 1].Value = "Route Code";
-                    worksheet.Cells[1, 2].Value = "Dealer Name";
-                    worksheet.Cells[1, 3].Value = "Phone No";
-                    worksheet.Cells[1, 4].Value = "Address";
-                    worksheet.Cells[1, 5].Value = "Material";
-                    worksheet.Cells[1, 6].Value = "Quantity";
-                    worksheet.Cells[1, 7].Value = "Unit";
+				// Calculate column totals (sum of each material across all dealers)
+				var columnTotals = new Dictionary<string, int>();
+				var columnAmountTotals = new Dictionary<string, decimal>(); // Amount totals
+				foreach (var shortCode in shortCodes)
+				{
+					// Quantity totals
+					var total = 0;
+					foreach (var dealer in dealerData)
+					{
+						if (dealer.Value.ContainsKey(shortCode))
+						{
+							total += dealer.Value[shortCode];
+						}
+					}
+					columnTotals[shortCode] = total;
 
-                    // Add data
-                    for (int i = 0; i < dispatchData.Count; i++)
-                    {
-                        var item = dispatchData[i];
-                        var itemType = item.GetType();
-                        var properties = itemType.GetProperties();
+					// Amount totals
+					var amountTotal = 0m;
+					foreach (var dealer in dealerAmountData)
+					{
+						if (dealer.Value.ContainsKey(shortCode))
+						{
+							amountTotal += dealer.Value[shortCode];
+						}
+					}
+					columnAmountTotals[shortCode] = Math.Round(amountTotal, 2);
+				}
 
-                        worksheet.Cells[i + 2, 1].Value = itemType.GetProperty("routeCode")?.GetValue(item)?.ToString() ?? "";
-                        worksheet.Cells[i + 2, 2].Value = itemType.GetProperty("dealerName")?.GetValue(item)?.ToString() ?? "";
-                        worksheet.Cells[i + 2, 3].Value = itemType.GetProperty("phoneNo")?.GetValue(item)?.ToString() ?? "";
-                        worksheet.Cells[i + 2, 4].Value = itemType.GetProperty("address")?.GetValue(item)?.ToString() ?? "";
-                        worksheet.Cells[i + 2, 5].Value = itemType.GetProperty("materialName")?.GetValue(item)?.ToString() ?? "";
-                        worksheet.Cells[i + 2, 6].Value = itemType.GetProperty("quantity")?.GetValue(item)?.ToString() ?? "";
-                        worksheet.Cells[i + 2, 7].Value = itemType.GetProperty("unit")?.GetValue(item)?.ToString() ?? "";
-                    }
+				// Add total row with column totals
+				var totalRow = new Dictionary<string, object>
+				{
+					{ "dealerName", "Total" },
+					{ "routeCode", "" },
+					{ "phoneNo", "" }
+				};
 
-                    // Auto-fit columns
-                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+				// Add column totals for each short code
+				foreach (var shortCode in shortCodes)
+				{
+					totalRow[shortCode] = columnTotals[shortCode];
+					totalRow["Amt_" + shortCode] = columnAmountTotals[shortCode]; // Add amount totals
+				}
 
-                    // Convert to bytes
-                    var fileBytes = package.GetAsByteArray();
+				// Calculate grand total (sum of all column totals)
+				var grandTotal = columnTotals.Values.Sum();
+				var grandTotalAmount = Math.Round(columnAmountTotals.Values.Sum(), 2); // Grand total amount
+				totalRow["total"] = grandTotal;
+				totalRow["totalAmount"] = grandTotalAmount; // Add grand total amount
 
-                    // Return file
-                    var fileName = $"DispatchRouteSheet_{dispatchDate:yyyyMMdd}.xlsx";
-                    return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-                }
-            }
-            catch (Exception ex)
-            {
-                _notifyService.Error("Error exporting to Excel: " + ex.Message);
-                return RedirectToAction("DispatchRouteSheet");
-            }
-        }
+				pivotData.Add(totalRow);
+
+				return Json(new
+				{
+					success = true,
+					data = pivotData,
+					materials = shortCodes,
+					grandTotal = grandTotal,
+					grandTotalAmount = grandTotalAmount // Include grand total amount in response
+				});
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
+
+		// GET: DealerOrders/ExportDispatchToExcel
+		[HttpGet]
+		public async Task<IActionResult> ExportDispatchToExcel(DateTime? date, int? customerId)
+		{
+			try
+			{
+				var dispatchDate = date ?? DateTime.Now.Date;
+
+				// Get dealer orders for the specified date
+				var dealerOrdersQuery = _context.DealerOrders
+					.Include(o => o.Dealer)
+					.Where(o => o.OrderDate == dispatchDate);
+
+				// Filter by customer if specified
+				if (customerId.HasValue && customerId.Value > 0)
+				{
+					dealerOrdersQuery = dealerOrdersQuery.Where(o => o.DistributorId == customerId.Value);
+				}
+
+				var dealerOrders = await dealerOrdersQuery.ToListAsync();
+
+				// Get all unique short codes for column headers
+				var shortCodes = new List<string>();
+				var dealerData = new Dictionary<string, Dictionary<string, int>>(); // dealer -> shortCode -> quantity
+				// Add amount data storage
+				var dealerAmountData = new Dictionary<string, Dictionary<string, decimal>>(); // dealer -> shortCode -> amount
+				var dealerRoutes = new Dictionary<string, string>(); // dealer -> route code
+				var dealerPhones = new Dictionary<string, string>(); // dealer -> phone
+
+				foreach (var order in dealerOrders)
+				{
+					var dealerKey = order.Dealer?.Name ?? "";
+					if (!string.IsNullOrEmpty(dealerKey))
+					{
+						// Initialize dealer data if not exists
+						if (!dealerData.ContainsKey(dealerKey))
+						{
+							dealerData[dealerKey] = new Dictionary<string, int>();
+							dealerAmountData[dealerKey] = new Dictionary<string, decimal>(); // Initialize amount data
+							dealerRoutes[dealerKey] = order.Dealer?.RouteCode ?? "";
+							dealerPhones[dealerKey] = order.Dealer?.PhoneNo ?? "";
+						}
+
+						// Get order items for this order
+						var orderItems = await _context.DealerOrderItems
+							.Where(i => i.DealerOrderId == order.Id)
+							.ToListAsync();
+
+						foreach (var item in orderItems)
+						{
+							var shortCode = item.ShortCode ?? "";
+							var amount = item.Qty * item.Rate; // Calculate amount
+
+							// Add to short codes list if not exists
+							if (!string.IsNullOrEmpty(shortCode) && !shortCodes.Contains(shortCode))
+							{
+								shortCodes.Add(shortCode);
+							}
+
+							// Add quantity to dealer data
+							if (dealerData[dealerKey].ContainsKey(shortCode))
+							{
+								dealerData[dealerKey][shortCode] += item.Qty;
+								dealerAmountData[dealerKey][shortCode] += amount; // Add amount
+							}
+							else
+							{
+								dealerData[dealerKey][shortCode] = item.Qty;
+								dealerAmountData[dealerKey][shortCode] = amount; // Set amount
+							}
+						}
+					}
+				}
+
+				// Sort short codes for consistent column order
+				shortCodes.Sort();
+
+				// Create pivot table data
+				var pivotData = new List<Dictionary<string, object>>();
+
+				foreach (var kvp in dealerData)
+				{
+					var dealerName = kvp.Key;
+					var materials = kvp.Value;
+					var amounts = dealerAmountData[dealerName]; // Get amounts for this dealer
+
+					// Create row data with dealer info
+					var rowData = new Dictionary<string, object>
+					{
+						{ "dealerName", dealerName },
+						{ "routeCode", dealerRoutes[dealerName] },
+						{ "phoneNo", dealerPhones[dealerName] }
+					};
+
+					// Add material quantities only (no individual amounts)
+					foreach (var shortCode in shortCodes)
+					{
+						rowData[shortCode] = materials.ContainsKey(shortCode) ? materials[shortCode] : 0;
+					}
+
+					// Calculate row total (sum of all materials for this dealer)
+					var rowTotal = materials.Values.Sum();
+					var rowAmountTotal = Math.Round(amounts.Values.Sum(), 2); // Total amount for this dealer
+					rowData["total"] = rowTotal;
+					rowData["totalAmount"] = rowAmountTotal; // Add total amount
+
+					pivotData.Add(rowData);
+				}
+
+				// Calculate column totals (sum of each material across all dealers)
+				var columnTotals = new Dictionary<string, int>();
+				var columnAmountTotals = new Dictionary<string, decimal>(); // Amount totals
+				foreach (var shortCode in shortCodes)
+				{
+					// Quantity totals
+					var total = 0;
+					foreach (var dealer in dealerData)
+					{
+						if (dealer.Value.ContainsKey(shortCode))
+						{
+							total += dealer.Value[shortCode];
+						}
+					}
+					columnTotals[shortCode] = total;
+				}
+
+				// Add total row with column totals
+				var totalRow = new Dictionary<string, object>
+				{
+					{ "dealerName", "Total" },
+					{ "routeCode", "" },
+					{ "phoneNo", "" }
+				};
+
+				// Add column totals for each short code
+				foreach (var shortCode in shortCodes)
+				{
+					totalRow[shortCode] = columnTotals[shortCode];
+				}
+
+				// Calculate grand total (sum of all column totals)
+				var grandTotal = columnTotals.Values.Sum();
+				var grandTotalAmount = Math.Round(dealerAmountData.Values.SelectMany(d => d.Values).Sum(), 2); // Grand total amount
+				totalRow["total"] = grandTotal;
+				totalRow["totalAmount"] = grandTotalAmount; // Add grand total amount
+
+				pivotData.Add(totalRow);
+
+				// Create Excel file
+				using (var package = new ExcelPackage())
+				{
+					var worksheet = package.Workbook.Worksheets.Add("Dispatch Route Sheet");
+
+					// Add headers
+					worksheet.Cells[1, 1].Value = "Route Code";
+					worksheet.Cells[1, 2].Value = "Dealer Name";
+					worksheet.Cells[1, 3].Value = "Phone No";
+
+					// Add short code headers (quantity only for each material)
+					int colIndex = 4;
+					for (int i = 0; i < shortCodes.Count; i++)
+					{
+						var shortCode = shortCodes[i];
+						worksheet.Cells[1, colIndex].Value = shortCode;
+						colIndex++;
+					}
+
+					// Add Total column headers
+					worksheet.Cells[1, colIndex].Value = "Total Qty";
+					worksheet.Cells[1, colIndex + 1].Value = "Total Amt";
+
+					// Add data rows
+					for (int i = 0; i < pivotData.Count; i++)
+					{
+						var rowData = pivotData[i];
+						int row = i + 2; // Excel rows start at 1, and header is row 1
+
+						worksheet.Cells[row, 1].Value = rowData["routeCode"]?.ToString() ?? "";
+						worksheet.Cells[row, 2].Value = rowData["dealerName"]?.ToString() ?? "";
+						worksheet.Cells[row, 3].Value = rowData["phoneNo"]?.ToString() ?? "";
+
+						// Add material quantities only
+						colIndex = 4;
+						for (int j = 0; j < shortCodes.Count; j++)
+						{
+							var shortCode = shortCodes[j];
+							worksheet.Cells[row, colIndex].Value = rowData.ContainsKey(shortCode) ? rowData[shortCode] : 0;
+							colIndex++;
+						}
+
+						// Add row totals (quantity and amount)
+						worksheet.Cells[row, colIndex].Value = rowData["total"];
+						worksheet.Cells[row, colIndex + 1].Value = rowData["totalAmount"];
+					}
+
+					// Auto-fit columns
+					worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+					// Convert to bytes
+					var fileBytes = package.GetAsByteArray();
+
+					// Return file
+					var fileName = $"DispatchRouteSheet_{dispatchDate:yyyyMMdd}.xlsx";
+					return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+				}
+			}
+			catch (Exception ex)
+			{
+				_notifyService.Error("Error exporting to Excel: " + ex.Message);
+				return RedirectToAction("DispatchRouteSheet");
+			}
+		}
 
 		// GET: DealerOrders/GetDealersByDistributor
 		[HttpGet]
@@ -223,23 +459,24 @@ namespace Milk_Bakery.Controllers
 			try
 			{
 				var today = DateTime.Now.Date;
-				
+
 				// Get all dealers for this distributor
 				var dealers = await _context.DealerMasters
 					.Where(d => d.DistributorId == distributorId)
 					.ToListAsync();
-				
+
 				// Get dealer IDs that have orders today
 				var dealerIdsWithOrdersToday = await _context.DealerOrders
 					.Where(o => o.DistributorId == distributorId && o.OrderDate == today)
 					.Select(o => o.DealerId)
 					.Distinct()
 					.ToListAsync();
-				
+
 				// Create result with order status, sorting to put non-ordered dealers first
 				var dealerResults = dealers
-					.Select(d => new { 
-						Id = d.Id, 
+					.Select(d => new
+					{
+						Id = d.Id,
 						Name = d.Name,
 						hasOrderedToday = dealerIdsWithOrdersToday.Contains(d.Id)
 					})
@@ -307,10 +544,10 @@ namespace Milk_Bakery.Controllers
 					var existingOrderItems = await _context.DealerOrderItems
 						.Where(item => item.DealerOrderId == existingOrder.Id)
 						.ToListAsync();
-					
+
 					// Create a mapping of material name to ordered quantity
 					var materialQuantities = existingOrderItems.ToDictionary(item => item.MaterialName, item => item.Qty);
-					
+
 					// Populate quantities from existing order
 					foreach (var order in basicOrders)
 					{
@@ -323,10 +560,13 @@ namespace Milk_Bakery.Controllers
 							viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = 0;
 						}
 					}
-					
+
 					// Add flag to indicate this is an existing order
 					ViewBag.IsExistingOrder = true;
 					ViewBag.ExistingOrderId = existingOrder.Id;
+					
+					// Add a flag to indicate that this order already exists
+					ViewBag.OrderAlreadyExists = true;
 				}
 				else
 				{
@@ -335,9 +575,10 @@ namespace Milk_Bakery.Controllers
 					{
 						viewModel.DealerOrderItemQuantities[dealer.Id][order.Id] = order.Quantity;
 					}
-					
+
 					// Add flag to indicate this is a new order
 					ViewBag.IsExistingOrder = false;
+					ViewBag.OrderAlreadyExists = false;
 				}
 
 				// Get available materials
@@ -397,10 +638,10 @@ namespace Milk_Bakery.Controllers
 					var existingOrderItems = await _context.DealerOrderItems
 						.Where(item => item.DealerOrderId == existingOrder.Id)
 						.ToListAsync();
-					
+
 					// Create a mapping of material name to ordered quantity
 					var materialQuantities = existingOrderItems.ToDictionary(item => item.MaterialName, item => item.Qty);
-					
+
 					// Populate quantities from existing order (updated quantities)
 					foreach (var order in basicOrders)
 					{
@@ -549,13 +790,13 @@ namespace Milk_Bakery.Controllers
 
 				// Process each dealer's orders (should be just one in this case)
 				bool hasSavedOrders = false;
-                List<int> savedDealerIds = new List<int>(); // Track which dealers had orders saved
-                
+				List<int> savedDealerIds = new List<int>(); // Track which dealers had orders saved
+
 				foreach (var kvp in intQuantities)
 				{
 					var dealerId = kvp.Key;
 					var orderItems = kvp.Value;
-					
+
 					// Check if this dealer has any order items
 					if (orderItems.Count > 0)
 					{
@@ -571,21 +812,21 @@ namespace Milk_Bakery.Controllers
 							var existingOrderItems = await _context.DealerOrderItems
 								.Where(item => item.DealerOrderId == existingOrder.Id)
 								.ToListAsync();
-							
+
 							// Create a mapping of material name to existing items for easy lookup
 							var existingItemsByMaterial = existingOrderItems.ToDictionary(item => item.MaterialName, item => item);
-							
+
 							// Get basic orders to match with order items
 							var basicOrders = await _context.DealerBasicOrders
 								.Where(dbo => dbo.DealerId == dealerId)
 								.ToListAsync();
-							
+
 							// Update or create order items
 							foreach (var itemKvp in orderItems)
 							{
 								var basicOrderId = itemKvp.Key;
 								var quantity = itemKvp.Value;
-								
+
 								// Find the basic order to get material details
 								var basicOrder = basicOrders.FirstOrDefault(bo => bo.Id == basicOrderId);
 								if (basicOrder != null)
@@ -595,7 +836,7 @@ namespace Milk_Bakery.Controllers
 									{
 										// Update existing item
 										existingItem.Qty = quantity;
-										
+
 										// Determine the rate to use - dealer price if provided, otherwise basic order rate
 										var rate = basicOrder.Rate;
 										if (dealerPrices.ContainsKey(basicOrder.MaterialName))
@@ -603,7 +844,7 @@ namespace Milk_Bakery.Controllers
 											rate = dealerPrices[basicOrder.MaterialName];
 										}
 										existingItem.Rate = rate;
-										
+
 										_context.DealerOrderItems.Update(existingItem);
 									}
 									else if (quantity > 0)
@@ -615,7 +856,7 @@ namespace Milk_Bakery.Controllers
 										{
 											rate = dealerPrices[basicOrder.MaterialName];
 										}
-										
+
 										var orderItem = new DealerOrderItem
 										{
 											DealerOrderId = existingOrder.Id,
@@ -626,41 +867,53 @@ namespace Milk_Bakery.Controllers
 											Rate = rate,
 											DeliverQnty = 0
 										};
-										
+
 										_context.DealerOrderItems.Add(orderItem);
 									}
 								}
 							}
-							
+
 							// Remove items that are no longer in the order (quantity = 0)
 							foreach (var existingItem in existingOrderItems)
 							{
 								// Check if this item's material is in the current order
-								var isMaterialInOrder = basicOrders.Any(bo => 
-									bo.MaterialName == existingItem.MaterialName && 
-									orderItems.ContainsKey(bo.Id) && 
+								var isMaterialInOrder = basicOrders.Any(bo =>
+									bo.MaterialName == existingItem.MaterialName &&
+									orderItems.ContainsKey(bo.Id) &&
 									orderItems[bo.Id] > 0);
-								
+
 								if (!isMaterialInOrder)
 								{
 									// Remove the item
 									_context.DealerOrderItems.Remove(existingItem);
 								}
 							}
-							
+
 							hasSavedOrders = true;
-                            savedDealerIds.Add(dealerId);
+							savedDealerIds.Add(dealerId);
 						}
 						else
 						{
 							// Creating a new order - check if we have quantities > 0
 							bool hasQuantities = orderItems.Values.Any(q => q > 0);
-							
+
 							if (hasQuantities)
 							{
+								// Additional validation to prevent duplicate orders
+								// Check if an order already exists for this dealer today (double-check)
+								var duplicateOrderCheck = await _context.DealerOrders
+									.AnyAsync(d => d.DealerId == dealerId && d.DistributorId == SelectedDistributorId && d.OrderDate == orderDate);
+
+								if (duplicateOrderCheck)
+								{
+									// An order already exists for this dealer today, cannot create another one
+									_notifyService.Error("An order already exists for this dealer today. You can only update the existing order.");
+									return Json(new { success = false, message = "An order already exists for this dealer today. You can only update the existing order." });
+								}
+
 								hasSavedOrders = true;
-                                savedDealerIds.Add(dealerId);
-                                
+								savedDealerIds.Add(dealerId);
+
 								// Create DealerOrder
 								var dealerOrder = new DealerOrder
 								{
@@ -721,8 +974,8 @@ namespace Milk_Bakery.Controllers
 				if (hasSavedOrders)
 				{
 					_notifyService.Success("Dealer orders saved successfully.");
-                    // Return the list of saved dealer IDs so the frontend can handle them appropriately
-                    return Json(new { success = true, savedDealerIds = savedDealerIds });
+					// Return the list of saved dealer IDs so the frontend can handle them appropriately
+					return Json(new { success = true, savedDealerIds = savedDealerIds });
 				}
 				else
 				{
@@ -736,6 +989,32 @@ namespace Milk_Bakery.Controllers
 				_notifyService.Error("An error occurred while saving dealer orders.");
 				return Json(new { success = false, message = ex.Message });
 			}
+		}
+
+		// Helper method to generate purchase order number
+		private string GeneratePurchaseOrderNumber()
+		{
+			int maxId = _context.PurchaseOrder.Any() ? _context.PurchaseOrder.Max(e => e.Id) + 1 : 1;
+			string orderNo = "";
+
+			if (maxId.ToString().Length == 1)
+				orderNo = "P0000000" + maxId.ToString();
+			else if (maxId.ToString().Length == 2)
+				orderNo = "P000000" + maxId.ToString();
+			else if (maxId.ToString().Length == 3)
+				orderNo = "P00000" + maxId.ToString();
+			else if (maxId.ToString().Length == 4)
+				orderNo = "P0000" + maxId.ToString();
+			else if (maxId.ToString().Length == 5)
+				orderNo = "P000" + maxId.ToString();
+			else if (maxId.ToString().Length == 6)
+				orderNo = "P00" + maxId.ToString();
+			else if (maxId.ToString().Length == 7)
+				orderNo = "P0" + maxId.ToString();
+			else if (maxId.ToString().Length == 8)
+				orderNo = "P" + maxId.ToString();
+
+			return orderNo;
 		}
 
 		#region Helper Methods

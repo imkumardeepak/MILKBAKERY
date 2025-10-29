@@ -250,7 +250,7 @@ namespace Milk_Bakery.Controllers.Api
 				existingInvoice.InvoiceNo = updateDto.InvoiceNo;
 				existingInvoice.InvoiceDate = updateDto.InvoiceDate;
 				existingInvoice.CustomerRefPO = updateDto.CustomerRefPO;
-				existingInvoice.TotalAmount = updateDto.TotalAmount;
+				existingInvoice.TotalAmount = Convert.ToDecimal(updateDto.TotalAmount);
 				existingInvoice.OrderDate = updateDto.OrderDate;
 				existingInvoice.BillToName = updateDto.BillToName;
 				existingInvoice.BillToCode = updateDto.BillToCode;

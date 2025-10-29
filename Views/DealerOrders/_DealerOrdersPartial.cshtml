@@ -10,9 +10,9 @@
                 @{ int index = 0; }
                 @foreach (var dealer in Model.Dealers)
                 {
-                    <div class="card shadow mb-3 border-left-primary" id="dealer-card-@dealer.Id">
-                        <div class="card-header py-2 d-flex justify-content-between align-items-center" id="heading@(dealer.Id)">
-                            <h6 class="m-0 font-weight-bold text-primary">@dealer.Name</h6>
+                    <div class="card shadow mb-2 border-left-primary" id="dealer-card-@dealer.Id">
+                        <div class="card-header py-1 d-flex justify-content-between align-items-center" id="heading@(dealer.Id)">
+                            <h6 class="mb-0 font-weight-bold text-primary">@dealer.Name</h6>
                             <button class="btn btn-link text-primary p-1 accordion-toggle" type="button" data-dealer-id="@dealer.Id">
                                 <i class="fas fa-chevron-down toggle-icon"></i>
                             </button>
@@ -21,6 +21,12 @@
                         <div id="collapse@(dealer.Id)" class="dealer-collapse-content @(index == 0 ? "" : "d-none")">
                             <div class="card-body p-2">
                                 <h6 class="font-weight-bold text-primary mb-2">Order Details</h6>
+                                @if (ViewBag.OrderAlreadyExists == true)
+                                {
+                                    <div class="alert alert-info py-1 px-2 mb-2 small" role="alert">
+                                        <i class="fas fa-info-circle"></i> An order has already been placed for this dealer today. You can view and update the existing order below.
+                                    </div>
+                                }
                                 @if (Model.DealerBasicOrders.ContainsKey(dealer.Id) && Model.DealerBasicOrders[dealer.Id].Any())
                                 {
                                     decimal dealerTotal = 0; // Variable to store dealer total
@@ -29,7 +35,9 @@
                                         <table class="table table-bordered table-hover table-sm mb-2">
                                             <thead class="thead-dark">
                                                 <tr>
-                                                    <th>Short Code</th>
+                                                    <!-- Material name column hidden on small screens, visible on large screens -->
+                                                    <th class="d-none d-lg-table-cell">Material</th>
+                                                    <th>Code</th>
                                                     <th class="text-center">Rate</th>
                                                     <th class="text-center">Qty</th>
                                                     <th class="text-center">Price</th>
@@ -56,17 +64,27 @@
                                                     dealerTotal += price;
                                                     
                                                     <tr>
+                                                        <!-- Material name cell hidden on small screens, visible on large screens -->
+                                                        <td class="d-none d-lg-table-cell">@basicOrder.MaterialName</td>
                                                         <td>@basicOrder.ShortCode</td>
                                                         <td class="text-center">@rate.ToString("F2")</td>
                                                         <td class="p-1">
-                                                            <input type="number" 
-                                                                   name="DealerOrderItemQuantities[@dealer.Id][@basicOrder.Id]" 
-                                                                   class="form-control form-control-sm text-center quantity-input" 
-                                                                   value="@quantity" 
-                                                                   min="0" 
-                                                                   data-dealer-id="@dealer.Id"
-                                                                   data-basic-order-id="@basicOrder.Id"
-                                                                   data-rate="@rate" />
+                                                            <div class="input-group input-group-sm">
+                                                                <div class="input-group-prepend">
+                                                                    <button class="btn btn-outline-secondary qty-decrease" type="button" data-dealer-id="@dealer.Id" data-basic-order-id="@basicOrder.Id">-</button>
+                                                                </div>
+                                                                <input type="number" 
+                                                                       name="DealerOrderItemQuantities[@dealer.Id][@basicOrder.Id]" 
+                                                                       class="form-control form-control-sm text-center quantity-input" 
+                                                                       value="@quantity" 
+                                                                       min="0" 
+                                                                       data-dealer-id="@dealer.Id"
+                                                                       data-basic-order-id="@basicOrder.Id"
+                                                                       data-rate="@rate" />
+                                                                <div class="input-group-append">
+                                                                    <button class="btn btn-outline-secondary qty-increase" type="button" data-dealer-id="@dealer.Id" data-basic-order-id="@basicOrder.Id">+</button>
+                                                                </div>
+                                                            </div>
                                                         </td>
                                                         <td class="text-center price-cell">@price.ToString("F2")</td>
                                                     </tr>
@@ -76,20 +94,20 @@
                                     </div>
                                     
                                     <div class="text-right">
-                                        <strong class="dealer-total">Dealer Total: ₹@dealerTotal.ToString("F2")</strong>
+                                        <strong class="dealer-total small">Total: ₹@dealerTotal.ToString("F2")</strong>
                                     </div>
                                     
                                     <!-- Save button for individual dealer -->
                                     <div class="text-center mt-2">
-                                        <button type="button" class="btn btn-success save-dealer-order-btn" data-dealer-id="@dealer.Id">
-                                            <i class="fas fa-save"></i> Save Order for @dealer.Name
+                                        <button type="button" class="btn btn-success btn-sm save-dealer-order-btn" data-dealer-id="@dealer.Id">
+                                            <i class="fas fa-save"></i> @(ViewBag.OrderAlreadyExists == true ? "Update Order" : "Save Order")
                                         </button>
                                     </div>
                                 }
                                 else
                                 {
-                                    <div class="alert alert-info py-1 px-2 mb-2" role="alert">
-                                        <i class="fas fa-info-circle"></i> No basic orders found for this dealer.
+                                    <div class="alert alert-info py-1 px-2 mb-2 small" role="alert">
+                                        <i class="fas fa-info-circle"></i> No orders found for this dealer.
                                     </div>
                                 }
                             </div>
@@ -101,7 +119,7 @@
         }
         else
         {
-            <div class="alert alert-warning text-center" role="alert">
+            <div class="alert alert-warning text-center py-2 px-2 small" role="alert">
                 <i class="fas fa-exclamation-triangle"></i> No dealers found for the selected distributor.
             </div>
         }
@@ -115,6 +133,26 @@
             button.html(originalText);
             button.prop('disabled', false);
         }
+        
+        // Handle quantity increase button
+        $(document).on('click', '.qty-increase', function() {
+            var dealerId = $(this).data('dealer-id');
+            var basicOrderId = $(this).data('basic-order-id');
+            var inputField = $(this).closest('.input-group').find('.quantity-input');
+            var currentValue = parseInt(inputField.val()) || 0;
+            inputField.val(currentValue + 1).trigger('input');
+        });
+        
+        // Handle quantity decrease button
+        $(document).on('click', '.qty-decrease', function() {
+            var dealerId = $(this).data('dealer-id');
+            var basicOrderId = $(this).data('basic-order-id');
+            var inputField = $(this).closest('.input-group').find('.quantity-input');
+            var currentValue = parseInt(inputField.val()) || 0;
+            if (currentValue > 0) {
+                inputField.val(currentValue - 1).trigger('input');
+            }
+        });
         
         // Handle quantity input changes to update price
         $(document).on('input', '.quantity-input', function() {
@@ -138,7 +176,7 @@
             });
             
             // Update dealer total display using the correct selector
-            $('#collapse' + dealerId).find('.dealer-total').text('Dealer Total: ₹' + dealerTotal.toFixed(2));
+            $('#collapse' + dealerId).find('.dealer-total').text('Total: ₹' + dealerTotal.toFixed(2));
         }
         
         // Handle save order for individual dealer
@@ -147,6 +185,18 @@
             var originalText = button.html();
             var dealerId = button.data('dealer-id');
             var dealerName = $('#dealer-card-' + dealerId).find('.card-header h6').text();
+            
+            // Check if this dealer already has an order (by looking for the success badge)
+            if ($('#dealer-card-' + dealerId).find('.badge-success').length > 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Order Already Exists',
+                    text: 'An order has already been placed for ' + dealerName + ' today. You can only update the existing order.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
+                return;
+            }
             
             // Show loading indicator
             button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
@@ -192,15 +242,27 @@
                             icon: 'success',
                             title: 'Success',
                             text: 'Order for ' + dealerName + ' saved successfully!',
-                            confirmButtonText: 'OK'
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#3085d6'
+                        }).then((result) => {
+                            // Reload the page after successful save
+                            if (result.isConfirmed) {
+                                location.reload();
+                            }
                         });
+                        
+                        // Also reload the page if the alert is closed
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
                     } else {
                         // Show error message
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
                             text: 'Error saving order for ' + dealerName + ': ' + (result.message || 'Unknown error'),
-                            confirmButtonText: 'OK'
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#3085d6'
                         });
                     }
                 },
@@ -210,7 +272,8 @@
                         icon: 'error',
                         title: 'Error',
                         text: 'Error saving order for ' + dealerName + '. Please try again. ' + error,
-                        confirmButtonText: 'OK'
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6'
                     });
                 },
                 complete: function() {
@@ -244,3 +307,60 @@
         $('.accordion-toggle').first().find('.toggle-icon').removeClass('fa-chevron-down').addClass('fa-chevron-up');
     });
 </script>
+
+<style>
+    /* Mobile-specific adjustments */
+    @@media (max-width: 575.98px) {
+        .card {
+            margin-bottom: 0.75rem !important;
+        }
+        
+        .card-header {
+            padding: 0.5rem !important;
+        }
+        
+        .card-body {
+            padding: 0.5rem !important;
+        }
+        
+        .table th, .table td {
+            padding: 0.25rem !important;
+            font-size: 0.8rem;
+        }
+        
+        .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .form-control-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .small {
+            font-size: 0.75rem;
+        }
+        
+        .input-group-sm > .form-control:not(textarea) {
+            height: calc(1.5em + 0.5rem + 2px);
+        }
+        
+        .input-group-sm > .input-group-prepend > .btn,
+        .input-group-sm > .input-group-append > .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+    }
+    
+    /* Quantity button styling */
+    .qty-increase, .qty-decrease {
+        min-width: 30px;
+        padding: 0.15rem 0.3rem;
+    }
+    
+    .quantity-input {
+        max-width: 60px;
+        text-align: center;
+    }
+</style>
