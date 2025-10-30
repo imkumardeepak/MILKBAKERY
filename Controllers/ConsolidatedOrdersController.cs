@@ -198,6 +198,8 @@ namespace Milk_Bakery.Controllers
 				// Calculate grand totals
 				var grandTotal = consolidatedData.Values.Sum();
 				var totalCrates = resultData.Sum(item => (int)((dynamic)item).crates);
+				var totalItemsPerCrate = resultData.Sum(item => (int)((dynamic)item).totalQuantityPerUnit);
+				var totalItemsInCrates = resultData.Sum(item => (int)((dynamic)item).itemsInCrates);
 				var totalLeftoverItems = resultData.Sum(item => (int)((dynamic)item).leftoverItems);
 
 				return Json(new
@@ -207,6 +209,8 @@ namespace Milk_Bakery.Controllers
 					dealerDetails = dealerDetails,
 					grandTotal = grandTotal,
 					totalCrates = totalCrates,
+					totalItemsPerCrate = totalItemsPerCrate,
+					totalItemsInCrates = totalItemsInCrates,
 					totalLeftoverItems = totalLeftoverItems,
 					orderDate = orderDate.ToString("dd/MM/yyyy")
 				});
@@ -341,7 +345,7 @@ namespace Milk_Bakery.Controllers
 				// Calculate grand totals
 				var grandTotal = consolidatedData.Values.Sum();
 				var totalCrates = resultData.Sum(item => (int)item.crates);
-				
+				var totalItemsInCrates = resultData.Sum(item => (int)item.itemsInCrates);
 				var totalLeftoverItems = resultData.Sum(item => (int)item.leftoverItems);
 
 				// Create Excel file
@@ -355,7 +359,9 @@ namespace Milk_Bakery.Controllers
 					worksheet.Cells[1, 3].Value = "SAP Code";
 					worksheet.Cells[1, 4].Value = "Quantity (PCS)";
 					worksheet.Cells[1, 5].Value = "Unit Type";
-					worksheet.Cells[1, 6].Value = "Leftover Items";
+					worksheet.Cells[1, 6].Value = "Items per Crate";
+					worksheet.Cells[1, 7].Value = "In Crates";
+					worksheet.Cells[1, 8].Value = "Leftover Items";
 
 					// Add data rows
 					for (int i = 0; i < resultData.Count; i++)
@@ -367,19 +373,24 @@ namespace Milk_Bakery.Controllers
 						worksheet.Cells[i + 2, 3].Value = rowData.sapCode;
 						worksheet.Cells[i + 2, 4].Value = rowData.quantity;
 						worksheet.Cells[i + 2, 5].Value = rowData.unitType;
-						worksheet.Cells[i + 2, 6].Value = rowData.leftoverItems;
+						worksheet.Cells[i + 2, 6].Value = rowData.totalQuantityPerUnit;
+						worksheet.Cells[i + 2, 7].Value = rowData.itemsInCrates;
+						worksheet.Cells[i + 2, 8].Value = rowData.leftoverItems;
 					}
 
 					// Add total row
 					var totalRow = resultData.Count + 2;
 					worksheet.Cells[totalRow, 1].Value = "Grand Total";
 					worksheet.Cells[totalRow, 4].Value = grandTotal;
-					worksheet.Cells[totalRow, 6].Value = totalLeftoverItems;
+					worksheet.Cells[totalRow, 6].Value = "";
+					worksheet.Cells[totalRow, 7].Value = totalItemsInCrates;
+					worksheet.Cells[totalRow, 8].Value = totalLeftoverItems;
 
 					// Format the total row
-					worksheet.Cells[totalRow, 1, totalRow, 6].Style.Font.Bold = true;
+					worksheet.Cells[totalRow, 1, totalRow, 8].Style.Font.Bold = true;
 					worksheet.Cells[totalRow, 4].Style.Numberformat.Format = "#,##0";
-					worksheet.Cells[totalRow, 6].Style.Numberformat.Format = "#,##0";
+					worksheet.Cells[totalRow, 7].Style.Numberformat.Format = "#,##0";
+					worksheet.Cells[totalRow, 8].Style.Numberformat.Format = "#,##0";
 
 					// Auto-fit columns
 					worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();

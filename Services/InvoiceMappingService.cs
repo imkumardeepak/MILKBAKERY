@@ -70,7 +70,7 @@ namespace Milk_Bakery.Services
 				InvoiceNo = dto.InvoiceNo,
 				InvoiceDate = dto.InvoiceDate,
 				CustomerRefPO = dto.CustomerRefPO,
-				TotalAmount = dto.TotalAmount,
+				TotalAmount = Convert.ToDecimal(dto.TotalAmount),
 				OrderDate = dto.OrderDate,
 				BillToName = dto.BillToName,
 				BillToCode = dto.BillToCode,

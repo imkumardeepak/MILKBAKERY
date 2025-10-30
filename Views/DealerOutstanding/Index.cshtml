@@ -6,30 +6,19 @@
 <div class="mt-2">
     <div class="card mb-2">
         <div class="card-header text-white p-2" style="background-color:#007bff;">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <a href="@Url.Action("Index", "Home")" class="btn btn-link text-white p-0 mr-2">
-                        <i class="fa fa-arrow-left"></i>
-                    </a>
-                    <h5 class="mb-0 text-white font-weight-bold">Dealer Outstanding</h5>
-                </div>
-                <a href="@Url.Action("OutstandingReport", "DealerOutstanding")" class="btn btn-light btn-sm">
-                    <i class="fas fa-file-alt"></i> Outstanding Report
+            <div class="d-flex align-items-center">
+                <a href="@Url.Action("Index", "Home")" class="btn btn-link text-white p-0 mr-2">
+                    <i class="fa fa-arrow-left"></i>
                 </a>
+                <h5 class="mb-0 text-white font-weight-bold">Dealer Outstanding</h5>
             </div>
         </div>
         <div class="card-body p-2">
             <div class="row mb-2">
                 <div class="col-12 col-md-4 mb-2 mb-md-0">
-                    <label for="customerFilter" class="form-label font-weight-bold mb-1">Select Customer:</label>
-                    <select id="customerFilter" class="form-control form-control-sm select2">
-                        <option value="">-- Select Customer --</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-4 mb-2 mb-md-0">
-                    <label for="dealerFilter" class="form-label font-weight-bold mb-1">Select Dealer:</label>
-                    <select id="dealerFilter" class="form-control form-control-sm select2" disabled>
-                        <option value="">-- Select Dealer --</option>
+                    <label for="distributorFilter" class="form-label font-weight-bold mb-1">Select Distributor:</label>
+                    <select id="distributorFilter" class="form-control form-control-sm select2">
+                        <option value="">-- Select Distributor --</option>
                     </select>
                 </div>
                 <div class="col-12 col-md-4 mb-2 mb-md-0">
@@ -76,32 +65,20 @@
             // Initialize Select2
             $('.select2').select2({
                 width: '100%',
-                placeholder: "-- Select --",
+                placeholder: "-- Select Distributor --",
                 allowClear: true
             });
 
-            // Load customers
-            loadCustomers();
+            // Load distributors
+            loadDistributors();
 
             // Filter button click event
             $('#filterBtn').on('click', function () {
                 loadData();
             });
 
-            // Customer filter change event
-            $('#customerFilter').on('change', function () {
-                var customerId = $(this).val();
-                if (customerId) {
-                    loadDealers(customerId);
-                    $('#dealerFilter').prop('disabled', false);
-                } else {
-                    $('#dealerFilter').empty().append('<option value="">-- Select Dealer --</option>').prop('disabled', true);
-                    $('#filterBtn').prop('disabled', true);
-                }
-            });
-
-            // Dealer filter change event
-            $('#dealerFilter').on('change', function () {
+            // Distributor filter change event
+            $('#distributorFilter').on('change', function () {
                 if ($(this).val()) {
                     $('#filterBtn').prop('disabled', false);
                 } else {
@@ -109,93 +86,80 @@
                 }
             });
 
-            function loadCustomers() {
+            function loadDistributors() {
                 $.ajax({
-                    url: '@Url.Action("GetCustomers", "DealerOutstanding")',
+                    url: '@Url.Action("GetDistributors", "DealerOutstanding")',
                     type: 'GET',
                     success: function (result) {
                         if (result.success) {
-                            var select = $('#customerFilter');
-                            select.empty().append('<option value="">-- Select Customer --</option>');
+                            var select = $('#distributorFilter');
+                            select.empty().append('<option value="">-- Select Distributor --</option>');
 
-                            $.each(result.customers, function (index, customer) {
-                                select.append('<option value="' + customer.id + '">' + customer.name + '</option>');
+                            $.each(result.distributors, function (index, distributor) {
+                                select.append('<option value="' + distributor.id + '">' + distributor.name + '</option>');
                             });
                         }
                     },
                     error: function () {
-                        console.log('Error loading customers');
-                    }
-                });
-            }
-
-            function loadDealers(customerId) {
-                $.ajax({
-                    url: '@Url.Action("GetDealersByCustomer", "DealerOutstanding")',
-                    type: 'GET',
-                    data: { customerId: customerId },
-                    success: function (result) {
-                        if (result.success) {
-                            var select = $('#dealerFilter');
-                            select.empty().append('<option value="">-- Select Dealer --</option>');
-
-                            $.each(result.dealers, function (index, dealer) {
-                                select.append('<option value="' + dealer.id + '">' + dealer.name + '</option>');
-                            });
-                        }
-                    },
-                    error: function () {
-                        console.log('Error loading dealers');
+                        console.log('Error loading distributors');
                     }
                 });
             }
 
             function loadData() {
-                var dealerId = $('#dealerFilter').val();
+                var distributorId = $('#distributorFilter').val();
 
-                // Validate that dealer is selected
-                if (!dealerId) {
+                // Validate that distributor is selected
+                if (!distributorId) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Missing Filter',
-                        text: 'Please select a dealer to load data.',
+                        text: 'Please select a distributor to load data.',
                         confirmButtonText: 'OK'
                     });
                     return;
                 }
 
                 $.ajax({
-                    url: '@Url.Action("GetDealerOutstandingForToday", "DealerOutstanding")',
+                    url: '@Url.Action("GetDealerOutstandings", "DealerOutstanding")',
                     type: 'GET',
                     data: {
-                        dealerId: dealerId
+                        distributorId: distributorId
                     },
                     success: function (result) {
-                        var tbody = $('#outstandingTable tbody');
-                        tbody.empty();
+                        if (result.success) {
+                            var tbody = $('#outstandingTable tbody');
+                            tbody.empty();
 
-                        if (result.success && result.outstanding) {
-                            var item = result.outstanding;
-                            var row = '<tr data-dealer-id="' + item.dealerId + '">' +
-                                '<td>' + item.dealerName + '</td>' +
-                                '<td>' + item.deliverDate + '</td>' +
-                                '<td>₹' + item.invoiceAmount.toFixed(2) + '</td>' +
-                                '<td>₹' + item.outstandingAmount.toFixed(2) + '</td>' +
-                                '<td>' +
-                                '<div class="input-group input-group-sm">' +
-                                '<input type="number" class="form-control form-control-sm received-amount" ' +
-                                'value="' + item.receivedAmount + '" min="0" step="0.01" style="width: 100px;">' +
-                                '</div>' +
-                                '</td>' +
-                                '<td>' +
-                                '<button class="btn btn-outline-primary btn-sm save-received-btn" type="button">Save</button>' +
-                                '</td>' +
-                                '</tr>';
-                            tbody.append(row);
-                            $('#outstandingReportBtn').prop('disabled', false);
+                            if (result.outstandings && result.outstandings.length > 0) {
+                                $.each(result.outstandings, function (index, item) {
+                                    var row = '<tr data-dealer-id="' + item.dealerId + '">' +
+                                        '<td>' + item.dealerName + '</td>' +
+                                        '<td>' + item.deliverDate + '</td>' +
+                                        '<td>₹' + item.invoiceAmount.toFixed(2) + '</td>' +
+                                        '<td>₹' + item.outstandingAmount.toFixed(2) + '</td>' +
+                                        '<td>' +
+                                        '<div class="input-group input-group-sm">' +
+                                        '<input type="number" class="form-control form-control-sm received-amount" ' +
+                                        'value="' + item.receivedAmount + '" min="0" step="0.01" style="width: 100px;">' +
+                                        '<div class="input-group-append">' +
+                                        '<button class="btn btn-outline-primary btn-sm save-received-btn" type="button">Save</button>' +
+                                        '</div>' +
+                                        '</div>' +
+                                        '</td>' +
+                                        '<td></td>' +
+                                        '</tr>';
+                                    tbody.append(row);
+                                });
+                            } else {
+                                tbody.append('<tr><td colspan="6" class="text-center">No data found</td></tr>');
+                            }
                         } else {
-                            tbody.append('<tr><td colspan="6" class="text-center">No orders today</td></tr>');
+                            $('#outstandingTable tbody').empty().append('<tr><td colspan="6" class="text-center">Error: ' + result.message + '</td></tr>');
                         }
+                    },
+                    error: function () {
+                        $('#outstandingTable tbody').empty().append('<tr><td colspan="6" class="text-center">Error loading data</td></tr>');
                     }
                 });
             }
@@ -224,8 +188,7 @@
                                     timer: 1500,
                                     timerProgressBar: true,
                                     showConfirmButton: false
-                                 });
-                                 loadData(); // Reload data after successful save
+                                });
                             } else {
                                 Swal.fire({
                                     icon: 'error',

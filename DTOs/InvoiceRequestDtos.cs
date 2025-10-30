@@ -16,8 +16,8 @@ namespace Milk_Bakery.DTOs
 		public string? CustomerRefPO { get; set; }
 
 		[Required(ErrorMessage = "Total amount is required")]
-		[Range(0.01, double.MaxValue, ErrorMessage = "Total amount must be greater than 0")]
-		public decimal TotalAmount { get; set; }
+		[MaxLength(50, ErrorMessage = "Total amount cannot exceed 50 characters")]
+		public string TotalAmount { get; set; }
 
 		[Required(ErrorMessage = "Order date is required")]
 		public DateTime OrderDate { get; set; }
@@ -42,7 +42,6 @@ namespace Milk_Bakery.DTOs
 		[MaxLength(200, ErrorMessage = "Company name cannot exceed 200 characters")]
 		public string? CompanyName { get; set; }
 
-		[MaxLength(50, ErrorMessage = "Company code cannot exceed 50 characters")]
 		public int CompanyCode { get; set; }
 
 		[MaxLength(50, ErrorMessage = "Vehicle number cannot exceed 50 characters")]
