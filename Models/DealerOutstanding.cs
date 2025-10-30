@@ -25,14 +25,14 @@ namespace Milk_Bakery.Models
         public decimal InvoiceAmount { get; set; }
 
         [Required]
-        [Display(Name = "Outstanding Amount")]
+        [Display(Name = "Balance Amount")]
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal OutstandingAmount { get; set; }
+        public decimal BalanceAmount { get; set; }
 
         [Required]
-        [Display(Name = "Received Amount")]
+        [Display(Name = "Paid Amount")]
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal ReceivedAmount { get; set; }
+        public decimal PaidAmount { get; set; }
 
         // Navigation property for related dealer
         [ForeignKey("DealerId")]

@@ -463,6 +463,12 @@ namespace Milk_Bakery.Controllers
 					.Where(o => o.OrderDate == orderDate && o.DistributorId == customerId)
 					.ToListAsync();
 
+				// Get conversion data for the material
+				var conversionData = await _context.ConversionTables
+					.FirstOrDefaultAsync(c => c.MaterialName == materialName);
+				
+				var totalQuantityPerUnit = conversionData?.TotalQuantity ?? 1;
+
 				var dealerOrderItems = new List<object>();
 
 				foreach (var order in dealerOrders)
@@ -485,7 +491,8 @@ namespace Milk_Bakery.Controllers
 							basicOrderId = basicOrder?.Id ?? 0,
 							materialName = item.MaterialName,
 							shortCode = item.ShortCode, // Add shortCode to the response
-							quantity = item.Qty
+							quantity = item.Qty,
+							totalQuantityPerUnit = totalQuantityPerUnit // Add totalQuantityPerUnit to the response
 						});
 					}
 				}

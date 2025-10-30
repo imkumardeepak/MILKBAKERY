@@ -39,23 +39,24 @@ namespace Milk_Bakery.Controllers
 			try
 			{
 				var today = DateTime.Now.Date;
-				
+
 				// Get all dealers for this distributor
 				var dealers = await _context.DealerMasters
 					.Where(d => d.DistributorId == distributorId)
 					.ToListAsync();
-				
+
 				// Get dealer IDs that have orders today
 				var dealerIdsWithOrdersToday = await _context.DealerOrders
 					.Where(o => o.DistributorId == distributorId && o.OrderDate == today)
 					.Select(o => o.DealerId)
 					.Distinct()
 					.ToListAsync();
-				
+
 				// Create result with order status, sorting to put non-ordered dealers first
 				var dealerResults = dealers
-					.Select(d => new { 
-						Id = d.Id, 
+					.Select(d => new
+					{
+						Id = d.Id,
 						Name = d.Name,
 						hasOrderedToday = dealerIdsWithOrdersToday.Contains(d.Id)
 					})
@@ -95,7 +96,7 @@ namespace Milk_Bakery.Controllers
 
 				// Get the most recent dealer order for this dealer (not just today's orders)
 				var latestOrder = await _context.DealerOrders
-					.Where(dbo => dbo.DealerId == dealer.Id && dbo.DistributorId == distributorId)
+					.Where(dbo => dbo.DealerId == dealer.Id && dbo.DistributorId == distributorId && dbo.ProcessFlag == 1)
 					.OrderByDescending(dbo => dbo.OrderDate)
 					.FirstOrDefaultAsync();
 
@@ -108,7 +109,7 @@ namespace Milk_Bakery.Controllers
 					{
 						return Json(new { success = false, message = "This order has not been processed yet and cannot have delivered quantities entered." });
 					}
-					
+
 					orders = await _context.DealerOrders
 						.Where(dbo => dbo.DealerId == dealer.Id && dbo.DistributorId == distributorId && dbo.OrderDate == latestOrder.OrderDate)
 						.Include(dbo => dbo.DealerOrderItems)
@@ -160,8 +161,6 @@ namespace Milk_Bakery.Controllers
 					return Json(new { success = false, message = "Order not found." });
 				}
 
-
-
 				// Update delivered quantities
 				decimal grandTotal = 0;
 				var updatedItems = new List<DeliveredQuantityItemViewModel>();
@@ -196,6 +195,37 @@ namespace Milk_Bakery.Controllers
 						grandTotal += updatedItem.TotalAmount;
 					}
 				}
+
+				await _context.SaveChangesAsync();
+
+				// Save data in DealerOutstanding table
+				var dealerOutstanding = await _context.DealerOutstandings
+					.FirstOrDefaultAsync(d => d.DealerId == dealerOrder.DealerId && d.DeliverDate == dealerOrder.OrderDate);
+
+				if (dealerOutstanding == null)
+				{
+					// Create new DealerOutstanding record
+					dealerOutstanding = new DealerOutstanding
+					{
+						DealerId = dealerOrder.DealerId,
+						DeliverDate = dealerOrder.OrderDate,
+						InvoiceAmount = grandTotal,
+						PaidAmount = 0,
+						BalanceAmount = grandTotal
+					};
+					_context.DealerOutstandings.Add(dealerOutstanding);
+				}
+				else
+				{
+					// Update existing DealerOutstanding record
+					dealerOutstanding.InvoiceAmount = grandTotal;
+					dealerOutstanding.BalanceAmount = grandTotal - dealerOutstanding.PaidAmount;
+					_context.DealerOutstandings.Update(dealerOutstanding);
+				}
+
+				// Update dealer order deliver flag to 1 (delivered)
+				dealerOrder.DeliverFlag = 1;
+				_context.DealerOrders.Update(dealerOrder);
 
 				await _context.SaveChangesAsync();
 

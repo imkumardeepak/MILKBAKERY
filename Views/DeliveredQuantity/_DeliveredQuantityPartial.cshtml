@@ -84,7 +84,7 @@
                                                         <strong>Date:</strong> @order.OrderDate.ToString("dd/MM/yyyy")
                                                     </div>
                                                     <button class="btn btn-success btn-sm save-delivery-btn" data-order-id="@order.Id">
-                                                        <i class="fas fa-save"></i> Save
+                                                        <i class="fas fa-save"></i> <span class="d-none d-sm-inline">Save</span>
                                                     </button>
                                                 </div>
 
@@ -95,6 +95,8 @@
                                                             data-order-id="@order.Id">
                                                             <thead class="thead-dark">
                                                                 <tr>
+                                                                    <!-- Material name column hidden on small screens, visible on medium and up -->
+                                                                    <th class="p-1 d-none d-md-table-cell">Material</th>
                                                                     <th class="p-1">Code</th>
                                                                     <th class="p-1 text-center">Ordered</th>
                                                                     <th class="p-1 text-center">Delivered</th>
@@ -110,27 +112,33 @@
                                                                     var amountVariance = orderedAmount - deliveredAmount;
                                                                     var variance = item.Qty - item.DeliverQnty;
                                                                     <tr data-item-id="@item.Id" data-unit-price="@item.Rate">
+                                                                        <!-- Material name cell hidden on small screens, visible on medium and up -->
+                                                                        <td class="p-1 d-none d-md-table-cell">@item.MaterialName</td>
                                                                         <td class="p-1"><strong>@item.ShortCode</strong></td>
                                                                         <td class="p-1 text-center ordered-qty"><strong>@item.Qty</strong></td>
                                                                         <td class="p-1 text-center">
                                                                             <div class="input-group input-group-sm">
                                                                                 <div class="input-group-prepend">
-                                                                                    <button class="btn btn-outline-secondary qty-decrease" type="button" data-item-id="@item.Id">-</button>
+                                                                                    <button class="btn btn-outline-secondary qty-decrease p-1" type="button" data-item-id="@item.Id">
+                                                                                        <i class="fas fa-minus"></i>
+                                                                                    </button>
                                                                                 </div>
                                                                                 <input type="number"
                                                                                     class="form-control form-control-sm delivered-qty text-center p-1"
-                                                                                    data-item-id="@item.Id" value="@item.DeliverQnty" min="0" step="1"
+                                                                                    data-item-id="@item.Id" value="@item.Qty" min="0" step="1"
                                                                                     style="width: 60px; height: 30px; font-size: 0.8rem;" />
                                                                                 <div class="input-group-append">
-                                                                                    <button class="btn btn-outline-secondary qty-increase" type="button" data-item-id="@item.Id">+</button>
+                                                                                    <button class="btn btn-outline-secondary qty-increase p-1" type="button" data-item-id="@item.Id">
+                                                                                        <i class="fas fa-plus"></i>
+                                                                                    </button>
                                                                                 </div>
                                                                             </div>
                                                                         </td>
-                                                                        <td class="p-1 text-center variance @(variance == 0 ? "text-success" : variance > 0 ? "text-warning" : "text-danger")">
-                                                                            <strong><span class="variance-value">@variance</span></strong>
+                                                                        <td class="p-1 text-center variance @(variance == 0 ? "text-success" : variance > 0 ? "text-danger" : "text-warning")">
+                                                                            <strong><span class="variance-value">@(@variance > 0 ? "+" + variance : variance.ToString())</span></strong>
                                                                         </td>
-                                                                        <td class="p-1 text-center amount-variance @(amountVariance == 0 ? "text-success" : amountVariance > 0 ? "text-warning" : "text-danger")">
-                                                                            <strong><span class="amount-variance-value">@amountVariance.ToString("F2")</span></strong>
+                                                                        <td class="p-1 text-center amount-variance @(amountVariance == 0 ? "text-success" : amountVariance > 0 ? "text-danger" : "text-warning")">
+                                                                            <strong><span class="amount-variance-value">@(@amountVariance > 0 ? "+" + amountVariance.ToString("F2") : amountVariance.ToString("F2"))</span></strong>
                                                                         </td>
                                                                     </tr>
                                                                 }
@@ -172,6 +180,13 @@
 
 <script>
     $(document).ready(function () {
+        // Remove any existing event handlers to prevent duplication
+        $(document).off('click', '.qty-increase');
+        $(document).off('click', '.qty-decrease');
+        $(document).off('input', '.delivered-qty');
+        $('.save-delivery-btn').off('click');
+        $('.accordion-toggle').off('click');
+        
         // Custom accordion toggle implementation to avoid conflicts
         $('.accordion-toggle').on('click', function (e) {
             e.preventDefault();
@@ -211,13 +226,13 @@
 
             // Calculate amounts
             var deliveredAmount = (deliveredQty * unitPrice);
-            var variance = orderedQty - deliveredQty;
+            var variance = deliveredQty - orderedQty;  // Fixed: deliver qty - order qty = variance
             var orderedAmount = orderedQty * unitPrice;
-            var amountVariance = orderedAmount - deliveredAmount;
+            var amountVariance = deliveredAmount - orderedAmount; // Changed to show positive when increasing, negative when decreasing
 
             // Update row values
-            row.find('.variance-value').text(variance);
-            row.find('.amount-variance-value').text(amountVariance.toFixed(2));
+            row.find('.variance-value').text(variance > 0 ? '+' + variance : variance);
+            row.find('.amount-variance-value').text(amountVariance > 0 ? '+' + amountVariance.toFixed(2) : amountVariance.toFixed(2));
 
             // Apply color coding to quantity variance
             var varianceCell = row.find('.variance');
@@ -225,11 +240,11 @@
                 // Fully delivered - green
                 varianceCell.removeClass('text-warning text-danger').addClass('text-success');
             } else if (variance > 0) {
-                // Partial delivery - orange
-                varianceCell.removeClass('text-success text-danger').addClass('text-warning');
-            } else {
-                // Over delivery - red
+                // Over delivery - red (positive variance)
                 varianceCell.removeClass('text-success text-warning').addClass('text-danger');
+            } else {
+                // Under delivery - orange (negative variance)
+                varianceCell.removeClass('text-success text-danger').addClass('text-warning');
             }
 
             // Apply color coding to amount variance
@@ -238,11 +253,11 @@
                 // No amount variance - green
                 amountVarianceCell.removeClass('text-warning text-danger').addClass('text-success');
             } else if (amountVariance > 0) {
-                // Positive amount variance (loss) - orange
-                amountVarianceCell.removeClass('text-success text-danger').addClass('text-warning');
-            } else {
-                // Negative amount variance (gain) - red
+                // Positive amount variance (gain) - red
                 amountVarianceCell.removeClass('text-success text-warning').addClass('text-danger');
+            } else {
+                // Negative amount variance (loss) - orange
+                amountVarianceCell.removeClass('text-success text-danger').addClass('text-warning');
             }
         }
 
@@ -264,7 +279,7 @@
 
                 var orderedAmount = orderedQty * unitPrice;
                 var deliveredAmount = deliveredQty * unitPrice;
-                var amountVariance = orderedAmount - deliveredAmount;
+                var amountVariance = deliveredAmount - orderedAmount; // Changed to show positive when increasing, negative when decreasing
                 totalAmountVariance += amountVariance;
             });
 
@@ -274,23 +289,25 @@
             summaryContainer.find('.col-4').eq(1).html('<strong>Delivered:</strong> ' + totalDelivered);
 
             var amountVarianceElement = summaryContainer.find('.col-4').eq(2).find('span');
-            amountVarianceElement.html('<strong>₹' + totalAmountVariance.toFixed(0) + '</strong>');
+            amountVarianceElement.html('<strong>₹' + (totalAmountVariance > 0 ? '+' : '') + totalAmountVariance.toFixed(0) + '</strong>');
 
             // Apply color coding to amount variance
             if (totalAmountVariance === 0) {
                 amountVarianceElement.removeClass('text-warning text-danger').addClass('text-success');
             } else if (totalAmountVariance > 0) {
-                amountVarianceElement.removeClass('text-success text-danger').addClass('text-warning');
-            } else {
+                // Positive amount variance (gain) - red
                 amountVarianceElement.removeClass('text-success text-warning').addClass('text-danger');
+            } else {
+                // Negative amount variance (loss) - orange
+                amountVarianceElement.removeClass('text-success text-danger').addClass('text-warning');
             }
         }
 
         // Initialize delivered amounts for all rows on page load
         $('.delivery-table tbody tr').each(function () {
-            // Set the input value to the existing delivered quantity
-            var deliveredQty = parseInt($(this).find('.delivered-qty').val()) || 0;
-            $(this).find('.delivered-qty').val(deliveredQty);
+            // Set the input value to the ordered quantity by default
+            var orderedQty = parseInt($(this).find('.ordered-qty').text()) || 0;
+            $(this).find('.delivered-qty').val(orderedQty);
             updateRowValues($(this));
         });
 
@@ -315,6 +332,12 @@
             var inputField = $(this).closest('.input-group').find('.delivered-qty');
             var currentValue = parseInt(inputField.val()) || 0;
             inputField.val(currentValue + 1).trigger('input');
+            
+            // Add visual feedback
+            $(this).addClass('btn-success');
+            setTimeout(() => {
+                $(this).removeClass('btn-success');
+            }, 150);
         });
         
         // Handle quantity decrease button
@@ -323,6 +346,12 @@
             var currentValue = parseInt(inputField.val()) || 0;
             if (currentValue > 0) {
                 inputField.val(currentValue - 1).trigger('input');
+                
+                // Add visual feedback
+                $(this).addClass('btn-danger');
+                setTimeout(() => {
+                    $(this).removeClass('btn-danger');
+                }, 150);
             }
         });
 
@@ -420,3 +449,84 @@
         });
     });
 </script>
+
+<style>
+    /* Compact styling for mobile */
+    @@media (max-width: 575.98px) {
+        .card-body {
+            padding: 0.5rem !important;
+        }
+        
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+        
+        .mb-2 {
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .p-2 {
+            padding: 0.5rem !important;
+        }
+        
+        .table th, .table td {
+            padding: 0.25rem !important;
+            font-size: 0.75rem;
+        }
+        
+        .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .input-group .btn {
+            padding: 0.1rem 0.25rem;
+            font-size: 0.7rem;
+        }
+        
+        .form-control {
+            padding: 0.1rem 0.25rem;
+            font-size: 0.75rem;
+            height: calc(1.5em + 0.2rem + 2px);
+        }
+        
+        .small, small {
+            font-size: 0.7rem !important;
+        }
+    }
+    
+    /* Additional compact styles for very small screens */
+    @@media (max-width: 375px) {
+        .table th, .table td {
+            padding: 0.15rem !important;
+            font-size: 0.7rem;
+        }
+        
+        .btn {
+            padding: 0.15rem 0.35rem;
+            font-size: 0.65rem;
+        }
+        
+        .input-group .btn {
+            padding: 0.05rem 0.2rem;
+            font-size: 0.6rem;
+        }
+        
+        .form-control {
+            padding: 0.05rem 0.2rem;
+            font-size: 0.65rem;
+            height: calc(1.5em + 0.1rem + 2px);
+        }
+    }
+    
+    /* Button feedback styles */
+    .btn-success-temp {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+    }
+    
+    .btn-danger-temp {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+    }
+</style>

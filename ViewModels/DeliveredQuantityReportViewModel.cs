@@ -36,6 +36,7 @@ namespace Milk_Bakery.ViewModels
 		public decimal OrderedAmount { get; set; }
 		public decimal DeliveredAmount { get; set; }
 		public decimal AmountVariance { get; set; }
+		// Updated to check if variance is not zero (regardless of positive or negative)
 		public bool HasVariance => QuantityVariance != 0 || AmountVariance != 0;
 	}
 }

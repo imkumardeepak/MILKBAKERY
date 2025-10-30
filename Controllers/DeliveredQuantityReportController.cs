@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using OfficeOpenXml;
+using System.Drawing; // Added for Color support
 
 namespace Milk_Bakery.Controllers
 {
@@ -167,8 +169,10 @@ namespace Milk_Bakery.Controllers
 
 					var orderedAmount = item.Qty * item.Rate;
 					var deliveredAmount = item.DeliverQnty * item.Rate;
-					var quantityVariance = item.Qty - item.DeliverQnty;
-					var amountVariance = orderedAmount - deliveredAmount;
+					// Changed to Delivered - Ordered to show positive values when delivered exceeds ordered
+					var quantityVariance = item.DeliverQnty - item.Qty;
+					// Changed to Delivered - Ordered for amount as well
+					var amountVariance = deliveredAmount - orderedAmount;
 
 					var reportItem = new DeliveredQuantityReportItem
 					{
@@ -205,41 +209,127 @@ namespace Milk_Bakery.Controllers
 		{
 			try
 			{
+				// Set the license context for EPPlus
+				ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
 				// Ensure we have the correct date values
 				var fromDate = model.FromDate ?? DateTime.Now.Date;
 				var toDate = model.ToDate ?? DateTime.Now.Date;
-				
+
 				// Generate report data
 				var reportItems = await GenerateDeliveredQuantityReport(fromDate, toDate, model.CustomerName, model.DealerId, model.ShowOnlyVariance);
-				
+
 				// Log the number of items for debugging
 				System.Diagnostics.Debug.WriteLine($"Exporting {reportItems.Count} items to Excel");
 
-				// Create CSV content
-				var csv = new System.Text.StringBuilder();
-				csv.AppendLine("Customer,Dealer,Order Date,Order ID,Material,Short Code,Ordered Quantity,Delivered Quantity,Quantity Variance,Unit Price,Ordered Amount,Delivered Amount,Amount Variance");
-
-				foreach (var item in reportItems)
+				// Create Excel package
+				using (var package = new ExcelPackage())
 				{
-					// Escape any commas in text fields to prevent CSV formatting issues
-					var customerName = item.CustomerName?.Replace(",", ";") ?? "";
-					var dealerName = item.DealerName?.Replace(",", ";") ?? "";
-					var materialName = item.MaterialName?.Replace(",", ";") ?? "";
-					var shortCode = item.ShortCode?.Replace(",", ";") ?? "";
-					
-					csv.AppendLine($"{customerName},{dealerName},{item.OrderDate:yyyy-MM-dd},{item.OrderId},{materialName},{shortCode},{item.OrderedQuantity},{item.DeliveredQuantity},{item.QuantityVariance},{item.UnitPrice:F2},{item.OrderedAmount:F2},{item.DeliveredAmount:F2},{item.AmountVariance:F2}");
-				}
+					var worksheet = package.Workbook.Worksheets.Add("Delivered Quantity Report");
 
-				var fileName = $"DeliveredQuantityReport_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-				byte[] fileBytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
-				return File(fileBytes, "text/csv", fileName);
+					// Headers
+					worksheet.Cells[1, 1].Value = "Customer";
+					worksheet.Cells[1, 2].Value = "Dealer";
+					worksheet.Cells[1, 3].Value = "Order Date";
+					worksheet.Cells[1, 4].Value = "Order ID";
+					worksheet.Cells[1, 5].Value = "Material";
+					worksheet.Cells[1, 6].Value = "Short Code";
+					worksheet.Cells[1, 7].Value = "Ordered Quantity";
+					worksheet.Cells[1, 8].Value = "Delivered Quantity";
+					worksheet.Cells[1, 9].Value = "Quantity Variance";
+					worksheet.Cells[1, 10].Value = "Unit Price";
+					worksheet.Cells[1, 11].Value = "Ordered Amount";
+					worksheet.Cells[1, 12].Value = "Delivered Amount";
+					worksheet.Cells[1, 13].Value = "Amount Variance";
+
+					// Format headers
+					using (var range = worksheet.Cells[1, 1, 1, 13])
+					{
+						range.Style.Font.Bold = true;
+						range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+						range.Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
+						range.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+					}
+
+					// Add data
+					for (int i = 0; i < reportItems.Count; i++)
+					{
+						var item = reportItems[i];
+						var row = i + 2; // Start from row 2 (after header)
+
+						// Calculate variance as Delivered - Ordered (to show positive when delivered exceeds ordered)
+						var quantityVariance = item.DeliveredQuantity - item.OrderedQuantity;
+						var amountVariance = item.DeliveredAmount - item.OrderedAmount;
+
+						worksheet.Cells[row, 1].Value = item.CustomerName;
+						worksheet.Cells[row, 2].Value = item.DealerName;
+						worksheet.Cells[row, 3].Value = item.OrderDate;
+						worksheet.Cells[row, 3].Style.Numberformat.Format = "yyyy-mm-dd";
+						worksheet.Cells[row, 4].Value = item.OrderId;
+						worksheet.Cells[row, 5].Value = item.MaterialName;
+						worksheet.Cells[row, 6].Value = item.ShortCode;
+						worksheet.Cells[row, 7].Value = item.OrderedQuantity;
+						worksheet.Cells[row, 8].Value = item.DeliveredQuantity;
+						worksheet.Cells[row, 9].Value = quantityVariance;
+						worksheet.Cells[row, 10].Value = item.UnitPrice;
+						worksheet.Cells[row, 10].Style.Numberformat.Format = "0.00";
+						worksheet.Cells[row, 11].Value = item.OrderedAmount;
+						worksheet.Cells[row, 11].Style.Numberformat.Format = "0.00";
+						worksheet.Cells[row, 12].Value = item.DeliveredAmount;
+						worksheet.Cells[row, 12].Style.Numberformat.Format = "0.00";
+						worksheet.Cells[row, 13].Value = amountVariance;
+						worksheet.Cells[row, 13].Style.Numberformat.Format = "0.00";
+
+						// Apply borders to all data cells
+						for (int col = 1; col <= 13; col++)
+						{
+							worksheet.Cells[row, col].Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+						}
+
+						// Color coding for quantity variance
+						if (quantityVariance == 0)
+						{
+							worksheet.Cells[row, 9].Style.Font.Color.SetColor(Color.Green);
+						}
+						else if (quantityVariance > 0)
+						{
+							worksheet.Cells[row, 9].Style.Font.Color.SetColor(Color.Red);
+						}
+						else
+						{
+							worksheet.Cells[row, 9].Style.Font.Color.SetColor(Color.Orange);
+						}
+
+						// Color coding for amount variance
+						if (amountVariance == 0)
+						{
+							worksheet.Cells[row, 13].Style.Font.Color.SetColor(Color.Green);
+						}
+						else if (amountVariance > 0)
+						{
+							worksheet.Cells[row, 13].Style.Font.Color.SetColor(Color.Red);
+						}
+						else
+						{
+							worksheet.Cells[row, 13].Style.Font.Color.SetColor(Color.Orange);
+						}
+					}
+
+					// Auto-fit columns for better appearance
+					worksheet.Cells.AutoFitColumns();
+
+					// Set the content type and file name
+					var fileName = $"DeliveredQuantityReport_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+					var fileBytes = package.GetAsByteArray();
+					return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+				}
 			}
 			catch (Exception ex)
 			{
 				// Log the exception for debugging
 				System.Diagnostics.Debug.WriteLine($"Error in ExportToExcel: {ex.Message}");
 				System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-				
+
 				// Return an error response
 				return BadRequest("An error occurred while generating the export file.");
 			}
