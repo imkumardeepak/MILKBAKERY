@@ -192,6 +192,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3JkZXJzXF9EZWFsZXJPcmRlcnNQYXJ0aWFsLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerOrders/_ExcelViewPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3JkZXJzXF9FeGNlbFZpZXdQYXJ0aWFsLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerOutstanding/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3V0c3RhbmRpbmdcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 

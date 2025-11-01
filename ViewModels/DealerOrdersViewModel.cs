@@ -21,5 +21,8 @@ namespace Milk_Bakery.ViewModels
         
         // Available materials for selection
         public List<MaterialMaster> AvailableMaterials { get; set; } = new List<MaterialMaster>();
+        
+        // Conversion data for crate calculations
+        public Dictionary<string, ConversionTable> MaterialConversions { get; set; } = new Dictionary<string, ConversionTable>();
     }
 }

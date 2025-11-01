@@ -221,6 +221,52 @@ namespace Milk_Bakery.Controllers
 			}
 		}
 
+		// POST: OrderReconciliation/SaveReconciliationData
+        [HttpPost]
+        public async Task<IActionResult> SaveReconciliationData([FromBody] ReconciliationSaveModel model)
+        {
+            try
+            {
+                var orderDate = DateTime.Parse(model.Date);
+                
+                // Process each adjustment
+                foreach (var adjustment in model.Adjustments)
+                {
+                    // Get all dealer orders for this material on the specified date and customer
+                    var dealerOrders = await _context.DealerOrders
+                        .Include(o => o.DealerOrderItems)
+                        .Where(o => o.OrderDate == orderDate && o.DistributorId == model.CustomerId)
+                        .ToListAsync();
+                    
+                    // Update each dealer order item for this material
+                    foreach (var order in dealerOrders)
+                    {
+                        var orderItem = order.DealerOrderItems
+                            .FirstOrDefault(i => i.ShortCode == adjustment.ShortCode);
+                        
+                        if (orderItem != null)
+                        {
+                            // Update the quantity based on received crates
+                            // New quantity = received crates * items per crate
+                            orderItem.Qty = adjustment.ReceivedCrates * adjustment.ItemsPerCrate;
+                            orderItem.DeliverQnty = adjustment.ReceivedCrates * adjustment.ItemsPerCrate;
+                            
+                            _context.DealerOrderItems.Update(orderItem);
+                        }
+                    }
+                }
+                
+                // Save all changes
+                await _context.SaveChangesAsync();
+                
+                return Json(new { success = true, message = "Reconciliation data saved successfully." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
 		// GET: OrderReconciliation/ExportToExcel
 		[HttpGet]
 		public async Task<IActionResult> ExportToExcel(DateTime? date, int? customerId)
@@ -357,12 +403,13 @@ namespace Milk_Bakery.Controllers
 					worksheet.Cells[1, 1].Value = "Material Name";
 					worksheet.Cells[1, 2].Value = "Short Code";
 					worksheet.Cells[1, 3].Value = "SAP Code";
-					worksheet.Cells[1, 4].Value = "Quantity (PCS)";
+					worksheet.Cells[1, 4].Value = "Ordered Quantity";
 					worksheet.Cells[1, 5].Value = "Unit Type";
 					worksheet.Cells[1, 6].Value = "Items per Crate";
 					worksheet.Cells[1, 7].Value = "Total Crates";
-					worksheet.Cells[1, 8].Value = "In Crates";
-					worksheet.Cells[1, 9].Value = "Leftover Items";
+					worksheet.Cells[1, 8].Value = "Items in Crates";
+					worksheet.Cells[1, 9].Value = "Actual Received Crates";
+					worksheet.Cells[1, 10].Value = "Variance";
 
 					// Add data rows
 					for (int i = 0; i < resultData.Count; i++)
@@ -377,7 +424,12 @@ namespace Milk_Bakery.Controllers
 						worksheet.Cells[i + 2, 6].Value = rowData.totalQuantityPerUnit;
 						worksheet.Cells[i + 2, 7].Value = rowData.crates;
 						worksheet.Cells[i + 2, 8].Value = rowData.itemsInCrates;
-						worksheet.Cells[i + 2, 9].Value = rowData.leftoverItems;
+						worksheet.Cells[i + 2, 9].Value = rowData.crates; // Default to ordered crates
+						worksheet.Cells[i + 2, 10].Value = 0; // Default variance is 0
+
+						// Add some basic styling
+						worksheet.Cells[i + 2, 7].Style.Font.Bold = true;
+						worksheet.Cells[i + 2, 9].Style.Font.Bold = true;
 					}
 
 					// Add total row
@@ -387,14 +439,16 @@ namespace Milk_Bakery.Controllers
 					worksheet.Cells[totalRow, 6].Value = "";
 					worksheet.Cells[totalRow, 7].Value = totalCrates;
 					worksheet.Cells[totalRow, 8].Value = totalItemsInCrates;
-					worksheet.Cells[totalRow, 9].Value = totalLeftoverItems;
+					worksheet.Cells[totalRow, 9].Value = totalCrates; // Default to total crates
+					worksheet.Cells[totalRow, 10].Value = 0; // Default variance is 0
 
 					// Format the total row
-					worksheet.Cells[totalRow, 1, totalRow, 9].Style.Font.Bold = true;
+					worksheet.Cells[totalRow, 1, totalRow, 10].Style.Font.Bold = true;
 					worksheet.Cells[totalRow, 4].Style.Numberformat.Format = "#,##0";
 					worksheet.Cells[totalRow, 7].Style.Numberformat.Format = "#,##0";
 					worksheet.Cells[totalRow, 8].Style.Numberformat.Format = "#,##0";
 					worksheet.Cells[totalRow, 9].Style.Numberformat.Format = "#,##0";
+					worksheet.Cells[totalRow, 10].Style.Numberformat.Format = "#,##0";
 
 					// Auto-fit columns
 					worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();

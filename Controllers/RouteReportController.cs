@@ -49,7 +49,7 @@ namespace Milk_Bakery.Controllers
 					// Fetch and cache materials as a dictionary
 					var materialMap = await _context.MaterialMaster
 						.AsNoTracking()
-						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement)
+						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true)
 						.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 					var materialShortNames = materialMap.Values.Distinct().ToList();
@@ -86,14 +86,12 @@ namespace Milk_Bakery.Controllers
 							po.Segementname == Segement && routeCustomers.Contains(po.Customername))
 							.ToListAsync();
 
-						// Order customers by sequence instead of alphabetically
-						var distinctCustomers = purchaseOrders
-							.Select(po => po.Customername)
-							.Distinct()
+						// Get all customers in the route, ordered by sequence
+						var allRouteCustomers = routeCustomers
 							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
 							.ToList();
 
-						if (distinctCustomers.Count > 0)
+						if (allRouteCustomers.Count > 0)
 						{
 							DataTable combinedDataTable = new DataTable();
 							combinedDataTable.Columns.Add("Srno");
@@ -108,8 +106,9 @@ namespace Milk_Bakery.Controllers
 							combinedDataTable.Rows.Add(headingRow);
 
 							int i = 1;
-							foreach (var customerName in distinctCustomers)
+							foreach (var customerName in allRouteCustomers)
 							{
+								// Check if customer has orders in the date range
 								var orderDetails = purchaseOrders
 									.Where(po => po.Customername == customerName)
 									.SelectMany(po => po.ProductDetails)
@@ -125,6 +124,13 @@ namespace Milk_Bakery.Controllers
 								DataRow row = combinedDataTable.NewRow();
 								row["Srno"] = i;
 								row["CustomerName"] = customerName;
+
+								// Initialize all material columns to 0
+								foreach (var mat in materialShortNames)
+								{
+									row[mat] = 0;
+								}
+
 								int sum = 0;
 								foreach (var item in orderDetails)
 								{
@@ -193,7 +199,7 @@ namespace Milk_Bakery.Controllers
 				{
 					var materialMap = await _context.MaterialMaster
 						.AsNoTracking()
-						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement)
+						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true)
 						.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 					var materialShortNames = materialMap.Values.Distinct().ToList();
@@ -214,10 +220,8 @@ namespace Milk_Bakery.Controllers
 						.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
 						.ToListAsync();
 
-					// Order customers by sequence instead of alphabetically
-					var distinctCustomers = purchaseOrders
-						.Select(po => po.Customername)
-						.Distinct()
+					// Get all customers in the route, ordered by sequence
+					var allRouteCustomers = routeCustomers
 						.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
 						.ToList();
 
@@ -233,8 +237,9 @@ namespace Milk_Bakery.Controllers
 					combinedDataTable.Rows.Add(heading);
 
 					int i = 1;
-					foreach (var customerName in distinctCustomers)
+					foreach (var customerName in allRouteCustomers)
 					{
+						// Check if customer has orders in the date range
 						var orderDetails = purchaseOrders
 							.Where(po => po.Customername == customerName)
 							.SelectMany(po => po.ProductDetails)
@@ -250,6 +255,12 @@ namespace Milk_Bakery.Controllers
 						DataRow row = combinedDataTable.NewRow();
 						row["Srno"] = i;
 						row["CustomerName"] = customerName;
+
+						// Initialize all material columns to 0
+						foreach (var mat in materialShortNames)
+						{
+							row[mat] = 0;
+						}
 
 						int sum = 0;
 						foreach (var item in orderDetails)
@@ -364,7 +375,7 @@ namespace Milk_Bakery.Controllers
 				// Material Map
 				var materialMap = await _context.MaterialMaster
 					.AsNoTracking()
-					.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement)
+					.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true)
 					.ToDictionaryAsync(m => m.Materialname, m => m.ShortName);
 
 				var materialShortNames = materialMap.Values.Distinct().ToList();
@@ -401,21 +412,20 @@ namespace Milk_Bakery.Controllers
 							.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
 							.ToListAsync();
 
-						// Order customers by sequence instead of alphabetically
-						var distinctCustomers = purchaseOrders
-							.Select(po => po.Customername)
-							.Distinct()
+						// Get all customers in the route, ordered by sequence
+						var allRouteCustomers = routeCustomers
 							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
 							.ToList();
 
-						if (!distinctCustomers.Any()) continue;
+						if (!allRouteCustomers.Any()) continue;
 
 						DataTable routeData = CreateTableStructure(materialShortNames);
 						routeData.Rows.Add(CreateHeaderRow(route.ShortCode + "-" + route.Route.ToUpper(), routeData));
 
 						int i = 1;
-						foreach (var cust in distinctCustomers)
+						foreach (var cust in allRouteCustomers)
 						{
+							// Check if customer has orders in the date range
 							var details = purchaseOrders
 								.Where(po => po.Customername == cust)
 								.SelectMany(po => po.ProductDetails)
@@ -426,8 +436,14 @@ namespace Milk_Bakery.Controllers
 							var row = routeData.NewRow();
 							row["Srno"] = i++;
 							row["CustomerName"] = cust;
-							int totalQty = 0;
 
+							// Initialize all material columns to 0
+							foreach (var mat in materialShortNames)
+							{
+								row[mat] = 0;
+							}
+
+							int totalQty = 0;
 							foreach (var d in details)
 							{
 								if (materialMap.TryGetValue(d.ProductName, out var shortName))
@@ -464,18 +480,17 @@ namespace Milk_Bakery.Controllers
 						.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
 						.ToListAsync();
 
-					// Order customers by sequence instead of alphabetically
-					var distinctCustomers = purchaseOrders
-						.Select(po => po.Customername)
-						.Distinct()
+					// Get all customers in the route, ordered by sequence
+					var allRouteCustomers = routeCustomers
 						.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
 						.ToList();
 
 					finalData.Rows.Add(CreateHeaderRow(Customer.ToUpper(), finalData));
 
 					int i = 1;
-					foreach (var cust in distinctCustomers)
+					foreach (var cust in allRouteCustomers)
 					{
+						// Check if customer has orders in the date range
 						var details = purchaseOrders
 							.Where(po => po.Customername == cust)
 							.SelectMany(po => po.ProductDetails)
@@ -486,8 +501,14 @@ namespace Milk_Bakery.Controllers
 						var row = finalData.NewRow();
 						row["Srno"] = i++;
 						row["CustomerName"] = cust;
-						int totalQty = 0;
 
+						// Initialize all material columns to 0
+						foreach (var mat in materialShortNames)
+						{
+							row[mat] = 0;
+						}
+
+						int totalQty = 0;
 						foreach (var d in details)
 						{
 							if (materialMap.TryGetValue(d.ProductName, out var shortName))

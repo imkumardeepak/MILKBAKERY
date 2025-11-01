@@ -12,6 +12,7 @@ using System;
 using OfficeOpenXml;
 using System.IO;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Milk_Bakery.Controllers
 {
@@ -263,7 +264,7 @@ namespace Milk_Bakery.Controllers
 				// Get all unique short codes for column headers
 				var shortCodes = new List<string>();
 				var dealerData = new Dictionary<string, Dictionary<string, int>>(); // dealer -> shortCode -> quantity
-				// Add amount data storage
+																					// Add amount data storage
 				var dealerAmountData = new Dictionary<string, Dictionary<string, decimal>>(); // dealer -> shortCode -> amount
 				var dealerRoutes = new Dictionary<string, string>(); // dealer -> route code
 				var dealerPhones = new Dictionary<string, string>(); // dealer -> phone
@@ -564,7 +565,7 @@ namespace Milk_Bakery.Controllers
 					// Add flag to indicate this is an existing order
 					ViewBag.IsExistingOrder = true;
 					ViewBag.ExistingOrderId = existingOrder.Id;
-					
+
 					// Add a flag to indicate that this order already exists
 					ViewBag.OrderAlreadyExists = true;
 				}
@@ -669,6 +670,99 @@ namespace Milk_Bakery.Controllers
 			viewModel.AvailableMaterials = await _context.MaterialMaster.ToListAsync();
 
 			return PartialView("_DealerOrdersPartial", viewModel);
+		}
+
+		// POST: DealerOrders/LoadExcelView
+		[HttpPost]
+		public async Task<IActionResult> LoadExcelView(int distributorId)
+		{
+			try
+			{
+				var viewModel = new DealerOrdersViewModel();
+
+				// Set selected distributor
+				viewModel.SelectedDistributorId = distributorId;
+				viewModel.AvailableDistributors = await GetAvailableDistributors();
+
+				// Get dealers for the selected distributor
+				viewModel.Dealers = await _context.DealerMasters
+					.Where(d => d.DistributorId == distributorId)
+					.ToListAsync();
+
+				// Get basic orders for each dealer
+				foreach (var dealer in viewModel.Dealers)
+				{
+					var basicOrders = await _context.DealerBasicOrders
+						.Where(dbo => dbo.DealerId == dealer.Id)
+						.ToListAsync();
+
+					viewModel.DealerBasicOrders[dealer.Id] = basicOrders;
+				}
+
+				// Get available materials that are mapped to the customer segment
+				// First get the customer/distributor
+				var distributor = await _context.Customer_Master
+					.FirstOrDefaultAsync(c => c.Id == distributorId);
+
+				List<MaterialMaster> availableMaterials;
+				if (distributor != null)
+				{
+					// Get segments mapped to this customer
+					var segmentMappings = await _context.CustomerSegementMap
+						.Where(m => m.Customername == distributor.Name)
+						.ToListAsync();
+
+					// If segments found, filter materials by those segments
+					if (segmentMappings.Any())
+					{
+						var segmentNames = segmentMappings.Select(m => m.SegementName).ToList();
+						availableMaterials = await _context.MaterialMaster
+							.Where(m => segmentNames.Contains(m.segementname) && m.isactive == true)
+							.OrderBy(m => m.sequence)
+							.ToListAsync();
+					}
+					else
+					{
+						// If no segments found, load all active materials
+						availableMaterials = await _context.MaterialMaster
+							.Where(m => m.isactive == true)
+							.OrderBy(m => m.sequence)
+							.ToListAsync();
+					}
+				}
+				else
+				{
+					// If no distributor found, load all active materials
+					availableMaterials = await _context.MaterialMaster
+						.Where(m => m.isactive == true)
+						.OrderBy(m => m.sequence)
+						.ToListAsync();
+				}
+
+				// Set available materials in the view model
+				viewModel.AvailableMaterials = availableMaterials;
+
+				// Get conversion data for available materials
+				var materialNames = availableMaterials.Select(m => m.Materialname).ToList();
+				var conversionData = await _context.ConversionTables
+					.Where(c => materialNames.Contains(c.MaterialName))
+					.ToListAsync();
+
+				// Populate conversion dictionary
+				foreach (var conversion in conversionData)
+				{
+					if (!viewModel.MaterialConversions.ContainsKey(conversion.MaterialName))
+					{
+						viewModel.MaterialConversions[conversion.MaterialName] = conversion;
+					}
+				}
+
+				return PartialView("_ExcelViewPartial", viewModel);
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
 		}
 
 		// POST: DealerOrders/SaveOrders
@@ -788,6 +882,9 @@ namespace Milk_Bakery.Controllers
 					}
 				}
 
+				// Get all materials to use for dealer prices
+				var allMaterials = await _context.MaterialMaster.ToDictionaryAsync(m => m.Materialname, m => m);
+
 				// Process each dealer's orders (should be just one in this case)
 				bool hasSavedOrders = false;
 				List<int> savedDealerIds = new List<int>(); // Track which dealers had orders saved
@@ -839,7 +936,12 @@ namespace Milk_Bakery.Controllers
 
 										// Determine the rate to use - dealer price if provided, otherwise basic order rate
 										var rate = basicOrder.Rate;
-										if (dealerPrices.ContainsKey(basicOrder.MaterialName))
+										// Use dealer price from material master if available
+										if (allMaterials.ContainsKey(basicOrder.MaterialName))
+										{
+											rate = allMaterials[basicOrder.MaterialName].dealerprice;
+										}
+										else if (dealerPrices.ContainsKey(basicOrder.MaterialName))
 										{
 											rate = dealerPrices[basicOrder.MaterialName];
 										}
@@ -852,7 +954,12 @@ namespace Milk_Bakery.Controllers
 										// Create new item only if quantity > 0
 										// Determine the rate to use - dealer price if provided, otherwise basic order rate
 										var rate = basicOrder.Rate;
-										if (dealerPrices.ContainsKey(basicOrder.MaterialName))
+										// Use dealer price from material master if available
+										if (allMaterials.ContainsKey(basicOrder.MaterialName))
+										{
+											rate = allMaterials[basicOrder.MaterialName].dealerprice;
+										}
+										else if (dealerPrices.ContainsKey(basicOrder.MaterialName))
 										{
 											rate = dealerPrices[basicOrder.MaterialName];
 										}
@@ -944,7 +1051,12 @@ namespace Milk_Bakery.Controllers
 										{
 											// Determine the rate to use - dealer price if provided, otherwise basic order rate
 											var rate = basicOrder.Rate;
-											if (dealerPrices.ContainsKey(basicOrder.MaterialName))
+											// Use dealer price from material master if available
+											if (allMaterials.ContainsKey(basicOrder.MaterialName))
+											{
+												rate = allMaterials[basicOrder.MaterialName].dealerprice;
+											}
+											else if (dealerPrices.ContainsKey(basicOrder.MaterialName))
 											{
 												rate = dealerPrices[basicOrder.MaterialName];
 											}
@@ -991,6 +1103,337 @@ namespace Milk_Bakery.Controllers
 			}
 		}
 
+		// POST: DealerOrders/SaveExcelViewOrders
+
+		// POST: DealerOrders/SaveAllExcelViewOrders
+		[HttpPost]
+		public async Task<IActionResult> SaveAllExcelViewOrders([FromBody] List<ExcelViewOrderModel> allOrders)
+		{
+			// Validate that all "Items to Add" values are 0
+			if (!await AreAllItemsToAddZero(allOrders))
+			{
+				_notifyService.Error("Cannot save orders. All \"Items to Add\" values must be 0 to complete crates.");
+				return Json(new { success = false, message = "Cannot save orders. All \"Items to Add\" values must be 0 to complete crates." });
+			}
+			
+			using var transaction = await _context.Database.BeginTransactionAsync();
+			try
+			{
+				var distributorId = 0;
+				var orderDate = DateTime.Now.Date;
+				
+				// Process each dealer order
+				foreach (var model in allOrders)
+				{
+					// Get the dealer
+					var dealer = await _context.DealerMasters.FirstOrDefaultAsync(d => d.Id == model.dealerId);
+					if (dealer == null)
+					{
+						continue; // Skip this dealer if not found
+					}
+
+					// Get the distributor ID from the dealer
+					distributorId = dealer.DistributorId;
+
+					// Check if an order already exists for this dealer today
+					var existingOrder = await _context.DealerOrders
+						.FirstOrDefaultAsync(d => d.DealerId == model.dealerId && d.DistributorId == distributorId && d.OrderDate == orderDate);
+
+					// Convert order items to dictionary
+					var intQuantities = new Dictionary<int, int>();
+					foreach (var item in model.orderItems)
+					{
+						intQuantities[item.MaterialId] = item.Quantity;
+					}
+
+					// Get materials to get rates
+					var materials = await _context.MaterialMaster
+						.Where(m => intQuantities.Keys.Contains(m.Id))
+						.ToDictionaryAsync(m => m.Id, m => m);
+
+					if (existingOrder != null)
+					{
+						// Update existing order
+						var existingOrderItems = await _context.DealerOrderItems
+							.Where(item => item.DealerOrderId == existingOrder.Id)
+							.ToListAsync();
+
+						// Create a mapping of material name to existing items for easy lookup
+						var existingItemsByMaterial = existingOrderItems.ToDictionary(item => item.MaterialName, item => item);
+
+						// Update or create order items
+						foreach (var kvp in intQuantities)
+						{
+							var materialId = kvp.Key;
+							var quantity = kvp.Value;
+
+							// Find the material
+							if (materials.TryGetValue(materialId, out var material))
+							{
+								// Check if an item already exists for this material
+								if (existingItemsByMaterial.TryGetValue(material.Materialname, out DealerOrderItem existingItem))
+								{
+									// Update existing item
+									existingItem.Qty = quantity;
+									existingItem.Rate = material.dealerprice; // Use dealer price instead of regular price
+									_context.DealerOrderItems.Update(existingItem);
+								}
+								else if (quantity > 0)
+								{
+									// Create new item only if quantity > 0
+									var orderItem = new DealerOrderItem
+									{
+										DealerOrderId = existingOrder.Id,
+										MaterialName = material.Materialname,
+										ShortCode = material.ShortName,
+										SapCode = material.material3partycode,
+										Qty = quantity,
+										Rate = material.dealerprice, // Use dealer price instead of regular price
+										DeliverQnty = 0
+									};
+
+									_context.DealerOrderItems.Add(orderItem);
+								}
+							}
+						}
+
+						// Remove items that are no longer in the order (quantity = 0)
+						foreach (var existingItem in existingOrderItems)
+						{
+							// Find the material ID for this item
+							var material = materials.Values.FirstOrDefault(m => m.Materialname == existingItem.MaterialName);
+							if (material != null)
+							{
+								// Check if this item's material is in the current order
+								var isMaterialInOrder = intQuantities.ContainsKey(material.Id) && intQuantities[material.Id] > 0;
+
+								if (!isMaterialInOrder)
+								{
+									// Remove the item
+									_context.DealerOrderItems.Remove(existingItem);
+								}
+							}
+						}
+					}
+					else
+					{
+						// Creating a new order - check if we have quantities > 0
+						bool hasQuantities = intQuantities.Values.Any(q => q > 0);
+
+						if (hasQuantities)
+						{
+							// Additional validation to prevent duplicate orders
+							// Check if an order already exists for this dealer today (double-check)
+							var duplicateOrderCheck = await _context.DealerOrders
+								.AnyAsync(d => d.DealerId == model.dealerId && d.DistributorId == distributorId && d.OrderDate == orderDate);
+
+							if (duplicateOrderCheck)
+							{
+								// An order already exists for this dealer today, cannot create another one
+								// We'll skip this dealer but continue with others
+								continue;
+							}
+
+							// Create DealerOrder
+							var dealerOrder = new DealerOrder
+							{
+								OrderDate = orderDate,
+								DistributorId = distributorId,
+								DealerId = model.dealerId,
+								DistributorCode = GetDistributorCode(distributorId),
+								ProcessFlag = 0 // Default to not processed
+							};
+
+							_context.DealerOrders.Add(dealerOrder);
+							await _context.SaveChangesAsync();
+
+							// Process order items based on quantities
+							foreach (var kvp in intQuantities)
+							{
+								var materialId = kvp.Key;
+								var quantity = kvp.Value;
+
+								// Only create order items for quantities > 0
+								if (quantity > 0 && materials.TryGetValue(materialId, out var material))
+								{
+									var orderItem = new DealerOrderItem
+									{
+										DealerOrderId = dealerOrder.Id,
+										MaterialName = material.Materialname,
+										ShortCode = material.ShortName,
+										SapCode = material.material3partycode,
+										Qty = quantity,
+										Rate = material.dealerprice, // Use dealer price instead of regular price
+										DeliverQnty = 0
+									};
+
+									_context.DealerOrderItems.Add(orderItem);
+								}
+							}
+						}
+					}
+				}
+
+				await _context.SaveChangesAsync();
+
+				// Now create the PurchaseOrder based on the consolidated dealer orders
+				// Get the customer/distributor details
+				var customer = await _context.Customer_Master.FindAsync(distributorId);
+				if (customer != null)
+				{
+					// Get customer segment
+					var customerSegment = await _context.CustomerSegementMap
+						 .FirstOrDefaultAsync(csm => csm.Customername == customer.Name);
+
+					if (customerSegment != null)
+					{
+						var company = await _context.Company_SegementMap.FirstOrDefaultAsync(a => a.Segementname == customer.Division);
+
+						if (company != null)
+						{
+							// Check if an order already exists for this customer on this date
+							var existingPurchaseOrder = await _context.PurchaseOrder
+								.FirstOrDefaultAsync(po => po.OrderDate.Date == orderDate && po.CustomerCode == customerSegment.custsegementcode);
+
+							if (existingPurchaseOrder == null)
+							{
+								// Get dealer orders for the specified date and customer that are not yet processed
+								var dealerOrders = await _context.DealerOrders
+									.Include(o => o.Dealer)
+									.Include(o => o.DealerOrderItems)
+									.Where(o => o.OrderDate == orderDate && o.DistributorId == distributorId && o.ProcessFlag == 0)
+									.ToListAsync();
+
+								if (dealerOrders.Any())
+								{
+									// Group by material and sum quantities across all dealers
+									var consolidatedData = new Dictionary<string, int>(); // material -> total quantity
+
+									foreach (var order in dealerOrders)
+									{
+										foreach (var item in order.DealerOrderItems)
+										{
+											var materialName = item.MaterialName ?? "";
+
+											// Add to consolidated data
+											if (consolidatedData.ContainsKey(materialName))
+											{
+												consolidatedData[materialName] += item.Qty;
+											}
+											else
+											{
+												consolidatedData[materialName] = item.Qty;
+											}
+										}
+									}
+
+									// Create a new purchase order
+									var purchaseOrder = new PurchaseOrder
+									{
+										OrderNo = GeneratePurchaseOrderNumber(),
+										OrderDate = orderDate,
+										Id = _context.PurchaseOrder.Any() ? _context.PurchaseOrder.Max(e => e.Id) + 1 : 1,
+										Customername = customer.Name,
+										Segementname = customerSegment.SegementName,
+										Segementcode = customerSegment.segementcode3party,
+										CustomerCode = customerSegment.custsegementcode,
+										companycode = company.companycode
+									};
+
+									// Get conversion data for all materials
+									var conversionData = await _context.ConversionTables.ToListAsync();
+									var conversionDict = conversionData.ToDictionary(c => c.MaterialName, c => c);
+
+									// Create product details for each consolidated item
+									var productDetails = new List<ProductDetail>();
+
+									foreach (var kvp in consolidatedData)
+									{
+										var materialName = kvp.Key;
+										var totalQuantity = kvp.Value;
+
+										// Get material details
+										var material = await _context.MaterialMaster
+											.FirstOrDefaultAsync(m => m.Materialname == materialName);
+
+										// Calculate crates based on conversion data
+										var crates = 0;
+										var unitType = "PCS";
+										var unitQuantity = 1;
+										var totalQuantityPerUnit = 1;
+
+										if (conversionDict.ContainsKey(materialName))
+										{
+											var conversion = conversionDict[materialName];
+											unitType = conversion.UnitType;
+											unitQuantity = conversion.UnitQuantity;
+											totalQuantityPerUnit = conversion.TotalQuantity;
+
+											// Calculate crates (total quantity / items per crate)
+											if (totalQuantityPerUnit > 0)
+											{
+												crates = totalQuantity / totalQuantityPerUnit;
+												// If there's a remainder, we need an additional crate
+												if (totalQuantity % totalQuantityPerUnit > 0)
+												{
+													crates++;
+												}
+											}
+										}
+										
+										if (crates == 0)
+										{
+											continue; // Skip items with zero crates
+										}
+										
+										var productDetail = new ProductDetail
+										{
+											Id = 0,
+											PurchaseOrderId = purchaseOrder.Id,
+											ProductName = materialName,
+											ProductCode = material?.material3partycode ?? "",
+											Unit = unitType,
+											qty = crates, // Using crates as the quantity to order
+											Rate = material?.dealerprice ?? 0, // Use dealer price instead of regular price
+											Price = crates * (material?.dealerprice ?? 0) // Use dealer price instead of regular price
+										};
+
+										productDetails.Add(productDetail);
+									}
+
+									if (productDetails.Any())
+									{
+										purchaseOrder.ProductDetails = productDetails;
+
+										// Save the purchase order
+										_context.PurchaseOrder.Add(purchaseOrder);
+										
+										// Update ProcessFlag for all dealer orders that were included in the consolidated order
+										foreach (var order in dealerOrders)
+										{
+											order.ProcessFlag = 1; // Mark as processed
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				await _context.SaveChangesAsync();
+				await transaction.CommitAsync();
+
+				_notifyService.Success("All dealer orders and purchase order saved successfully.");
+				return Json(new { success = true });
+			}
+			catch (Exception ex)
+			{
+				await transaction.RollbackAsync();
+				_notifyService.Error("An error occurred while saving dealer orders: " + ex.Message);
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
+
 		// Helper method to generate purchase order number
 		private string GeneratePurchaseOrderNumber()
 		{
@@ -1015,6 +1458,64 @@ namespace Milk_Bakery.Controllers
 				orderNo = "P" + maxId.ToString();
 
 			return orderNo;
+		}
+
+		// Helper method to check if all items to add are 0
+		private async Task<bool> AreAllItemsToAddZero(List<ExcelViewOrderModel> allOrders)
+		{
+			// Get all material IDs from the orders
+			var materialIds = allOrders.SelectMany(o => o.orderItems.Select(i => i.MaterialId)).Distinct().ToList();
+			
+			// Get materials and their conversion data
+			var materials = await _context.MaterialMaster
+				.Where(m => materialIds.Contains(m.Id))
+				.ToDictionaryAsync(m => m.Id, m => m);
+				
+			var materialNames = materials.Values.Select(m => m.Materialname).ToList();
+			var conversionData = await _context.ConversionTables
+				.Where(c => materialNames.Contains(c.MaterialName))
+				.ToDictionaryAsync(c => c.MaterialName, c => c);
+			
+			// Calculate total quantities per material across all dealers
+			var totalQuantities = new Dictionary<int, int>(); // materialId -> total quantity
+			
+			foreach (var order in allOrders)
+			{
+				foreach (var item in order.orderItems)
+				{
+					if (totalQuantities.ContainsKey(item.MaterialId))
+					{
+						totalQuantities[item.MaterialId] += item.Quantity;
+					}
+					else
+					{
+						totalQuantities[item.MaterialId] = item.Quantity;
+					}
+				}
+			}
+			
+			// Check if all items to add are 0
+			foreach (var kvp in totalQuantities)
+			{
+				var materialId = kvp.Key;
+				var totalQuantity = kvp.Value;
+				
+				if (materials.TryGetValue(materialId, out var material) && 
+					conversionData.TryGetValue(material.Materialname, out var conversion))
+				{
+					var itemsPerCrate = conversion.TotalQuantity;
+					if (itemsPerCrate > 0)
+					{
+						var itemsNeeded = (itemsPerCrate - (totalQuantity % itemsPerCrate)) % itemsPerCrate;
+						if (itemsNeeded != 0)
+						{
+							return false; // Found a material that needs items to complete a crate
+						}
+					}
+				}
+			}
+			
+			return true; // All items to add are 0
 		}
 
 		#region Helper Methods

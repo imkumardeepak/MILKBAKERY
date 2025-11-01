@@ -160,21 +160,44 @@ namespace Milk_Bakery.Services
 											.OrderByDescending(a => a.DispDate)
 											.FirstOrDefaultAsync();
 
-												// Create new record
-												var largeCratesManage = new CratesManage()
+												if (topRecord != null)
 												{
-													CustomerId = customer.Id,
-													SegmentCode = segment.custsegementcode,
-													DispDate = invoice.InvoiceDate.Date,
-													Opening = topRecord != null ? topRecord.Balance : 0,
-													Outward = crateCount,
-													Inward = 0,
-													Balance = (topRecord?.Balance ?? 0) + crateCount,
-													CratesTypeId = matchingCrateType != null ? matchingCrateType.Id : (int?)null
-												};
-												dbContext.CratesManages.Add(largeCratesManage);
-												_logger.LogInformation("Created new large crates record for customer ID: {customerId}, Date: {date}, Outward: {outward}",
-													customer.Id, invoice.InvoiceDate.Date, crateCount);
+													// Create new record
+													var largeCratesManage = new CratesManage()
+													{
+														CustomerId = customer.Id,
+														SegmentCode = segment.custsegementcode,
+														DispDate = invoice.InvoiceDate.Date,
+														Opening = topRecord != null ? topRecord.Balance : 0,
+														Outward = crateCount,
+														Inward = 0,
+														Balance = (topRecord?.Balance ?? 0) + crateCount,
+														CratesTypeId = matchingCrateType != null ? matchingCrateType.Id : (int?)null
+													};
+													dbContext.CratesManages.Add(largeCratesManage);
+													_logger.LogInformation("Created new large crates record for customer ID: {customerId}, Date: {date}, Outward: {outward}",
+														customer.Id, invoice.InvoiceDate.Date, crateCount);
+												}
+												else
+												{
+													// Create new record
+													var largeCratesManage = new CratesManage()
+													{
+														CustomerId = customer.Id,
+														SegmentCode = segment.custsegementcode,
+														DispDate = DateTime.Now.Date,
+														Opening = 0,
+														Outward = crateCount,
+														Inward = 0,
+														Balance = crateCount,
+														CratesTypeId = matchingCrateType != null ? matchingCrateType.Id : (int?)null
+
+													};
+
+													dbContext.CratesManages.Add(largeCratesManage);
+													_logger.LogInformation("Created new large crates record for customer ID: {customerId}, Date: {date}, Outward: {outward}",
+														customer.Id, invoice.InvoiceDate.Date, crateCount);
+												}
 											}
 										}
 									}
