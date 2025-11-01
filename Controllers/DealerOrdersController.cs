@@ -717,7 +717,7 @@ namespace Milk_Bakery.Controllers
 					{
 						var segmentNames = segmentMappings.Select(m => m.SegementName).ToList();
 						availableMaterials = await _context.MaterialMaster
-							.Where(m => segmentNames.Contains(m.segementname) && m.isactive == true)
+							.Where(m => segmentNames.Contains(m.segementname) && m.isactive == true && !m.Materialname.StartsWith("CRATES"))
 							.OrderBy(m => m.sequence)
 							.ToListAsync();
 					}
@@ -725,7 +725,7 @@ namespace Milk_Bakery.Controllers
 					{
 						// If no segments found, load all active materials
 						availableMaterials = await _context.MaterialMaster
-							.Where(m => m.isactive == true)
+							.Where(m => m.isactive == true && !m.Materialname.StartsWith("CRATES"))
 							.OrderBy(m => m.sequence)
 							.ToListAsync();
 					}
@@ -734,7 +734,7 @@ namespace Milk_Bakery.Controllers
 				{
 					// If no distributor found, load all active materials
 					availableMaterials = await _context.MaterialMaster
-						.Where(m => m.isactive == true)
+						.Where(m => m.isactive == true && !m.Materialname.StartsWith("CRATES"))
 						.OrderBy(m => m.sequence)
 						.ToListAsync();
 				}
