@@ -72,6 +72,9 @@
                                 <button type="button" id="exportButton" class="btn btn-success">
                                     <i class="fas fa-file-excel"></i> Export to Excel
                                 </button>
+                                <button type="button" id="exportPivotButton" class="btn btn-info">
+                                    <i class="fas fa-file-excel"></i> Export Pivot to Excel
+                                </button>
                             }
                         </div>
                     </div>
@@ -367,6 +370,61 @@
                 // Create a temporary form for export
                 var exportForm = $('<form>', {
                     'action': '@Url.Action("ExportToExcel")',
+                    'method': 'POST'
+                }).append('@Html.AntiForgeryToken()');
+
+                // Add form data
+                var fromDate = $('#FromDate').val();
+                var toDate = $('#ToDate').val();
+                var customerName = $('#CustomerName').val();
+                var dealerId = $('#DealerId').val();
+                var showOnlyVariance = $('#ShowOnlyVariance').is(':checked');
+
+                if (fromDate) {
+                    exportForm.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'FromDate',
+                        'value': fromDate
+                    }));
+                }
+
+                if (toDate) {
+                    exportForm.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'ToDate',
+                        'value': toDate
+                    }));
+                }
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'CustomerName',
+                    'value': customerName
+                }));
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'DealerId',
+                    'value': dealerId
+                }));
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'ShowOnlyVariance',
+                    'value': showOnlyVariance
+                }));
+
+                // Submit the form
+                $('body').append(exportForm);
+                exportForm.submit();
+                exportForm.remove();
+            });
+
+            // Handle pivot export button click
+            $('#exportPivotButton').click(function () {
+                // Create a temporary form for pivot export
+                var exportForm = $('<form>', {
+                    'action': '@Url.Action("ExportToExcelPivot")',
                     'method': 'POST'
                 }).append('@Html.AntiForgeryToken()');
 

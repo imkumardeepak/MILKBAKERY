@@ -120,6 +120,11 @@ namespace Milk_Bakery.Services
 								_logger.LogInformation("Created new crates record for CustomerId: {customerId}, SegmentCode: {segmentCode}, CrateTypeId: {crateTypeId}, Date: {date}, Opening Balance: {opening}",
 									combination.CustomerId, combination.SegmentCode, combination.CratesTypeId, currentDate, newRecord.Opening);
 							}
+							else
+							{
+								_logger.LogInformation("Found existing crates record for CustomerId: {customerId}, SegmentCode: {segmentCode}, CrateTypeId: {crateTypeId}, Date: {date}, Opening Balance: {opening}",
+									combination.CustomerId, combination.SegmentCode, combination.CratesTypeId, currentDate, existingRecord.Opening);
+							}
 						}
 						catch (Exception ex)
 						{

@@ -87,11 +87,13 @@ namespace Milk_Bakery.Controllers
 							.ToListAsync();
 
 						// Get all customers in the route, ordered by sequence
-						var allRouteCustomers = routeCustomers
+						var distinctCustomers = purchaseOrders
+							.Select(po => po.Customername)
+							.Distinct()
 							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
 							.ToList();
 
-						if (allRouteCustomers.Count > 0)
+						if (distinctCustomers.Count > 0)
 						{
 							DataTable combinedDataTable = new DataTable();
 							combinedDataTable.Columns.Add("Srno");
@@ -106,7 +108,7 @@ namespace Milk_Bakery.Controllers
 							combinedDataTable.Rows.Add(headingRow);
 
 							int i = 1;
-							foreach (var customerName in allRouteCustomers)
+							foreach (var customerName in distinctCustomers)
 							{
 								// Check if customer has orders in the date range
 								var orderDetails = purchaseOrders
@@ -124,12 +126,6 @@ namespace Milk_Bakery.Controllers
 								DataRow row = combinedDataTable.NewRow();
 								row["Srno"] = i;
 								row["CustomerName"] = customerName;
-
-								// Initialize all material columns to 0
-								foreach (var mat in materialShortNames)
-								{
-									row[mat] = 0;
-								}
 
 								int sum = 0;
 								foreach (var item in orderDetails)
@@ -255,12 +251,6 @@ namespace Milk_Bakery.Controllers
 						DataRow row = combinedDataTable.NewRow();
 						row["Srno"] = i;
 						row["CustomerName"] = customerName;
-
-						// Initialize all material columns to 0
-						foreach (var mat in materialShortNames)
-						{
-							row[mat] = 0;
-						}
 
 						int sum = 0;
 						foreach (var item in orderDetails)
@@ -413,17 +403,19 @@ namespace Milk_Bakery.Controllers
 							.ToListAsync();
 
 						// Get all customers in the route, ordered by sequence
-						var allRouteCustomers = routeCustomers
+						var distinctCustomers = purchaseOrders
+								.Select(po => po.Customername)
+								.Distinct()
 							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
 							.ToList();
 
-						if (!allRouteCustomers.Any()) continue;
+						if (!distinctCustomers.Any()) continue;
 
 						DataTable routeData = CreateTableStructure(materialShortNames);
 						routeData.Rows.Add(CreateHeaderRow(route.ShortCode + "-" + route.Route.ToUpper(), routeData));
 
 						int i = 1;
-						foreach (var cust in allRouteCustomers)
+						foreach (var cust in distinctCustomers)
 						{
 							// Check if customer has orders in the date range
 							var details = purchaseOrders
@@ -436,12 +428,6 @@ namespace Milk_Bakery.Controllers
 							var row = routeData.NewRow();
 							row["Srno"] = i++;
 							row["CustomerName"] = cust;
-
-							// Initialize all material columns to 0
-							foreach (var mat in materialShortNames)
-							{
-								row[mat] = 0;
-							}
 
 							int totalQty = 0;
 							foreach (var d in details)
@@ -480,15 +466,16 @@ namespace Milk_Bakery.Controllers
 						.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
 						.ToListAsync();
 
-					// Get all customers in the route, ordered by sequence
-					var allRouteCustomers = routeCustomers
+					var distinctCustomers = purchaseOrders
+						.Select(po => po.Customername)
+						.Distinct()
 						.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
 						.ToList();
 
 					finalData.Rows.Add(CreateHeaderRow(Customer.ToUpper(), finalData));
 
 					int i = 1;
-					foreach (var cust in allRouteCustomers)
+					foreach (var cust in distinctCustomers)
 					{
 						// Check if customer has orders in the date range
 						var details = purchaseOrders
@@ -501,12 +488,6 @@ namespace Milk_Bakery.Controllers
 						var row = finalData.NewRow();
 						row["Srno"] = i++;
 						row["CustomerName"] = cust;
-
-						// Initialize all material columns to 0
-						foreach (var mat in materialShortNames)
-						{
-							row[mat] = 0;
-						}
 
 						int totalQty = 0;
 						foreach (var d in details)

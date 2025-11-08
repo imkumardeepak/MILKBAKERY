@@ -35,7 +35,7 @@ namespace Milk_Bakery.Services
 					await ProcessInvoicesWithSetFlagZero();
 
 					// Wait for 10 minutes before next execution
-					await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+					await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
 				}
 				catch (Exception ex)
 				{
@@ -75,6 +75,13 @@ namespace Milk_Bakery.Services
 								var crateTypeCounts = new Dictionary<string, int>();
 
 								// Find customer details
+								if (string.IsNullOrEmpty(invoice.ShipToCode))
+								{
+									_logger.LogWarning("ShipToCode is null or empty for invoice ID: {invoiceId}", invoice.InvoiceId);
+									continue; // Skip processing if ShipToCode is invalid
+								}
+
+
 								var customer = await dbContext.Customer_Master.FirstOrDefaultAsync(c => c.shortname == invoice.ShipToCode);
 								if (customer == null)
 								{

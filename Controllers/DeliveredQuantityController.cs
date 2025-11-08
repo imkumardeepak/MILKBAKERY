@@ -4,8 +4,6 @@ using Milk_Bakery.Data;
 using Milk_Bakery.Models;
 using Milk_Bakery.ViewModels;
 using AspNetCoreHero.ToastNotification.Abstractions;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Collections.Generic;
 
 namespace Milk_Bakery.Controllers
 {
@@ -127,6 +125,221 @@ namespace Milk_Bakery.Controllers
 			}
 		}
 
+		// POST: DeliveredQuantity/LoadExcelView
+		[HttpPost]
+		public async Task<IActionResult> LoadExcelView(int distributorId)
+		{
+			try
+			{
+				var viewModel = new DeliveredQuantityExcelViewModel
+				{
+					SelectedDistributorId = distributorId,
+					AvailableDistributors = await GetAvailableDistributors()
+				};
+
+				// Get dealers for the selected distributor
+				viewModel.Dealers = await _context.DealerMasters
+					.Where(d => d.DistributorId == distributorId)
+					.ToListAsync();
+
+				// Get all orders for these dealers that have been processed but not yet delivered
+				var dealerIds = viewModel.Dealers.Select(d => d.Id).ToList();
+				var allOrders = await _context.DealerOrders
+					.Where(o => dealerIds.Contains(o.DealerId) && o.DistributorId == distributorId && o.ProcessFlag == 1)
+					.Include(o => o.DealerOrderItems)
+					.ToListAsync();
+
+				// Group orders by dealer and only keep the latest order date's orders for each dealer
+				foreach (var dealer in viewModel.Dealers)
+				{
+					var dealerOrders = allOrders.Where(o => o.DealerId == dealer.Id).ToList();
+					if (dealerOrders.Any())
+					{
+						// Get the latest order date for this dealer
+						var latestDate = dealerOrders.Max(o => o.OrderDate);
+						// Get all orders for this dealer that are from the latest date
+						var latestOrders = dealerOrders.Where(o => o.OrderDate == latestDate).ToList();
+						viewModel.DealerOrders[dealer.Id] = latestOrders;
+					}
+					else
+					{
+						viewModel.DealerOrders[dealer.Id] = new List<DealerOrder>();
+					}
+				}
+
+				// Get available materials that are mapped to the customer segment
+				// First get the customer/distributor
+				var distributor = await _context.Customer_Master
+					.FirstOrDefaultAsync(c => c.Id == distributorId);
+
+				List<MaterialMaster> availableMaterials;
+				if (distributor != null)
+				{
+					// Get segments mapped to this customer
+					var segmentMappings = await _context.CustomerSegementMap
+						.Where(m => m.Customername == distributor.Name)
+						.ToListAsync();
+
+					// If segments found, filter materials by those segments
+					if (segmentMappings.Any())
+					{
+						var segmentNames = segmentMappings.Select(m => m.SegementName).ToList();
+						availableMaterials = await _context.MaterialMaster
+							.Where(m => segmentNames.Contains(m.segementname) && m.isactive == true && !m.Materialname.StartsWith("CRATES"))
+							.OrderBy(m => m.sequence)
+							.ToListAsync();
+					}
+					else
+					{
+						// If no segments found, load all active materials
+						availableMaterials = await _context.MaterialMaster
+							.Where(m => m.isactive == true && !m.Materialname.StartsWith("CRATES"))
+							.OrderBy(m => m.sequence)
+							.ToListAsync();
+					}
+				}
+				else
+				{
+					// If no distributor found, load all active materials
+					availableMaterials = await _context.MaterialMaster
+						.Where(m => m.isactive == true && !m.Materialname.StartsWith("CRATES"))
+						.OrderBy(m => m.sequence)
+						.ToListAsync();
+				}
+
+				// Set available materials in the view model
+				viewModel.AvailableMaterials = availableMaterials;
+
+				// Get conversion data for available materials
+				var materialNames = availableMaterials.Select(m => m.Materialname).ToList();
+				var conversionData = await _context.ConversionTables
+					.Where(c => materialNames.Contains(c.MaterialName))
+					.ToListAsync();
+
+				// Populate conversion dictionary
+				foreach (var conversion in conversionData)
+				{
+					if (!viewModel.MaterialConversions.ContainsKey(conversion.MaterialName))
+					{
+						viewModel.MaterialConversions[conversion.MaterialName] = conversion;
+					}
+				}
+
+				return PartialView("_DeliveredQuantityExcelPartial", viewModel);
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
+
+		// POST: DeliveredQuantity/SaveExcelView
+		[HttpPost]
+		public async Task<IActionResult> SaveExcelView([FromBody] List<ExcelViewOrderModel> allOrders)
+		{
+			// Removed validation that prevents saving when there are no changes
+			// This allows saving even when all "Items to Add" values are not 0
+
+			using var transaction = await _context.Database.BeginTransactionAsync();
+			try
+			{
+				// Process each dealer order
+				foreach (var model in allOrders)
+				{
+					// Get the dealer order
+					var dealerOrder = await _context.DealerOrders
+						.Include(o => o.DealerOrderItems)
+						.FirstOrDefaultAsync(o => o.Id == model.dealerId);
+
+					if (dealerOrder == null || dealerOrder.ProcessFlag != 1)
+					{
+						continue; // Skip this order if not found or not processed
+					}
+
+					// Convert order items to dictionary
+					var intQuantities = new Dictionary<int, int>();
+					foreach (var item in model.orderItems)
+					{
+						intQuantities[item.MaterialId] = item.Quantity;
+					}
+
+					// Get materials to validate
+					var materials = await _context.MaterialMaster
+						.Where(m => intQuantities.Keys.Contains(m.Id))
+						.ToDictionaryAsync(m => m.Id, m => m);
+
+					// Update order items based on quantities
+					foreach (var item in dealerOrder.DealerOrderItems)
+					{
+						// Find the material for this item
+						var material = materials.Values.FirstOrDefault(m => m.Materialname == item.MaterialName);
+						if (material != null && intQuantities.ContainsKey(material.Id))
+						{
+							// Update delivered quantity
+							item.DeliverQnty = intQuantities[material.Id];
+							_context.DealerOrderItems.Update(item);
+						}
+					}
+
+					// Update dealer order deliver flag to 1 (delivered)
+					dealerOrder.DeliverFlag = 1;
+					_context.DealerOrders.Update(dealerOrder);
+
+					// Calculate grand total for this order
+					decimal grandTotal = 0;
+					foreach (var item in dealerOrder.DealerOrderItems)
+					{
+						grandTotal += item.DeliverQnty * item.Rate;
+					}
+
+					// Save data in DealerOutstanding table
+				var dealerOutstanding = await _context.DealerOutstandings
+					.FirstOrDefaultAsync(d => d.DealerId == dealerOrder.DealerId && d.DeliverDate == dealerOrder.OrderDate);
+
+				// Get the latest outstanding balance from previous dates
+				var previousOutstanding = await _context.DealerOutstandings
+					.Where(d => d.DealerId == dealerOrder.DealerId && d.DeliverDate < dealerOrder.OrderDate)
+					.OrderByDescending(d => d.DeliverDate)
+					.FirstOrDefaultAsync();
+
+				decimal previousBalance = previousOutstanding?.BalanceAmount ?? 0;
+
+				if (dealerOutstanding == null)
+				{
+					// Create new DealerOutstanding record
+					dealerOutstanding = new DealerOutstanding
+					{
+						DealerId = dealerOrder.DealerId,
+						DeliverDate = dealerOrder.OrderDate,
+						InvoiceAmount = grandTotal,
+						PaidAmount = 0,
+						BalanceAmount = grandTotal + previousBalance // Add previous balance
+					};
+					_context.DealerOutstandings.Add(dealerOutstanding);
+				}
+				else
+				{
+					// Update existing DealerOutstanding record
+					dealerOutstanding.InvoiceAmount = grandTotal;
+					dealerOutstanding.BalanceAmount = grandTotal - dealerOutstanding.PaidAmount + previousBalance; // Add previous balance
+					_context.DealerOutstandings.Update(dealerOutstanding);
+				}
+				}
+
+				await _context.SaveChangesAsync();
+				await transaction.CommitAsync();
+
+				_notifyService.Success("All delivered quantities saved successfully.");
+				return Json(new { success = true });
+			}
+			catch (Exception ex)
+			{
+				await transaction.RollbackAsync();
+				_notifyService.Error("An error occurred while saving delivered quantities: " + ex.Message);
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
+
 		// POST: DeliveredQuantity/Save
 		[HttpPost]
 		[ValidateAntiForgeryToken]
@@ -202,6 +415,14 @@ namespace Milk_Bakery.Controllers
 				var dealerOutstanding = await _context.DealerOutstandings
 					.FirstOrDefaultAsync(d => d.DealerId == dealerOrder.DealerId && d.DeliverDate == dealerOrder.OrderDate);
 
+				// Get the latest outstanding balance from previous dates
+				var previousOutstanding = await _context.DealerOutstandings
+					.Where(d => d.DealerId == dealerOrder.DealerId && d.DeliverDate < dealerOrder.OrderDate)
+					.OrderByDescending(d => d.DeliverDate)
+					.FirstOrDefaultAsync();
+
+				decimal previousBalance = previousOutstanding?.BalanceAmount ?? 0;
+
 				if (dealerOutstanding == null)
 				{
 					// Create new DealerOutstanding record
@@ -211,7 +432,7 @@ namespace Milk_Bakery.Controllers
 						DeliverDate = dealerOrder.OrderDate,
 						InvoiceAmount = grandTotal,
 						PaidAmount = 0,
-						BalanceAmount = grandTotal
+						BalanceAmount = grandTotal + previousBalance // Add previous balance
 					};
 					_context.DealerOutstandings.Add(dealerOutstanding);
 				}
@@ -219,7 +440,7 @@ namespace Milk_Bakery.Controllers
 				{
 					// Update existing DealerOutstanding record
 					dealerOutstanding.InvoiceAmount = grandTotal;
-					dealerOutstanding.BalanceAmount = grandTotal - dealerOutstanding.PaidAmount;
+					dealerOutstanding.BalanceAmount = grandTotal - dealerOutstanding.PaidAmount + previousBalance; // Add previous balance
 					_context.DealerOutstandings.Update(dealerOutstanding);
 				}
 
@@ -335,6 +556,7 @@ namespace Milk_Bakery.Controllers
 		}
 
 		#endregion
+
 	}
 
 	public class DeliveredQuantitySaveModel

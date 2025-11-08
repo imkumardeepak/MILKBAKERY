@@ -335,6 +335,306 @@ namespace Milk_Bakery.Controllers
 			}
 		}
 
+		// Export to Excel with pivot table format similar to OrderReconciliation
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> ExportToExcelPivot(DeliveredQuantityReportViewModel model)
+		{
+			try
+			{
+				// Set the license context for EPPlus
+				ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+				// Ensure we have the correct date values
+				var fromDate = model.FromDate ?? DateTime.Now.Date;
+				var toDate = model.ToDate ?? DateTime.Now.Date;
+
+				// Generate report data
+				var reportItems = await GenerateDeliveredQuantityReport(fromDate, toDate, model.CustomerName, model.DealerId, model.ShowOnlyVariance);
+
+				// Group data by dealer and material for pivot table format
+				var dealerData = new Dictionary<string, Dictionary<string, int>>(); // dealer -> shortCode -> delivered quantity
+				var dealerAmountData = new Dictionary<string, Dictionary<string, decimal>>(); // dealer -> shortCode -> delivered amount
+				var dealerBalances = new Dictionary<string, decimal>(); // dealer -> balance amount
+				var shortCodes = new List<string>();
+
+				// Process report items to build pivot data
+				foreach (var item in reportItems)
+				{
+					// Use only first name of dealer as per Excel export specification
+					var dealerKey = item.DealerName?.Split(' ').FirstOrDefault() ?? "";
+					if (!string.IsNullOrEmpty(dealerKey))
+					{
+						// Initialize dealer data if not exists
+						if (!dealerData.ContainsKey(dealerKey))
+						{
+							dealerData[dealerKey] = new Dictionary<string, int>();
+							dealerAmountData[dealerKey] = new Dictionary<string, decimal>();
+
+							// Get the latest outstanding balance from previous dates
+							// First, we need to get the dealer ID from the dealer name
+							var dealer = await _context.DealerMasters
+								.FirstOrDefaultAsync(d => d.Name == item.DealerName);
+							
+							if (dealer != null)
+							{
+								var previousOutstanding = await _context.DealerOutstandings
+									.Where(d => d.DealerId == dealer.Id && d.DeliverDate < fromDate)
+									.OrderByDescending(d => d.DeliverDate)
+									.FirstOrDefaultAsync();
+
+								decimal previousBalance = previousOutstanding?.BalanceAmount ?? 0;
+								dealerBalances[dealerKey] = previousBalance;
+							}
+							else
+							{
+								dealerBalances[dealerKey] = 0;
+							}
+						}
+
+						var shortCode = item.ShortCode ?? "";
+						// Calculate amount based on delivered quantity and unit price
+						var deliveredAmount = item.DeliveredQuantity * item.UnitPrice;
+
+						// Add to short codes list if not exists
+						if (!string.IsNullOrEmpty(shortCode) && !shortCodes.Contains(shortCode))
+						{
+							shortCodes.Add(shortCode);
+						}
+
+						// Add delivered quantity to dealer data
+						if (dealerData[dealerKey].ContainsKey(shortCode))
+						{
+							dealerData[dealerKey][shortCode] += item.DeliveredQuantity;
+							dealerAmountData[dealerKey][shortCode] += deliveredAmount;
+						}
+						else
+						{
+							dealerData[dealerKey][shortCode] = item.DeliveredQuantity;
+							dealerAmountData[dealerKey][shortCode] = deliveredAmount;
+						}
+					}
+				}
+
+				// Sort short codes for consistent column order
+				shortCodes.Sort();
+
+				// Create pivot table data
+				var pivotData = new List<Dictionary<string, object>>();
+
+				// Add data for dealers
+				foreach (var kvp in dealerData)
+				{
+					var dealerName = kvp.Key;
+					var materials = kvp.Value;
+					var amounts = dealerAmountData[dealerName]; // Get amounts for this dealer
+
+					// Create row data with dealer info
+					var rowData = new Dictionary<string, object>
+					{
+						{ "dealerName", dealerName }
+					};
+
+					// Add material quantities for all short codes
+					foreach (var shortCode in shortCodes)
+					{
+						rowData[shortCode] = materials.ContainsKey(shortCode) ? materials[shortCode] : 0;
+					}
+
+					// Calculate row total (sum of all materials for this dealer)
+					var rowTotal = materials.Values.Sum();
+					var rowAmountTotal = Math.Round(amounts.Values.Sum(), 2); // Total amount for this dealer
+					var dealerBalance = dealerBalances.ContainsKey(dealerName) ? dealerBalances[dealerName] : 0; // Get balance
+					var rowTotalWithBalance = rowAmountTotal + dealerBalance; // Total amount + balance
+
+					rowData["total"] = rowTotal;
+					rowData["totalAmount"] = rowAmountTotal; // Amount
+					rowData["balance"] = dealerBalance; // Old (Balance)
+					rowData["totalWithBalance"] = rowTotalWithBalance; // Total (Amount + Balance)
+
+					pivotData.Add(rowData);
+				}
+
+				// Calculate column totals (sum of each material across all dealers)
+				var columnTotals = new Dictionary<string, int>();
+				var columnAmountTotals = new Dictionary<string, decimal>(); // Amount totals
+
+				// Initialize column totals with 0 for all short codes
+				foreach (var shortCode in shortCodes)
+				{
+					columnTotals[shortCode] = 0;
+					columnAmountTotals[shortCode] = 0;
+				}
+
+				// Sum quantities for each short code across all dealers
+				foreach (var dealer in dealerData)
+				{
+					foreach (var shortCode in shortCodes)
+					{
+						if (dealer.Value.ContainsKey(shortCode))
+						{
+							columnTotals[shortCode] += dealer.Value[shortCode];
+						}
+					}
+				}
+
+				// Add total row with column totals
+				var totalRow = new Dictionary<string, object>
+				{
+					{ "dealerName", "Total" }
+				};
+
+				// Add column totals for each short code
+				foreach (var shortCode in shortCodes)
+				{
+					totalRow[shortCode] = columnTotals[shortCode];
+				}
+
+				// Calculate grand total (sum of all column totals)
+				var grandTotal = columnTotals.Values.Sum();
+				var grandTotalAmount = Math.Round(dealerAmountData.Values.SelectMany(d => d.Values).Sum(), 2); // Grand total amount
+				var totalBalance = dealerBalances.Values.Sum(); // Total balance
+				var grandTotalWithBalance = grandTotalAmount + totalBalance; // Grand total amount + balance
+
+				totalRow["total"] = grandTotal;
+				totalRow["totalAmount"] = grandTotalAmount; // Amount
+				totalRow["balance"] = totalBalance; // Old (Balance)
+				totalRow["totalWithBalance"] = grandTotalWithBalance; // Total (Amount + Balance)
+
+				pivotData.Add(totalRow);
+
+				// Get customer name for header
+				string customerName = "All Customers";
+				if (!string.IsNullOrEmpty(model.CustomerName))
+				{
+					customerName = model.CustomerName;
+				}
+
+				// Create Excel file
+				using (var package = new ExcelPackage())
+				{
+					var worksheet = package.Workbook.Worksheets.Add("Delivered Quantity Report");
+
+					// Set page orientation to landscape and paper size to A4 (Excel Export Specification #4)
+					worksheet.PrinterSettings.Orientation = eOrientation.Landscape;
+					worksheet.PrinterSettings.PaperSize = ePaperSize.A4;
+
+					// Set to fit all columns on one page (Excel Export Specification #9)
+					worksheet.PrinterSettings.FitToPage = true;
+					worksheet.PrinterSettings.FitToWidth = 1;
+					worksheet.PrinterSettings.FitToHeight = 0;
+
+					// Add header with customer name and date range (Excel Export Specification #10)
+					worksheet.Cells[1, 1].Value = $"Customer: {customerName}";
+					worksheet.Cells[1, 1].Style.Font.Bold = true;
+					worksheet.Cells[1, 1].Style.Font.Size = 14;
+
+					worksheet.Cells[2, 1].Value = $"Date Range: {fromDate:dd-MM-yyyy} to {toDate:dd-MM-yyyy}";
+					worksheet.Cells[2, 1].Style.Font.Bold = true;
+					worksheet.Cells[2, 1].Style.Font.Size = 12;
+
+					// Add headers for the data table (moved down by 2 rows)
+					worksheet.Cells[3, 1].Value = "Dealer";
+
+					// Add short code headers (quantity only for each material) (Excel Export Specification #10)
+					int colIndex = 2;
+					for (int i = 0; i < shortCodes.Count; i++)
+					{
+						var shortCode = shortCodes[i];
+						worksheet.Cells[3, colIndex].Value = shortCode;
+						colIndex++;
+					}
+
+					// Add Total column headers
+					worksheet.Cells[3, colIndex].Value = "Total Qty";
+					worksheet.Cells[3, colIndex + 1].Value = "Amount";
+					worksheet.Cells[3, colIndex + 2].Value = "Old"; // Balance
+					worksheet.Cells[3, colIndex + 3].Value = "Total"; // Amount + Balance
+
+					// Add data rows (starting from row 4)
+					for (int i = 0; i < pivotData.Count; i++)
+					{
+						var rowData = pivotData[i];
+						int row = i + 4; // Excel rows start at 1, header is row 3, so data starts at row 4
+
+						worksheet.Cells[row, 1].Value = rowData["dealerName"]?.ToString() ?? "";
+
+						// Add material quantities only
+						colIndex = 2;
+						for (int j = 0; j < shortCodes.Count; j++)
+						{
+							var shortCode = shortCodes[j];
+							worksheet.Cells[row, colIndex].Value = rowData.ContainsKey(shortCode) ? rowData[shortCode] : 0;
+							colIndex++;
+						}
+
+						// Add row totals (quantity, amount, balance, and total with balance)
+						worksheet.Cells[row, colIndex].Value = rowData["total"];
+						worksheet.Cells[row, colIndex + 1].Value = rowData["totalAmount"];
+						worksheet.Cells[row, colIndex + 2].Value = rowData["balance"];
+						worksheet.Cells[row, colIndex + 3].Value = rowData["totalWithBalance"];
+					}
+
+					// Apply styling to header row of the data table (Excel Export Specification #5)
+					using (var range = worksheet.Cells[3, 1, 3, shortCodes.Count + 5])
+					{
+						range.Style.Font.Bold = true;
+						range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+						range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+						range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+						range.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+						range.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+						range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+						range.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+						range.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+						range.Style.WrapText = true; // Excel Export Specification #7
+					}
+
+					// Apply borders to all data cells (Excel Export Specification #1)
+					using (var range = worksheet.Cells[3, 1, pivotData.Count + 3, shortCodes.Count + 5])
+					{
+						range.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+						range.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+						range.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+						range.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+						range.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center; // Excel Export Specification #8
+						range.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center; // Excel Export Specification #8
+					}
+
+					// Set column widths - fixed width for material columns (Excel Export Specification #6)
+					worksheet.Column(1).Width = 10; // Dealer Name column
+
+					// Set fixed width for all material columns (Excel Export Specification #6)
+					for (int i = 0; i < shortCodes.Count; i++)
+					{
+						worksheet.Column(i + 2).Width = 4; // Fixed width of 4 for material columns
+					}
+
+					// Set width for total columns
+					worksheet.Column(shortCodes.Count + 2).Width = 8; // Total Qty column
+					worksheet.Column(shortCodes.Count + 3).Width = 8; // Amount column
+					worksheet.Column(shortCodes.Count + 4).Width = 8; // Old (Balance) column
+					worksheet.Column(shortCodes.Count + 5).Width = 8; // Total (Amount + Balance) column
+
+					// Convert to bytes
+					var fileBytes = package.GetAsByteArray();
+
+					// Return file (Excel Export Specification #4)
+					var fileName = $"DeliveredQuantityReport_Pivot_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+					return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+				}
+			}
+			catch (Exception ex)
+			{
+				// Log the exception for debugging
+				System.Diagnostics.Debug.WriteLine($"Error in ExportToExcelPivot: {ex.Message}");
+				System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+
+				// Return an error response
+				return BadRequest("An error occurred while generating the export file.");
+			}
+		}
+
 		// Helper method to check if a customer is allowed for the current user
 		private async Task<bool> IsCustomerAllowedForUser(string loggedInCustomerName, string selectedCustomerName)
 		{

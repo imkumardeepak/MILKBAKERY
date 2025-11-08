@@ -23,7 +23,7 @@ namespace Milk_Bakery.Controllers
 			try
 			{
 				// Group data by truck number and date, and count customers
-				var groupedData = await _context.Invoices
+				var groupedData = await _context.Invoices.Where(c => c.InvoiceDate.Date <= DateTime.Now.Date && c.InvoiceDate.Date >= DateTime.Now.Date.AddDays(-1))
 					.Include(c => c.InvoiceMaterials)
 					.GroupBy(c => new { c.ShipToCode, c.InvoiceDate, c.ShipToRoute }) // Group by truck (route) and date
 					.Select(g => new GatePassGroupedData
@@ -46,6 +46,45 @@ namespace Milk_Bakery.Controllers
 			{
 				_logger.LogError(ex, "Error occurred while fetching gate pass data");
 				return View(new GatePassIndexViewModel());
+			}
+		}
+
+		// GET: GatePass/GetGatePassDataByDate
+		[HttpGet]
+		public async Task<IActionResult> GetGatePassDataByDate(DateTime? date)
+		{
+			try
+			{
+				var filterDate = date ?? DateTime.Now.Date;
+
+				// Group data by truck number and date, and count customers
+				var groupedData = await _context.Invoices
+					.Include(c => c.InvoiceMaterials)
+					.Where(c => c.InvoiceDate.Date == filterDate.Date) // Filter by selected date
+					.GroupBy(c => new { c.ShipToCode, c.InvoiceDate, c.ShipToRoute }) // Group by truck (route) and date
+					.Select(g => new GatePassGroupedData
+					{
+						TruckNumber = g.First().VehicleNo,
+						DispatchDate = g.Key.InvoiceDate,
+						CustomerCount = g.Count(),
+					})
+					.OrderBy(g => g.TruckNumber)
+					.ToListAsync();
+
+				// Convert to JSON-friendly format
+				var jsonData = groupedData.Select(g => new
+				{
+					truckNumber = g.TruckNumber,
+					dispatchDate = g.DispatchDate,
+					customerCount = g.CustomerCount
+				}).ToList();
+
+				return Json(new { success = true, data = jsonData });
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error occurred while fetching gate pass data for date {Date}", date);
+				return Json(new { success = false, message = ex.Message });
 			}
 		}
 

@@ -41,11 +41,6 @@ namespace Milk_Bakery.Controllers
 			return View(viewModel);
 		}
 
-		// GET: DealerOrders/DispatchRouteSheet
-		public async Task<IActionResult> DispatchRouteSheet()
-		{
-			return View();
-		}
 
 		// GET: DealerOrders/GetAllCustomers
 		[HttpGet]
@@ -60,396 +55,6 @@ namespace Milk_Bakery.Controllers
 			catch (Exception ex)
 			{
 				return Json(new { success = false, message = ex.Message });
-			}
-		}
-
-		// GET: DealerOrders/GetDispatchData
-		[HttpGet]
-		public async Task<IActionResult> GetDispatchData(DateTime? date, int? customerId)
-		{
-			try
-			{
-				var dispatchDate = date ?? DateTime.Now.Date;
-
-				// Get dealer orders for the specified date
-				var dealerOrdersQuery = _context.DealerOrders
-					.Include(o => o.Dealer)
-					.Where(o => o.OrderDate == dispatchDate);
-
-				// Filter by customer if specified
-				if (customerId.HasValue && customerId.Value > 0)
-				{
-					dealerOrdersQuery = dealerOrdersQuery.Where(o => o.DistributorId == customerId.Value);
-				}
-
-				var dealerOrders = await dealerOrdersQuery.ToListAsync();
-
-				// Get all unique short codes for column headers
-				var shortCodes = new List<string>();
-				// Changed to store quantity and amount data
-				var dealerData = new Dictionary<string, Dictionary<string, int>>(); // dealer -> shortCode -> quantity
-				var dealerAmountData = new Dictionary<string, Dictionary<string, decimal>>(); // dealer -> shortCode -> amount
-				var dealerRoutes = new Dictionary<string, string>(); // dealer -> route code
-				var dealerPhones = new Dictionary<string, string>(); // dealer -> phone
-
-				foreach (var order in dealerOrders)
-				{
-					var dealerKey = order.Dealer?.Name ?? "";
-					if (!string.IsNullOrEmpty(dealerKey))
-					{
-						// Initialize dealer data if not exists
-						if (!dealerData.ContainsKey(dealerKey))
-						{
-							dealerData[dealerKey] = new Dictionary<string, int>();
-							dealerAmountData[dealerKey] = new Dictionary<string, decimal>();
-							dealerRoutes[dealerKey] = order.Dealer?.RouteCode ?? "";
-							dealerPhones[dealerKey] = order.Dealer?.PhoneNo ?? "";
-						}
-
-						// Get order items for this order
-						var orderItems = await _context.DealerOrderItems
-							.Where(i => i.DealerOrderId == order.Id)
-							.ToListAsync();
-
-						foreach (var item in orderItems)
-						{
-							var shortCode = item.ShortCode ?? "";
-							var amount = item.Qty * item.Rate; // Calculate amount
-
-							// Add to short codes list if not exists
-							if (!string.IsNullOrEmpty(shortCode) && !shortCodes.Contains(shortCode))
-							{
-								shortCodes.Add(shortCode);
-							}
-
-							// Add quantity to dealer data
-							if (dealerData[dealerKey].ContainsKey(shortCode))
-							{
-								dealerData[dealerKey][shortCode] += item.Qty;
-								dealerAmountData[dealerKey][shortCode] += amount; // Add amount
-							}
-							else
-							{
-								dealerData[dealerKey][shortCode] = item.Qty;
-								dealerAmountData[dealerKey][shortCode] = amount; // Set amount
-							}
-						}
-					}
-				}
-
-				// Sort short codes for consistent column order
-				shortCodes.Sort();
-
-				// Create pivot table data
-				var pivotData = new List<object>();
-
-				foreach (var kvp in dealerData)
-				{
-					var dealerName = kvp.Key;
-					var materials = kvp.Value;
-					var amounts = dealerAmountData[dealerName]; // Get amounts for this dealer
-
-					// Create row data with dealer info
-					var rowData = new Dictionary<string, object>
-					{
-						{ "dealerName", dealerName },
-						{ "routeCode", dealerRoutes[dealerName] },
-						{ "phoneNo", dealerPhones[dealerName] }
-					};
-
-					// Add material quantities and amounts
-					foreach (var shortCode in shortCodes)
-					{
-						rowData[shortCode] = materials.ContainsKey(shortCode) ? materials[shortCode] : 0;
-						// Add amount with "Amt_" prefix to distinguish from quantity
-						rowData["Amt_" + shortCode] = amounts.ContainsKey(shortCode) ? Math.Round(amounts[shortCode], 2) : 0;
-					}
-
-					// Calculate row total (sum of all materials for this dealer)
-					var rowTotal = materials.Values.Sum();
-					var rowAmountTotal = Math.Round(amounts.Values.Sum(), 2); // Total amount for this dealer
-					rowData["total"] = rowTotal;
-					rowData["totalAmount"] = rowAmountTotal; // Add total amount
-
-					pivotData.Add(rowData);
-				}
-
-				// Calculate column totals (sum of each material across all dealers)
-				var columnTotals = new Dictionary<string, int>();
-				var columnAmountTotals = new Dictionary<string, decimal>(); // Amount totals
-				foreach (var shortCode in shortCodes)
-				{
-					// Quantity totals
-					var total = 0;
-					foreach (var dealer in dealerData)
-					{
-						if (dealer.Value.ContainsKey(shortCode))
-						{
-							total += dealer.Value[shortCode];
-						}
-					}
-					columnTotals[shortCode] = total;
-
-					// Amount totals
-					var amountTotal = 0m;
-					foreach (var dealer in dealerAmountData)
-					{
-						if (dealer.Value.ContainsKey(shortCode))
-						{
-							amountTotal += dealer.Value[shortCode];
-						}
-					}
-					columnAmountTotals[shortCode] = Math.Round(amountTotal, 2);
-				}
-
-				// Add total row with column totals
-				var totalRow = new Dictionary<string, object>
-				{
-					{ "dealerName", "Total" },
-					{ "routeCode", "" },
-					{ "phoneNo", "" }
-				};
-
-				// Add column totals for each short code
-				foreach (var shortCode in shortCodes)
-				{
-					totalRow[shortCode] = columnTotals[shortCode];
-					totalRow["Amt_" + shortCode] = columnAmountTotals[shortCode]; // Add amount totals
-				}
-
-				// Calculate grand total (sum of all column totals)
-				var grandTotal = columnTotals.Values.Sum();
-				var grandTotalAmount = Math.Round(columnAmountTotals.Values.Sum(), 2); // Grand total amount
-				totalRow["total"] = grandTotal;
-				totalRow["totalAmount"] = grandTotalAmount; // Add grand total amount
-
-				pivotData.Add(totalRow);
-
-				return Json(new
-				{
-					success = true,
-					data = pivotData,
-					materials = shortCodes,
-					grandTotal = grandTotal,
-					grandTotalAmount = grandTotalAmount // Include grand total amount in response
-				});
-			}
-			catch (Exception ex)
-			{
-				return Json(new { success = false, message = ex.Message });
-			}
-		}
-
-		// GET: DealerOrders/ExportDispatchToExcel
-		[HttpGet]
-		public async Task<IActionResult> ExportDispatchToExcel(DateTime? date, int? customerId)
-		{
-			try
-			{
-				var dispatchDate = date ?? DateTime.Now.Date;
-
-				// Get dealer orders for the specified date
-				var dealerOrdersQuery = _context.DealerOrders
-					.Include(o => o.Dealer)
-					.Where(o => o.OrderDate == dispatchDate);
-
-				// Filter by customer if specified
-				if (customerId.HasValue && customerId.Value > 0)
-				{
-					dealerOrdersQuery = dealerOrdersQuery.Where(o => o.DistributorId == customerId.Value);
-				}
-
-				var dealerOrders = await dealerOrdersQuery.ToListAsync();
-
-				// Get all unique short codes for column headers
-				var shortCodes = new List<string>();
-				var dealerData = new Dictionary<string, Dictionary<string, int>>(); // dealer -> shortCode -> quantity
-																					// Add amount data storage
-				var dealerAmountData = new Dictionary<string, Dictionary<string, decimal>>(); // dealer -> shortCode -> amount
-				var dealerRoutes = new Dictionary<string, string>(); // dealer -> route code
-				var dealerPhones = new Dictionary<string, string>(); // dealer -> phone
-
-				foreach (var order in dealerOrders)
-				{
-					var dealerKey = order.Dealer?.Name ?? "";
-					if (!string.IsNullOrEmpty(dealerKey))
-					{
-						// Initialize dealer data if not exists
-						if (!dealerData.ContainsKey(dealerKey))
-						{
-							dealerData[dealerKey] = new Dictionary<string, int>();
-							dealerAmountData[dealerKey] = new Dictionary<string, decimal>(); // Initialize amount data
-							dealerRoutes[dealerKey] = order.Dealer?.RouteCode ?? "";
-							dealerPhones[dealerKey] = order.Dealer?.PhoneNo ?? "";
-						}
-
-						// Get order items for this order
-						var orderItems = await _context.DealerOrderItems
-							.Where(i => i.DealerOrderId == order.Id)
-							.ToListAsync();
-
-						foreach (var item in orderItems)
-						{
-							var shortCode = item.ShortCode ?? "";
-							var amount = item.Qty * item.Rate; // Calculate amount
-
-							// Add to short codes list if not exists
-							if (!string.IsNullOrEmpty(shortCode) && !shortCodes.Contains(shortCode))
-							{
-								shortCodes.Add(shortCode);
-							}
-
-							// Add quantity to dealer data
-							if (dealerData[dealerKey].ContainsKey(shortCode))
-							{
-								dealerData[dealerKey][shortCode] += item.Qty;
-								dealerAmountData[dealerKey][shortCode] += amount; // Add amount
-							}
-							else
-							{
-								dealerData[dealerKey][shortCode] = item.Qty;
-								dealerAmountData[dealerKey][shortCode] = amount; // Set amount
-							}
-						}
-					}
-				}
-
-				// Sort short codes for consistent column order
-				shortCodes.Sort();
-
-				// Create pivot table data
-				var pivotData = new List<Dictionary<string, object>>();
-
-				foreach (var kvp in dealerData)
-				{
-					var dealerName = kvp.Key;
-					var materials = kvp.Value;
-					var amounts = dealerAmountData[dealerName]; // Get amounts for this dealer
-
-					// Create row data with dealer info
-					var rowData = new Dictionary<string, object>
-					{
-						{ "dealerName", dealerName },
-						{ "routeCode", dealerRoutes[dealerName] },
-						{ "phoneNo", dealerPhones[dealerName] }
-					};
-
-					// Add material quantities only (no individual amounts)
-					foreach (var shortCode in shortCodes)
-					{
-						rowData[shortCode] = materials.ContainsKey(shortCode) ? materials[shortCode] : 0;
-					}
-
-					// Calculate row total (sum of all materials for this dealer)
-					var rowTotal = materials.Values.Sum();
-					var rowAmountTotal = Math.Round(amounts.Values.Sum(), 2); // Total amount for this dealer
-					rowData["total"] = rowTotal;
-					rowData["totalAmount"] = rowAmountTotal; // Add total amount
-
-					pivotData.Add(rowData);
-				}
-
-				// Calculate column totals (sum of each material across all dealers)
-				var columnTotals = new Dictionary<string, int>();
-				var columnAmountTotals = new Dictionary<string, decimal>(); // Amount totals
-				foreach (var shortCode in shortCodes)
-				{
-					// Quantity totals
-					var total = 0;
-					foreach (var dealer in dealerData)
-					{
-						if (dealer.Value.ContainsKey(shortCode))
-						{
-							total += dealer.Value[shortCode];
-						}
-					}
-					columnTotals[shortCode] = total;
-				}
-
-				// Add total row with column totals
-				var totalRow = new Dictionary<string, object>
-				{
-					{ "dealerName", "Total" },
-					{ "routeCode", "" },
-					{ "phoneNo", "" }
-				};
-
-				// Add column totals for each short code
-				foreach (var shortCode in shortCodes)
-				{
-					totalRow[shortCode] = columnTotals[shortCode];
-				}
-
-				// Calculate grand total (sum of all column totals)
-				var grandTotal = columnTotals.Values.Sum();
-				var grandTotalAmount = Math.Round(dealerAmountData.Values.SelectMany(d => d.Values).Sum(), 2); // Grand total amount
-				totalRow["total"] = grandTotal;
-				totalRow["totalAmount"] = grandTotalAmount; // Add grand total amount
-
-				pivotData.Add(totalRow);
-
-				// Create Excel file
-				using (var package = new ExcelPackage())
-				{
-					var worksheet = package.Workbook.Worksheets.Add("Dispatch Route Sheet");
-
-					// Add headers
-					worksheet.Cells[1, 1].Value = "Route Code";
-					worksheet.Cells[1, 2].Value = "Dealer Name";
-					worksheet.Cells[1, 3].Value = "Phone No";
-
-					// Add short code headers (quantity only for each material)
-					int colIndex = 4;
-					for (int i = 0; i < shortCodes.Count; i++)
-					{
-						var shortCode = shortCodes[i];
-						worksheet.Cells[1, colIndex].Value = shortCode;
-						colIndex++;
-					}
-
-					// Add Total column headers
-					worksheet.Cells[1, colIndex].Value = "Total Qty";
-					worksheet.Cells[1, colIndex + 1].Value = "Total Amt";
-
-					// Add data rows
-					for (int i = 0; i < pivotData.Count; i++)
-					{
-						var rowData = pivotData[i];
-						int row = i + 2; // Excel rows start at 1, and header is row 1
-
-						worksheet.Cells[row, 1].Value = rowData["routeCode"]?.ToString() ?? "";
-						worksheet.Cells[row, 2].Value = rowData["dealerName"]?.ToString() ?? "";
-						worksheet.Cells[row, 3].Value = rowData["phoneNo"]?.ToString() ?? "";
-
-						// Add material quantities only
-						colIndex = 4;
-						for (int j = 0; j < shortCodes.Count; j++)
-						{
-							var shortCode = shortCodes[j];
-							worksheet.Cells[row, colIndex].Value = rowData.ContainsKey(shortCode) ? rowData[shortCode] : 0;
-							colIndex++;
-						}
-
-						// Add row totals (quantity and amount)
-						worksheet.Cells[row, colIndex].Value = rowData["total"];
-						worksheet.Cells[row, colIndex + 1].Value = rowData["totalAmount"];
-					}
-
-					// Auto-fit columns
-					worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
-
-					// Convert to bytes
-					var fileBytes = package.GetAsByteArray();
-
-					// Return file
-					var fileName = $"DispatchRouteSheet_{dispatchDate:yyyyMMdd}.xlsx";
-					return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-				}
-			}
-			catch (Exception ex)
-			{
-				_notifyService.Error("Error exporting to Excel: " + ex.Message);
-				return RedirectToAction("DispatchRouteSheet");
 			}
 		}
 
@@ -1115,13 +720,13 @@ namespace Milk_Bakery.Controllers
 				_notifyService.Error("Cannot save orders. All \"Items to Add\" values must be 0 to complete crates.");
 				return Json(new { success = false, message = "Cannot save orders. All \"Items to Add\" values must be 0 to complete crates." });
 			}
-			
+
 			using var transaction = await _context.Database.BeginTransactionAsync();
 			try
 			{
 				var distributorId = 0;
 				var orderDate = DateTime.Now.Date;
-				
+
 				// Process each dealer order
 				foreach (var model in allOrders)
 				{
@@ -1380,12 +985,12 @@ namespace Milk_Bakery.Controllers
 												}
 											}
 										}
-										
+
 										if (crates == 0)
 										{
 											continue; // Skip items with zero crates
 										}
-										
+
 										var productDetail = new ProductDetail
 										{
 											Id = 0,
@@ -1407,11 +1012,12 @@ namespace Milk_Bakery.Controllers
 
 										// Save the purchase order
 										_context.PurchaseOrder.Add(purchaseOrder);
-										
+
 										// Update ProcessFlag for all dealer orders that were included in the consolidated order
 										foreach (var order in dealerOrders)
 										{
 											order.ProcessFlag = 1; // Mark as processed
+											order.DeliverFlag = 0;
 										}
 									}
 								}
@@ -1465,20 +1071,20 @@ namespace Milk_Bakery.Controllers
 		{
 			// Get all material IDs from the orders
 			var materialIds = allOrders.SelectMany(o => o.orderItems.Select(i => i.MaterialId)).Distinct().ToList();
-			
+
 			// Get materials and their conversion data
 			var materials = await _context.MaterialMaster
 				.Where(m => materialIds.Contains(m.Id))
 				.ToDictionaryAsync(m => m.Id, m => m);
-				
+
 			var materialNames = materials.Values.Select(m => m.Materialname).ToList();
 			var conversionData = await _context.ConversionTables
 				.Where(c => materialNames.Contains(c.MaterialName))
 				.ToDictionaryAsync(c => c.MaterialName, c => c);
-			
+
 			// Calculate total quantities per material across all dealers
 			var totalQuantities = new Dictionary<int, int>(); // materialId -> total quantity
-			
+
 			foreach (var order in allOrders)
 			{
 				foreach (var item in order.orderItems)
@@ -1493,14 +1099,14 @@ namespace Milk_Bakery.Controllers
 					}
 				}
 			}
-			
+
 			// Check if all items to add are 0
 			foreach (var kvp in totalQuantities)
 			{
 				var materialId = kvp.Key;
 				var totalQuantity = kvp.Value;
-				
-				if (materials.TryGetValue(materialId, out var material) && 
+
+				if (materials.TryGetValue(materialId, out var material) &&
 					conversionData.TryGetValue(material.Materialname, out var conversion))
 				{
 					var itemsPerCrate = conversion.TotalQuantity;
@@ -1514,7 +1120,7 @@ namespace Milk_Bakery.Controllers
 					}
 				}
 			}
-			
+
 			return true; // All items to add are 0
 		}
 

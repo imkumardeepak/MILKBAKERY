@@ -15,93 +15,36 @@
         </div>
         <div class="card-body p-2">
             <div class="row mb-2">
-                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
                     <label for="orderDate" class="form-label font-weight-bold mb-1">Order Date:</label>
                     <input type="date" id="orderDate" class="form-control form-control-sm" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
                 </div>
-                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
                     <label for="customerFilter" class="form-label font-weight-bold mb-1">Customer/Distributor:</label>
                     <select id="customerFilter" class="form-control form-control-sm select2">
                         <option value="">-- Select Customer --</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3">
                     <div class="d-flex flex-column h-100 justify-content-end">
                         <div class="d-flex justify-content-between justify-content-md-end align-items-center">
                             <button id="filterBtn" class="btn btn-primary btn-sm mr-1">
                                 <i class="fas fa-filter"></i> <span class="d-none d-sm-inline">Filter</span>
                             </button>
-                            <button id="exportBtn" class="btn btn-success btn-sm" disabled>
-                                <i class="fas fa-file-excel"></i> <span class="d-none d-sm-inline">Export</span>
-                            </button>
+                            <a href="@Url.Action("DispatchRouteSheet", "OrderReconciliation")" class="btn btn-primary btn-sm mr-2">
+                                <i class="fas fa-truck"></i> <span class="d-none d-sm-inline">Dispatch RouteSheet</span>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Summary Cards -->
-            <div class="row mb-2">
-                <div class="col-12">
-                    <div class="card border-info">
-                        <div class="card-header bg-info text-white p-2">
-                            <h6 class="mb-0">Order Summary</h6>
-                        </div>
-                        <div class="card-body p-2">
-                            <div class="d-flex justify-content-around flex-wrap">
-                                <div class="p-1 text-center">
-                                    <h5 class="mb-0 font-weight-bold text-primary"><span id="grandTotal">0</span></h5>
-                                    <p class="mb-0 small">Total Quantity</p>
-                                </div>
-                                <div class="p-1 text-center">
-                                    <h5 class="mb-0 font-weight-bold text-success"><span id="totalCrates">0</span></h5>
-                                    <p class="mb-0 small">Total Crates</p>
-                                </div>
-                                <div class="p-1 text-center">
-                                    <h5 class="mb-0 font-weight-bold text-warning"><span id="totalVariance">0</span></h5>
-                                    <p class="mb-0 small">Total Variance</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
             <div class="row">
                 <div class="col-12">
-                    <div class="table-responsive">
-                        <table id="reconciliationTable" class="table table-striped table-bordered table-sm" style="width:100%">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <!-- Material name column hidden on small screens, visible on medium and up -->
-                                    <th class="d-none d-md-table-cell">Material</th>
-                                    <th>Code</th>
-                                    <th>Order Qty</th>
-                                    <th>Unit</th>
-                                    <th>Items per Box</th>
-                                    <th>Total Crates</th>
-                                    <th>In Crates</th>
-                                    <th>Actual Received Crates</th>
-                                    <th>Variance</th>
-                                    <th>Manage</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="9" class="text-center">Select date & customer, click Filter</td></tr>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <!-- Material name column hidden on small screens, visible on medium and up -->
-                                    <th class="d-none d-md-table-cell" colspan="2" class="text-right">Total:</th>
-                                    <th class="d-md-none">Total:</th>
-                                    <th id="footerGrandTotal">0</th>
-                                    <th></th>
-                                    <th id="footerTotalItemsPerCrate">0</th>
-                                    <th id="footerTotalCrates">0</th>
-                                    <th id="footerTotalItemsInCrates">0</th>
-                                    <th><input type="number" id="footerActualReceivedCrates" class="form-control form-control-sm" style="width: 80px;" value="0" readonly /></th>
-                                    <th id="footerTotalVariance">0</th>
-                                </tr>
-                            </tfoot>
-                        </table>
+                    <!-- Excel View (Only View Now) -->
+                    <div id="excelView">
+                        <div id="excelViewContent">
+                            <!-- Excel view content will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -124,215 +67,12 @@
             
             // Filter button click event
             $('#filterBtn').on('click', function () {
-                loadData();
+                loadExcelView();
             });
             
             // Export button click event
             $('#exportBtn').on('click', function () {
                 exportToExcel();
-            });
-            
-            // Handle actual received crates input changes
-            $(document).on('input', '.actual-received-crates', function() {
-                var row = $(this).closest('tr');
-                var totalCrates = parseInt(row.find('.total-crates').text()) || 0;
-                var actualReceived = parseInt($(this).val()) || 0;
-                var itemsPerCrate = parseInt(row.find('.items-per-crate').text()) || 1;
-                
-                // Calculate variance
-                var variance = actualReceived - totalCrates;
-                row.find('.variance').text(variance);
-                
-                // Update variance color coding
-                if (variance > 0) {
-                    row.find('.variance').removeClass('text-success').addClass('text-danger font-weight-bold');
-                } else if (variance < 0) {
-                    row.find('.variance').removeClass('text-danger').addClass('text-warning font-weight-bold');
-                } else {
-                    row.find('.variance').removeClass('text-danger text-warning').addClass('text-success');
-                }
-                
-                // Show/hide manage icon based on variance
-                if (variance !== 0) {
-                    row.find('.manage-btn').css('visibility', 'visible');
-                } else {
-                    row.find('.manage-btn').css('visibility', 'hidden');
-                }
-                
-                // Update footer total variance
-                updateFooterTotals();
-            });
-            
-            // Handle actual received crates input changes in modal
-            $(document).on('input', '.actual-received-crates-modal', function() {
-                var row = $(this).closest('tr');
-                var actualReceivedCrates = parseInt($(this).val()) || 0;
-                var itemsPerCrate = parseInt(row.data('items-per-crate')) || 1;
-                var originalItems = parseInt(row.data('original-items')) || 0;
-                var calculatedItems = actualReceivedCrates * itemsPerCrate;
-                var itemDifference = calculatedItems - originalItems;
-                
-                row.find('.calculated-items').text(calculatedItems);
-                row.find('.item-difference').text((itemDifference > 0 ? '+' : '') + itemDifference);
-                
-                // Add color coding for the difference
-                if (itemDifference > 0) {
-                    row.find('.item-difference').removeClass('text-success text-muted').addClass('text-danger font-weight-bold');
-                } else if (itemDifference < 0) {
-                    row.find('.item-difference').removeClass('text-danger text-muted').addClass('text-warning font-weight-bold');
-                } else {
-                    row.find('.item-difference').removeClass('text-danger text-warning').addClass('text-success');
-                }
-            });
-            
-            // Handle increase item button click
-            $(document).on('click', '.increase-item-btn', function() {
-                var row = $(this).closest('tr');
-                var actualReceivedCratesInput = row.find('.actual-received-crates-modal');
-                var currentCrates = parseInt(actualReceivedCratesInput.val()) || 0;
-                actualReceivedCratesInput.val(currentCrates + 1).trigger('input');
-            });
-            
-            // Handle decrease item button click
-            $(document).on('click', '.decrease-item-btn', function() {
-                var row = $(this).closest('tr');
-                var actualReceivedCratesInput = row.find('.actual-received-crates-modal');
-                var currentCrates = parseInt(actualReceivedCratesInput.val()) || 0;
-                if (currentCrates > 0) {
-                    actualReceivedCratesInput.val(currentCrates - 1).trigger('input');
-                }
-            });
-            
-            // Handle manage button click
-            $(document).on('click', '.manage-btn', function() {
-                var row = $(this).closest('tr');
-                var materialName = row.data('material-name');
-                var shortCode = row.data('short-code');
-                var customerId = row.data('customer-id');
-                var orderDate = row.data('order-date');
-                
-                // Set modal title
-                $('#modalMaterialName').text(materialName);
-                
-                // Clear previous data
-                $('#dealerDetailsTableBody').empty();
-                
-                // Show loading indicator
-                $('#dealerDetailsTableBody').html('<tr><td colspan="8" class="text-center">Loading...</td></tr>');
-                
-                // Show modal
-                $('#dealerDetailsModal').modal('show');
-                
-                // Get dealer details for this material
-                getDealerDetails(materialName, shortCode, customerId, orderDate);
-            });
-            
-            function getDealerDetails(materialName, shortCode, customerId, orderDate) {
-                // For now, we'll use the existing dealerDetails data that was loaded
-                // In a real implementation, you might want to make an AJAX call to get specific dealer details
-                
-                // Since we already have the dealer details in the result from loadData(),
-                // we need to store them in a global variable so we can access them here
-                if (typeof window.currentDealerDetails !== 'undefined') {
-                    populateDealerDetails(materialName, shortCode, window.currentDealerDetails);
-                } else {
-                    $('#dealerDetailsTableBody').html('<tr><td colspan="8" class="text-center">No dealer details available</td></tr>');
-                }
-            }
-            
-            function populateDealerDetails(materialName, shortCode, dealerDetails) {
-                var tbody = $('#dealerDetailsTableBody');
-                tbody.empty();
-                
-                if (!dealerDetails || dealerDetails.length === 0) {
-                    tbody.html('<tr><td colspan="8" class="text-center">No dealer details available</td></tr>');
-                    return;
-                }
-                
-                var foundDealers = false;
-                
-                // First, find the items per crate for this material from the main table
-                var itemsPerCrate = 1;
-                $('#reconciliationTable tbody tr').each(function() {
-                    if ($(this).data('material-name') === materialName) {
-                        itemsPerCrate = parseInt($(this).find('.items-per-crate').text()) || 1;
-                        return false; // Break the loop
-                    }
-                });
-                
-                $.each(dealerDetails, function(index, dealer) {
-                    if (dealer.materials) {
-                        $.each(dealer.materials, function(i, material) {
-                            if (material.materialName === materialName) {
-                                foundDealers = true;
-                                var orderedQuantity = material.quantity || 0;
-                                var originalCrates = Math.ceil(orderedQuantity / itemsPerCrate);
-                                var originalItems = originalCrates * itemsPerCrate;
-                                var actualReceivedCrates = originalCrates; // Default to original crates
-                                var calculatedItems = actualReceivedCrates * itemsPerCrate;
-                                var itemDifference = calculatedItems - originalItems;
-                                
-                                var row = '<tr data-original-items="' + originalItems + '" data-items-per-crate="' + itemsPerCrate + '">' +
-                                    '<td>' + (dealer.dealerName || 'Unknown Dealer') + '</td>' +
-                                    '<td>' + (dealer.orderDate || '') + '</td>' +
-                                    '<td>' + orderedQuantity + '</td>' +
-                                    '<td><input type="number" class="form-control form-control-sm actual-received-crates-modal" value="' + actualReceivedCrates + '" min="0" data-dealer-index="' + index + '" data-material-index="' + i + '" style="width: 80px;" /></td>' +
-                                    '<td>' + itemsPerCrate + '</td>' +
-                                    '<td class="calculated-items">' + calculatedItems + '</td>' +
-                                    '<td class="item-difference">' + (itemDifference > 0 ? '+' : '') + itemDifference + '</td>' +
-                                    '<td>' +
-                                        '<button class="btn btn-sm btn-success increase-item-btn mr-1"><i class="fas fa-plus"></i></button>' +
-                                        '<button class="btn btn-sm btn-danger decrease-item-btn"><i class="fas fa-minus"></i></button>' +
-                                    '</td>' +
-                                    '</tr>';
-                                tbody.append(row);
-                            }
-                        });
-                    }
-                });
-                
-                if (!foundDealers) {
-                    tbody.html('<tr><td colspan="8" class="text-center">No dealers found for this material</td></tr>');
-                }
-            }
-            
-            // Handle save button click in modal
-            $(document).on('click', '#saveDealerDetailsBtn', function() {
-                // Collect the updated dealer details
-                var updatedDetails = [];
-                $('#dealerDetailsTableBody tr').each(function() {
-                    var dealerName = $(this).find('td:nth-child(1)').text();
-                    var orderDate = $(this).find('td:nth-child(2)').text();
-                    var orderedQuantity = parseInt($(this).find('td:nth-child(3)').text()) || 0;
-                    var actualReceivedCrates = parseInt($(this).find('.actual-received-crates-modal').val()) || 0;
-                    var itemsPerCrate = parseInt($(this).find('td:nth-child(5)').text()) || 1;
-                    var calculatedItems = parseInt($(this).find('.calculated-items').text()) || 0;
-                    var itemDifference = parseInt($(this).find('.item-difference').text()) || 0;
-                    
-                    updatedDetails.push({
-                        dealerName: dealerName,
-                        orderDate: orderDate,
-                        orderedQuantity: orderedQuantity,
-                        actualReceivedCrates: actualReceivedCrates,
-                        itemsPerCrate: itemsPerCrate,
-                        calculatedItems: calculatedItems,
-                        itemDifference: itemDifference
-                    });
-                });
-                
-                // In a real implementation, you would send this data to the server
-                console.log('Updated dealer details:', updatedDetails);
-                
-                // Show success message
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Changes Saved!',
-                    text: 'The dealer details have been updated successfully.',
-                    confirmButtonText: 'OK'
-                });
-                
-                // Close the modal
-                $('#dealerDetailsModal').modal('hide');
             });
             
             function loadCustomers() {
@@ -355,7 +95,7 @@
                 });
             }
             
-            function loadData() {
+            function loadExcelView() {
                 var date = $('#orderDate').val();
                 var customerId = $('#customerFilter').val();
                 
@@ -370,141 +110,64 @@
                     return;
                 }
                 
+                // Show loading indicator
+                $('#excelViewContent').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading Excel view...</p></div>');
+                
                 $.ajax({
-                    url: '@Url.Action("GetReconciliationData", "OrderReconciliation")',
-                    type: 'GET',
+                    url: '@Url.Action("LoadExcelView", "OrderReconciliation")',
+                    type: 'POST',
                     data: {
-                        date: date,
+                        orderDate: date,
                         customerId: customerId
                     },
                     success: function (result) {
-                        if (result.success) {
-                            var tbody = $('#reconciliationTable tbody');
-                            tbody.empty();
-                            
-                            // Store dealer details in a global variable for later use
-                            window.currentDealerDetails = result.dealerDetails;
-                            
-                            if (result.data && result.data.length > 0) {
-                                $.each(result.data, function (index, item) {
-                                    // Material name cell hidden on small screens, visible on medium and up
-                                    var materialCell = '<td class="d-none d-md-table-cell">' + (item.materialName || '') + '</td>';
-                                    
-                                    // Check if there's a variance to determine if manage icon should be visible
-                                    var totalCrates = item.crates || 0;
-                                    var actualReceived = totalCrates; // Default to ordered crates
-                                    var variance = actualReceived - totalCrates;
-                                    var manageIconVisibility = variance !== 0 ? 'style="visibility: visible;"' : 'style="visibility: hidden;"';
-                                    
-                                    var row = '<tr data-material-name="' + (item.materialName || '') + '" data-short-code="' + (item.shortCode || '') + '" data-customer-id="' + customerId + '" data-order-date="' + $('#orderDate').val() + '">' +
-                                        materialCell +
-                                        '<td>' + (item.shortCode || '') + '</td>' +
-                                        '<td>' + (item.quantity || 0) + '</td>' +
-                                        '<td>' + (item.unitType || 'PCS') + '</td>' +
-                                        '<td class="items-per-crate">' + (item.totalQuantityPerUnit || 1) + '</td>' +
-                                        '<td class="total-crates">' + (item.crates || 0) + '</td>' +
-                                        '<td>' + (item.itemsInCrates || 0) + '</td>' +
-                                        '<td><input type="number" class="form-control form-control-sm actual-received-crates" style="width: 80px;" value="' + (item.crates || 0) + '" min="0" /></td>' +
-                                        '<td class="variance text-success">0</td>' +
-                                        '<td><button class="btn btn-sm btn-primary manage-btn" ' + manageIconVisibility + '><i class="fas fa-edit"></i></button></td>' +
-                                        '</tr>';
-                                    tbody.append(row);
-                                });
-                                
-                                // Enable export button
-                                $('#exportBtn').prop('disabled', false);
-                                
-                                // Update grand totals
-                                $('#grandTotal').text(result.grandTotal);
-                                $('#totalCrates').text(result.totalCrates);
-                                $('#totalVariance').text('0');
-                                
-                                // Update footer totals
-                                $('#footerGrandTotal').text(result.grandTotal);
-                                $('#footerTotalItemsPerCrate').text(result.totalItemsPerCrate);
-                                $('#footerTotalCrates').text(result.totalCrates);
-                                $('#footerTotalItemsInCrates').text(result.totalItemsInCrates);
-                                $('#footerTotalVariance').text('0');
-                            } else {
-                                // Adjust colspan based on screen size
-                                var colspan = $(window).width() < 768 ? 9 : 9;
-                                tbody.append('<tr><td colspan="' + colspan + '" class="text-center">No data found</td></tr>');
-                                
-                                // Reset totals
-                                $('#grandTotal').text('0');
-                                $('#totalCrates').text('0');
-                                $('#totalVariance').text('0');
-                                
-                                $('#footerGrandTotal').text('0');
-                                $('#footerTotalItemsPerCrate').text('0');
-                                $('#footerTotalCrates').text('0');
-                                $('#footerTotalItemsInCrates').text('0');
-                                $('#footerTotalVariance').text('0');
-                                
-                                // Disable export button when no data
-                                $('#exportBtn').prop('disabled', true);
-                            }
-                        } else {
-                            // Adjust colspan based on screen size
-                            var colspan = $(window).width() < 768 ? 9 : 9;
-                            $('#reconciliationTable tbody').empty().append('<tr><td colspan="' + colspan + '" class="text-center">Error: ' + result.message + '</td></tr>');
-                            
-                            // Reset totals
-                            $('#grandTotal').text('0');
-                            $('#totalCrates').text('0');
-                            $('#totalVariance').text('0');
-                            
-                            $('#footerGrandTotal').text('0');
-                            $('#footerTotalItemsPerCrate').text('0');
-                            $('#footerTotalCrates').text('0');
-                            $('#footerTotalItemsInCrates').text('0');
-                            $('#footerTotalVariance').text('0');
-                            
-                            // Disable export button on error
-                            $('#exportBtn').prop('disabled', true);
-                        }
+                        $('#excelViewContent').html(result);
+                        // Enable export button
+                        $('#exportBtn').prop('disabled', false);
                     },
                     error: function () {
-                        // Adjust colspan based on screen size
-                        var colspan = $(window).width() < 768 ? 9 : 9;
-                        $('#reconciliationTable tbody').empty().append('<tr><td colspan="' + colspan + '" class="text-center">Error loading data</td></tr>');
-                        
-                        // Reset totals
-                        $('#grandTotal').text('0');
-                        $('#totalCrates').text('0');
-                        $('#totalVariance').text('0');
-                        
-                        $('#footerGrandTotal').text('0');
-                        $('#footerTotalItemsPerCrate').text('0');
-                        $('#footerTotalCrates').text('0');
-                        $('#footerTotalItemsInCrates').text('0');
-                        $('#footerTotalVariance').text('0');
-                        
+                        $('#excelViewContent').html('<div class="alert alert-danger text-center">Error loading Excel view. Please try again.</div>');
                         // Disable export button on error
                         $('#exportBtn').prop('disabled', true);
                     }
                 });
             }
             
-            function updateFooterTotals() {
-                var totalVariance = 0;
-                
-                $('.variance').each(function() {
-                    var variance = parseInt($(this).text()) || 0;
-                    totalVariance += variance;
-                });
-                
-                $('#footerTotalVariance').text(totalVariance);
-                $('#totalVariance').text(totalVariance);
-            }
-            
             function exportToExcel() {
-                var date = $('#orderDate').val();
-                var customerId = $('#customerFilter').val();
-                var url = '@Url.Action("ExportToExcel", "OrderReconciliation")' + 
-                          '?date=' + encodeURIComponent(date) + 
-                          '&customerId=' + encodeURIComponent(customerId || '');
-                window.location.href = url;
+                // Simple export to CSV functionality
+                var table = $('.excel-table')[0];
+                if (!table) {
+                    alert('No data to export.');
+                    return;
+                }
+                
+                var csv = [];
+                var rows = table.querySelectorAll('tr');
+                
+                for (var i = 0; i < rows.length; i++) {
+                    var row = [], cols = rows[i].querySelectorAll('td, th');
+                    
+                    for (var j = 0; j < cols.length; j++) {
+                        // For quantity input cells, get the input value
+                        var input = cols[j].querySelector('input');
+                        var data = input ? input.value : cols[j].innerText;
+                        data = data.replace(/"/g, '""');
+                        row.push('"' + data + '"');
+                    }
+                    
+                    csv.push(row.join(','));
+                }
+                
+                var csvString = csv.join('\n');
+                var blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                var link = document.createElement('a');
+                var url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'order_reconciliation_' + new Date().toISOString().slice(0,10) + '.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
         });
     </script>
@@ -541,12 +204,6 @@
             .card-header h6 {
                 font-size: 0.9rem;
             }
-            
-            .actual-received-crates {
-                width: 60px !important;
-                font-size: 0.75rem;
-                padding: 0.1rem 0.25rem;
-            }
         }
         
         /* Additional compact styles */
@@ -572,49 +229,5 @@
         .select2-container .select2-selection--single .select2-selection__arrow {
             height: calc(1.5em + 0.5rem + 2px);
         }
-        
-        .actual-received-crates {
-            width: 80px;
-            text-align: center;
-        }
     </style>
 }
-
-<!-- Dealer Details Modal -->
-<div class="modal fade" id="dealerDetailsModal" tabindex="-1" role="dialog" aria-labelledby="dealerDetailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="dealerDetailsModalLabel">Dealer Details for <span id="modalMaterialName"></span></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-bordered" id="dealerDetailsTable">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>Dealer Name</th>
-                                <th>Order Date</th>
-                                <th>Ordered Quantity</th>
-                                <th>Actual Received Crates</th>
-                                <th>Items per Crate</th>
-                                <th>Calculated Items</th>
-                                <th>Item Difference</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dealerDetailsTableBody">
-                            <!-- Dealer details will be populated here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveDealerDetailsBtn">Save Changes</button>
-            </div>
-        </div>
-    </div>
-</div>

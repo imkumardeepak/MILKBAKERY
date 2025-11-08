@@ -1,0 +1,748 @@
+@model Milk_Bakery.ViewModels.OrderReconciliationExcelViewModel
+
+<style>
+    .excel-view-container {
+        font-size: 0.85rem;
+    }
+    
+    .card-header {
+        padding: 0.5rem 1rem;
+    }
+    
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    .excel-table-container {
+        max-height: 70vh;
+        overflow: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.35rem;
+    }
+    
+    .excel-table {
+        margin-bottom: 0;
+        width: 100%;
+        min-width: 800px; /* Ensure minimum width for small screens */
+    }
+    
+    .excel-table th {
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.3rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .excel-table td {
+        padding: 0.3rem;
+        vertical-align: middle;
+    }
+    
+    .dealer-col {
+        min-width: 120px;
+        max-width: 150px;
+        position: sticky;
+        left: 0;
+        z-index: 5;
+        background-color: white;
+        font-weight: 600;
+        box-shadow: 2px 0 2px -1px rgba(0,0,0,0.1);
+    }
+    
+    .material-col {
+        min-width: 70px;
+        max-width: 90px;
+        text-align: center;
+    }
+    
+    .total-col {
+        min-width: 80px;
+        text-align: center;
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+    
+    .variance-col {
+        min-width: 80px;
+        text-align: center;
+        font-weight: 600;
+        background-color: #fff3cd;
+    }
+    
+    .balance-col {
+        min-width: 90px;
+        text-align: center;
+        font-weight: 600;
+        background-color: #e8f5e9;
+    }
+    
+    .quantity-input {
+        width: 100%;
+        min-width: 60px;
+        padding: 0.2rem 0.3rem;
+        font-size: 0.8rem;
+        text-align: center;
+        border: 1px solid #ced4da;
+        border-radius: 0.2rem;
+    }
+    
+    .quantity-input:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+    
+    /* Style for modified quantity inputs */
+    .modified-quantity {
+        background-color: #fff3cd !important;
+        border-color: #ffc107 !important;
+    }
+    
+    /* Ordered quantity badge */
+    .badge-secondary {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        font-size: 0.6rem;
+        padding: 2px 4px;
+        background-color: #6c757d;
+        color: white;
+        border-radius: 4px;
+        z-index: 5;
+    }
+    
+    .conversion-info {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+    
+    .footer-highlight {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .btn-compact {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Highlighted Order Date header */
+    .order-date-header {
+        background-color: #007bff !important;
+        color: white !important;
+        font-weight: bold !important;
+        position: sticky;
+        left: 0;
+        z-index: 11;
+    }
+    
+    /* Mobile-specific adjustments */
+    @@media (max-width: 768px) {
+        .excel-view-container {
+            font-size: 0.8rem;
+        }
+        
+        .card-header {
+            padding: 0.4rem 0.75rem;
+        }
+        
+        .card-body {
+            padding: 0.5rem;
+        }
+        
+        .excel-table th, 
+        .excel-table td {
+            padding: 0.25rem 0.2rem;
+        }
+        
+        .dealer-col {
+            min-width: 100px;
+            max-width: 120px;
+        }
+        
+        .material-col {
+            min-width: 60px;
+            max-width: 75px;
+        }
+        
+        .total-col {
+            min-width: 70px;
+        }
+        
+        .balance-col {
+            min-width: 80px;
+        }
+        
+        .quantity-input {
+            min-width: 50px;
+            padding: 0.15rem 0.2rem;
+            font-size: 0.75rem;
+        }
+        
+        .btn-compact {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.75rem;
+        }
+        
+        .action-buttons {
+            justify-content: center;
+        }
+    }
+    
+    /* Small mobile screens */
+    @@media (max-width: 576px) {
+        .excel-table-container {
+            max-height: 60vh;
+        }
+        
+        .dealer-col {
+            min-width: 80px;
+            max-width: 100px;
+            font-size: 0.75rem;
+        }
+        
+        .material-col {
+            min-width: 55px;
+            max-width: 65px;
+        }
+        
+        .total-col {
+            min-width: 60px;
+        }
+        
+        .balance-col {
+            min-width: 70px;
+        }
+        
+        .quantity-input {
+            min-width: 45px;
+            padding: 0.1rem 0.15rem;
+        }
+    }
+    
+    /* Print styles */
+    @@media print {
+        .btn, .action-buttons {
+            display: none !important;
+        }
+        
+        .excel-table-container {
+            max-height: none;
+            overflow: visible;
+        }
+        
+        .excel-table {
+            min-width: auto;
+        }
+    }
+</style>
+
+<div class="excel-view-container">
+    <div class="card shadow-sm">
+        <div class="card-header py-2">
+            <h6 class="mb-0 font-weight-bold text-primary">Excel View - Order Reconciliation</h6>
+        </div>
+        <div class="card-body p-2">
+            @if (Model.DealerOrders != null && Model.DealerOrders.Any())
+            {
+                <div class="action-buttons">
+                    <button class="btn btn-success btn-sm btn-compact" id="saveAllBtn">
+                        <i class="fas fa-save"></i> Save All
+                    </button>
+                    @* <button class="btn btn-primary btn-sm btn-compact" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> Export
+                    </button> *@
+                    <button class="btn btn-info btn-sm btn-compact" onclick="toggleSummary()">
+                        <i class="fas fa-chart-bar"></i> Summary
+                    </button>
+                </div>
+                
+                <div class="table-responsive">
+                    <div class="excel-table-container">
+                        <table class="table table-bordered table-sm excel-table">
+                            <thead class="thead-light" style="position: sticky; top: 0; z-index: 10;">
+                                <tr>
+                                    <th class="dealer-col" style="position: sticky; left: 0; z-index: 11; background-color: #e9ecef;">Dealer</th>
+                                    @foreach (var material in Model.AvailableMaterials.OrderBy(m => m.sequence))
+                                    {
+                                        <th class="material-col" title="@material.Materialname">@material.ShortName</th>
+                                    }
+                                    <th class="total-col">Total Qty</th>
+                                    <th class="total-col">Amount</th>
+                                    <th class="variance-col">Variance</th>
+                                    <th class="total-col">Ordered Qty</th>
+                                    <th class="balance-col">Old</th>
+                                    <th class="balance-col">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var dealer in Model.Dealers)
+                                {
+                                    if (Model.DealerOrders.ContainsKey(dealer.Id) && Model.DealerOrders[dealer.Id].Any())
+                                    {
+                                        var orders = Model.DealerOrders[dealer.Id];
+                                        var latestOrder = orders.First(); // Taking the first order for display purposes
+                                        
+                                        // Get the last date balance amount for this dealer
+                                        var lastBalance = 0m;
+                                        var dealerBalances = ViewData["DealerOutstandings"] as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
+                                        if (dealerBalances.ContainsKey(dealer.Id))
+                                        {
+                                            lastBalance = dealerBalances[dealer.Id];
+                                        }
+                                        
+                                        <tr data-order-id="@latestOrder.Id">
+                                            <td class="dealer-col" style="position: sticky; left: 0; z-index: 2; background-color: white;" title="@dealer.Name">
+                                                @dealer.Name
+                                            </td>
+                                            @{
+                                                int totalQty = 0;
+                                                decimal totalAmount = 0;
+                                            }
+                                            @foreach (var material in Model.AvailableMaterials.OrderBy(m => m.sequence))
+                                            {
+                                                // Get the order item quantity for this dealer and material
+                                                int orderedQuantity = 0;
+                                                int deliveredQuantity = 0;
+                                                decimal rate = material.dealerprice; // Use material dealer price as rate
+                                                
+                                                // Sum quantities from all orders for this material
+                                                foreach (var order in orders)
+                                                {
+                                                    var orderItem = order.DealerOrderItems
+                                                        .FirstOrDefault(oi => oi.MaterialName == material.Materialname);
+                                                    if (orderItem != null)
+                                                    {
+                                                        orderedQuantity += orderItem.Qty; // Use the ordered quantity (Qty)
+                                                        deliveredQuantity += orderItem.DeliverQnty; // Use the delivered quantity
+                                                        rate = orderItem.Rate; // Use rate from the last order
+                                                    }
+                                                }
+                                                
+                                                // Show editable input field for quantity - initially show ordered quantity
+                                                <td class="material-col">
+                                                    <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                                                        <input type="number" 
+                                                               class="form-control quantity-input" 
+                                                               data-order-id="@latestOrder.Id" 
+                                                               data-material-id="@material.Id" 
+                                                               data-rate="@rate" 
+                                                               data-material-name="@material.Materialname"
+                                                               data-ordered-qty="@orderedQuantity"
+                                                               value="@orderedQuantity" 
+                                                               min="0" 
+                                                               step="1"
+                                                               style="padding-right: 20px;">
+                                                        <span class="badge badge-secondary" style="position: absolute; top: -8px; right: -8px; font-size: 0.6rem; padding: 2px 4px;" title="Ordered Quantity">@orderedQuantity</span>
+                                                    </div>
+                                                </td>
+                                            }
+                                            @{
+                                                // Calculate row totals
+                                                int rowTotalQty = 0;
+                                                decimal rowTotalAmount = 0;
+                                                int rowVariance = 0;
+                                                
+                                                foreach (var material in Model.AvailableMaterials.OrderBy(m => m.sequence))
+                                                {
+                                                    int materialOrderedQty = 0;
+                                                    int materialDeliveredQty = 0;
+                                                    
+                                                    // Sum ordered quantities for this material
+                                                    foreach (var order in orders)
+                                                    {
+                                                        var orderItem = order.DealerOrderItems
+                                                            .FirstOrDefault(oi => oi.MaterialName == material.Materialname);
+                                                        if (orderItem != null)
+                                                        {
+                                                            materialOrderedQty += orderItem.Qty;
+                                                            materialDeliveredQty += orderItem.DeliverQnty;
+                                                        }
+                                                    }
+                                                    
+                                                    rowTotalQty += materialOrderedQty;
+                                                    rowTotalAmount += materialOrderedQty * material.dealerprice;
+                                                    // Calculate variance as delivered - ordered
+                                                    rowVariance += materialDeliveredQty - materialOrderedQty;
+                                                }
+                                                
+                                                // Calculate total with balance (amount + balance)
+                                                var totalWithBalance = rowTotalAmount + lastBalance;
+                                            }
+                                            <td class="total-col total-qty">@rowTotalQty</td>
+                                            <td class="total-col total-amount">@rowTotalAmount.ToString("F2")</td>
+                                            <td class="variance-col variance">@rowVariance</td>
+                                            @{
+                                                // Calculate total ordered quantity for this row
+                                                int totalOrderedQty = 0;
+                                                foreach (var material in Model.AvailableMaterials.OrderBy(m => m.sequence))
+                                                {
+                                                    // Sum ordered quantities for this material
+                                                    foreach (var order in orders)
+                                                    {
+                                                        var orderItem = order.DealerOrderItems
+                                                            .FirstOrDefault(oi => oi.MaterialName == material.Materialname);
+                                                        if (orderItem != null)
+                                                        {
+                                                            totalOrderedQty += orderItem.Qty;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            <td class="total-col">@totalOrderedQty</td>
+                                            <td class="balance-col">@lastBalance.ToString("F2")</td>
+                                            <td class="balance-col">@totalWithBalance.ToString("F2")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                            <tfoot style="position: sticky; bottom: 0; z-index: 10; background-color: white;">
+                                <tr class="footer-highlight">
+                                    <th class="dealer-col" style="position: sticky; left: 0; z-index: 11; background-color: #e9ecef;">Total Qty</th>
+                                    @foreach (var material in Model.AvailableMaterials.OrderBy(m => m.sequence))
+                                    {
+                                        // Total quantity will be calculated by JavaScript
+                                        <th class="material-col total-quantity" data-material-id="@material.Id">0</th>
+                                    }
+                                    <th class="total-col"></th>
+                                    <th class="total-col"></th>
+                                    <th class="variance-col"></th>
+                                    <th class="total-col"></th>
+                                    <th class="balance-col"></th>
+                                    <th class="balance-col"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Summary Panel (Hidden by Default) -->
+                <div id="summaryPanel" class="mt-3 p-2 border rounded bg-light" style="display: none;">
+                    <h6 class="font-weight-bold">Order Summary</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Total Dealers:</strong> <span id="totalDealers">@Model.Dealers.Count()</span></p>
+                            <p><strong>Total Materials:</strong> <span id="totalMaterials">@Model.AvailableMaterials.Count()</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Last Updated:</strong> <span id="lastUpdated">@DateTime.Now.ToString("MMM dd, yyyy hh:mm tt")</span></p>
+                            <p><strong>Total Items:</strong> <span id="totalItems">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center py-2 px-2 small" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> No dealers found for the selected distributor.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Handle quantity input changes
+        $('.quantity-input').on('input', function () {
+            var row = $(this).closest('tr');
+            var totalQty = 0;
+            var totalAmount = 0;
+            var totalVariance = 0;
+            var lastBalance = parseFloat(row.find('.balance-col').eq(0).text()) || 0; // Get balance from the row
+            
+            // Calculate totals for this dealer row
+            row.find('.quantity-input').each(function () {
+                var quantity = parseInt($(this).val()) || 0;
+                var rate = parseFloat($(this).data('rate')) || 0;
+                var orderedQty = parseInt($(this).data('ordered-qty')) || 0;
+                
+                // Calculate difference between delivered and ordered (variance)
+                var variance = quantity - orderedQty;
+                
+                // Add a visual indicator for the difference
+                if (variance !== 0) {
+                    $(this).addClass('modified-quantity');
+                    // Add a tooltip to show the variance
+                    $(this).attr('title', 'Ordered: ' + orderedQty + ', Delivered: ' + quantity + ', Variance: ' + (variance > 0 ? '+' : '') + variance);
+                } else {
+                    $(this).removeClass('modified-quantity');
+                    $(this).attr('title', 'Ordered: ' + orderedQty + ', Delivered: ' + quantity);
+                }
+                
+                totalQty += quantity;
+                totalAmount += quantity * rate;
+                totalVariance += variance;
+            });
+            
+            // Calculate total with balance (amount + balance)
+            var totalWithBalance = totalAmount + lastBalance;
+            
+            // Update total cells
+            row.find('.total-qty').text(totalQty);
+            row.find('.total-amount').text(totalAmount.toFixed(2));
+            row.find('.variance').text(totalVariance > 0 ? '+' + totalVariance : totalVariance);
+            row.find('.balance-col').last().text(totalWithBalance.toFixed(2)); // Update total column
+            
+            // Highlight the row to indicate changes
+            row.addClass('table-warning');
+            
+            // Update footer calculations
+            updateFooterCalculations();
+            updateSummary();
+        });
+        
+        // Handle save all button click
+        $('#saveAllBtn').on('click', function () {
+            var allOrders = [];
+            
+            // Collect all order deliveries
+            $('tbody tr').each(function () {
+                var orderId = $(this).data('order-id');
+                var orderItems = [];
+                
+                // Collect all quantities for this order
+                $(this).find('.quantity-input').each(function () {
+                    var materialId = $(this).data('material-id');
+                    var quantity = parseInt($(this).val()) || 0;
+                    
+                    orderItems.push({
+                        MaterialId: materialId,
+                        Quantity: quantity
+                    });
+                });
+                
+                allOrders.push({
+                    dealerId: orderId, // Using dealerId property to store orderId
+                    orderItems: orderItems
+                });
+            });
+            
+            // Show loading state
+            var saveBtn = $('#saveAllBtn');
+            var originalText = saveBtn.html();
+            saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            
+            // Send all data to server
+            $.ajax({
+                url: '@Url.Action("SaveExcelView", "OrderReconciliation")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(allOrders),
+                success: function (response) {
+                    saveBtn.prop('disabled', false).html(originalText);
+                    
+                    if (response.success) {
+                        // Reset all row highlighting on successful save
+                        $('tbody tr').removeClass('table-warning').addClass('table-success');
+                        setTimeout(function () {
+                            $('tbody tr').removeClass('table-success');
+                        }, 2000);
+                        
+                        // Update the original values of inputs
+                        $('.quantity-input').each(function() {
+                            var orderedQty = parseInt($(this).data('ordered-qty')) || 0;
+                            $(this).val(orderedQty);
+                            $(this).attr('value', orderedQty);
+                            $(this).removeClass('modified-quantity');
+                            $(this).attr('title', 'Ordered: ' + orderedQty + ', Delivered: ' + orderedQty);
+                        });
+                        
+                        // Show success message
+                        showNotification('All order quantities saved successfully!', 'success');
+                    } else {
+                        showNotification('Error saving orders: ' + response.message, 'error');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    saveBtn.prop('disabled', false).html(originalText);
+                    showNotification('Error saving orders. Please try again. ' + error, 'error');
+                }
+            });
+        });
+        
+        // Function to update all footer calculations
+        function updateFooterCalculations() {
+            // Get the number of material columns (excluding dealer, total qty, total amount, variance, and ordered qty columns)
+            var headerCells = $('thead tr th.material-col');
+            var materialCount = headerCells.length;
+            
+            // For each material column, calculate all footer values
+            for (var i = 0; i < materialCount; i++) {
+                var totalQuantity = 0;
+                
+                // Sum quantities for this material across all orders
+                $('tbody tr').each(function () {
+                    var input = $(this).find('.quantity-input').eq(i);
+                    var quantity = parseInt(input.val()) || 0;
+                    totalQuantity += quantity;
+                });
+                
+                // Update total quantity display
+                var totalQuantityCell = $('tfoot tr .total-quantity').eq(i);
+                totalQuantityCell.text(totalQuantity);
+            }
+        }
+        
+        // Function to update summary panel
+        function updateSummary() {
+            var totalItems = 0;
+            var totalVariance = 0;
+            var totalOrderedQty = 0;
+            var ordersWithDeliveries = 0;
+            
+            $('tbody tr').each(function () {
+                var hasDelivery = false;
+                var rowTotalVariance = 0;
+                var rowTotalQty = 0;
+                var rowTotalOrderedQty = 0;
+                
+                $(this).find('.quantity-input').each(function () {
+                    var quantity = parseInt($(this).val()) || 0;
+                    var orderedQty = parseInt($(this).data('ordered-qty')) || 0;
+                    var rate = parseFloat($(this).data('rate')) || 0;
+                    var variance = quantity - orderedQty;
+                    
+                    rowTotalQty += quantity;
+                    rowTotalVariance += variance;
+                    rowTotalOrderedQty += orderedQty;
+                    
+                    if (quantity > 0) {
+                        hasDelivery = true;
+                    }
+                });
+                
+                // Update totals for this row
+                $(this).find('.total-qty').text(rowTotalQty);
+                $(this).find('.variance').text(rowTotalVariance > 0 ? '+' + rowTotalVariance : rowTotalVariance);
+                // Update ordered qty cell (last column)
+                $(this).find('td').last().prev().prev().text(rowTotalOrderedQty);
+                
+                totalItems += rowTotalQty;
+                totalVariance += rowTotalVariance;
+                totalOrderedQty += rowTotalOrderedQty;
+                
+                if (hasDelivery) {
+                    ordersWithDeliveries++;
+                }
+            });
+            
+            $('#totalItems').text(totalItems);
+        }
+        
+        // Initialize row totals on page load
+        function initializeRowTotals() {
+            $('tbody tr').each(function () {
+                var totalQty = 0;
+                var totalAmount = 0;
+                var totalVariance = 0;
+                var totalOrderedQty = 0;
+                var lastBalance = parseFloat($(this).find('.balance-col').eq(0).text()) || 0; // Get balance from the row
+                
+                // Calculate totals based on initial ordered quantities
+                $(this).find('.quantity-input').each(function () {
+                    var quantity = parseInt($(this).val()) || 0;
+                    var rate = parseFloat($(this).data('rate')) || 0;
+                    var orderedQty = parseInt($(this).data('ordered-qty')) || 0;
+                    var variance = quantity - orderedQty;
+                    
+                    totalQty += quantity;
+                    totalAmount += quantity * rate;
+                    totalVariance += variance;
+                    totalOrderedQty += orderedQty;
+                });
+                
+                // Calculate total with balance (amount + balance)
+                var totalWithBalance = totalAmount + lastBalance;
+                
+                // Update total cells
+                $(this).find('.total-qty').text(totalQty);
+                $(this).find('.total-amount').text(totalAmount.toFixed(2));
+                $(this).find('.variance').text(totalVariance > 0 ? '+' + totalVariance : totalVariance);
+                // Update ordered qty cell (last column)
+                $(this).find('td').last().prev().prev().text(totalOrderedQty);
+                // Update total column
+                $(this).find('.balance-col').last().text(totalWithBalance.toFixed(2));
+            });
+        }
+        
+        // Toggle summary panel
+        window.toggleSummary = function() {
+            $('#summaryPanel').slideToggle();
+        }
+        
+        // Show notification
+        function showNotification(message, type) {
+            // Remove any existing notifications
+            $('.custom-notification').remove();
+            
+            var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            var notification = $('<div class="alert ' + alertClass + ' alert-dismissible fade show custom-notification" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 1050; min-width: 250px;">' +
+                                '<i class="fas ' + icon + '"></i> ' + message +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                                '<span aria-hidden="true">&times;</span>' +
+                                '</button>' +
+                                '</div>');
+            
+            $('body').append(notification);
+            
+            // Auto dismiss after 3 seconds
+            setTimeout(function() {
+                notification.alert('close');
+            }, 3000);
+        }
+        
+        // Initialize footer calculations and row totals on page load
+        initializeRowTotals();
+        updateFooterCalculations();
+        updateSummary();
+    });
+    
+    function exportToExcel() {
+        // Simple export to CSV functionality
+        var table = $('.excel-table')[0];
+        var csv = [];
+        var rows = table.querySelectorAll('tr');
+        
+        for (var i = 0; i < rows.length; i++) {
+            var row = [], cols = rows[i].querySelectorAll('td, th');
+            
+            for (var j = 0; j < cols.length; j++) {
+                // For quantity input cells, get the input value
+                var input = cols[j].querySelector('input');
+                var data = input ? input.value : cols[j].innerText;
+                data = data.replace(/"/g, '""');
+                row.push('"' + data + '"');
+            }
+            
+            csv.push(row.join(','));
+        }
+        
+        var csvString = csv.join('\n');
+        var blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        var url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'order_reconciliation_' + new Date().toISOString().slice(0,10) + '.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
