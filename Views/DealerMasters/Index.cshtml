@@ -1,57 +1,86 @@
+@model IEnumerable<Milk_Bakery.Models.DealerMaster>
+
 @{
     ViewData["Title"] = "Dealer Masters";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    // Create a dictionary to map customer IDs to customer names for easy lookup
+    var customerDictionary = new Dictionary<int, string>();
+    if (ViewBag.CustomerList != null)
+    {
+        foreach (var customer in ViewBag.CustomerList as IEnumerable<Milk_Bakery.Models.Customer_Master>)
+        {
+            customerDictionary[customer.Id] = customer.Name;
+        }
+    }
 }
 
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Dealer Masters</h1>
-        <a asp-action="Create" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-            <i class="fas fa-plus-circle fa-sm text-white-50"></i> Create New Dealer
-        </a>
-    </div>
-
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Dealer List</h6>
+<div class="w-full bg-white shadow-lg rounded-lg overflow-hidden mt-2">
+    <div class="bg-blue-500 px-2 py-2 flex items-center justify-between">
+        <h2 class="text-white text-2xl font-semibold">Dealer Master</h2>
+        <div class="flex space-x-2">
+            <a asp-action="UploadDealers" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn flex items-center justify-center">
+                <i class="fa fa-upload mr-1"></i> Upload
+            </a>
+            <a asp-action="AddOrEdit" asp-route-id="0" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn flex items-center justify-center">
+                <i class="fa fa-plus mr-1"></i> Add
+            </a>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
+    </div>
+    <div class="p-2">
+        <div class="w-screen-lg mt-2">
+            @if (ViewBag.Customers != null && ViewBag.Customers.Count > 1)
+            {
+                <div class="mb-4">
+                    <form method="get" class="flex items-center space-x-4">
+                        <label for="selectedCustomerId" class="text-gray-700 font-medium">Select Customer:</label>
+                        <select name="selectedCustomerId" id="selectedCustomerId" class="text-[13px] h-10 text-gray-700 w-64 border-2 px-2 rounded-sm">
+                            @foreach (SelectListItem customer in ViewBag.Customers)
+                            {
+                                if (!string.IsNullOrEmpty(customer.Value))
+                                {
+                                    <option value="@customer.Value" asp-selected="@(ViewBag.SelectedCustomerId?.ToString() == customer.Value)">@customer.Text</option>
+
+                                }
+                            }
+                        </select>
+                        <button type="submit" class="h-10 w-24 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn">Filter</button>
+                    </form>
+                </div>
+            }
+            <div class="table-responsive table-container max-h-screen overflow-y-auto">
+                <table class="w-full divide-y divide-gray-200" id="dataTable">
+                    <thead class="bg-gray-200 sticky top-0">
                         <tr>
-                            <th>ID</th>
-                            <th>Distributor ID</th>
-                            <th>Name</th>
-                            <th>Route Code</th>
-                            <th>City</th>
-                            <th>Phone No</th>
-                            <th>Email</th>
-                            <th>Orders</th>
-                            <th>Actions</th>
+                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Id</th>
+                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Customer Name</th>
+                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Name</th>
+                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Phone No</th>
+                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Orders</th>
+                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-white divide-y divide-gray-200">
                         @foreach (var item in Model)
                         {
                             <tr>
-                                <td>@item.Id</td>
-                                <td>@item.DistributorId</td>
-                                <td>@item.Name</td>
-                                <td>@item.RouteCode</td>
-                                <td>@item.City</td>
-                                <td>@item.PhoneNo</td>
-                                <td>@item.Email</td>
-                                <td>@item.OrderCount</td>
-                                <td>
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-circle btn-sm">
-                                        <i class="fas fa-info-circle"></i>
-                                    </a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-circle btn-sm">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-circle btn-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                                <td class="px-2 py-2 whitespace-nowrap">@item.Id</td>
+                                <td class="px-2 py-2 whitespace-nowrap">
+                                    @if (customerDictionary.ContainsKey(item.DistributorId))
+                                    {
+                                        @customerDictionary[item.DistributorId]
+                                    }
+                                    else
+                                    {
+                                        @item.DistributorId
+                                    }
+                                </td>
+                                <td class="px-2 py-2 whitespace-nowrap">@item.Name</td>
+                                <td class="px-2 py-2 whitespace-nowrap">@item.PhoneNo</td>
+                                <td class="px-2 py-2 whitespace-nowrap">@item.DealerBasicOrders.Count</td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <a asp-action="AddOrEdit" asp-route-id="@item.Id" class="h-10 w-10 rounded-sm shadow-md text-white text-[16px] hover:bg-yellow-700 bg-yellow-600 btn"><i class="fas fa-pencil-alt"></i> </a> |
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="h-10 w-10 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn" onclick="return confirmation(this);"><i class="fas fa-trash-alt"></i></a>
                                 </td>
                             </tr>
                         }
@@ -65,10 +94,19 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            $('#dataTable').DataTable({
-                "order": [[0, "desc"]],
-                "pageLength": 25
-            });
+            // Check if DataTable is already initialized
+            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                // If already initialized, just update the settings
+                var table = $('#dataTable').DataTable();
+                table.order([0, "desc"]).draw();
+                table.page.len(25).draw();
+            } else {
+                // If not initialized, initialize it
+                $('#dataTable').DataTable({
+                    "order": [[0, "desc"]],
+                    "pageLength": 25
+                });
+            }
         });
     </script>
 }

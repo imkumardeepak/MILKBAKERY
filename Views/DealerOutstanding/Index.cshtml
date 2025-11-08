@@ -1,0 +1,366 @@
+@{
+    ViewData["Title"] = "Dealer Outstanding";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-2">
+    <div class="card mb-2">
+        <div class="card-header text-white p-2" style="background-color:#007bff;">
+            <div class="d-flex align-items-center">
+                <a href="@Url.Action("Index", "Home")" class="btn btn-link text-white p-0 mr-2">
+                    <i class="fa fa-arrow-left"></i>
+                </a>
+                <h5 class="mb-0 text-white font-weight-bold">Dealer Outstanding</h5>
+                <a href="@Url.Action("OutstandingReport", "DealerOutstanding")" class="btn btn-light btn-sm ml-auto">
+                    <i class="fas fa-file-alt"></i> <span class="d-none d-sm-inline">Report</span>
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-2">
+            <div class="row mb-2">
+                <div class="col-12 col-md-6 mb-2 mb-md-0">
+                    <label for="distributorFilter" class="form-label font-weight-bold small mb-1">Select Distributor:</label>
+                    <select id="distributorFilter" class="form-control form-control-sm select2">
+                        <option value="">-- Select Distributor --</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 mb-2 mb-md-0">
+                    <div class="d-flex align-items-end h-100">
+                        <button id="filterBtn" class="btn btn-primary btn-sm" disabled>
+                            <i class="fas fa-filter"></i> <span class="d-none d-sm-inline">Filter</span>
+                        </button>
+                        <button id="resetBtn" class="btn btn-outline-secondary btn-sm ml-2">
+                            <i class="fas fa-redo"></i> <span class="d-none d-sm-inline">Reset</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table id="outstandingTable" class="table table-striped table-bordered table-sm" style="width:100%">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th class="d-none d-md-table-cell">Dealer Name</th>
+                                    <th class="d-md-none">Dealer</th>
+                                    <th class="d-none d-lg-table-cell">Last Invoice Date</th>
+                                    <th>Invoice Amount</th>
+                                    <th>Outstanding</th>
+                                    <th>Received</th>
+                                    <th class="d-none d-lg-table-cell">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="7" class="text-center small">Select a distributor and click Filter</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2 with compact settings
+            $('.select2').select2({
+                width: '100%',
+                placeholder: "-- Select Distributor --",
+                allowClear: true
+            });
+
+            // Load distributors
+            loadDistributors();
+
+            // Filter button click event
+            $('#filterBtn').on('click', function () {
+                loadData();
+            });
+
+            // Reset button click event
+            $('#resetBtn').on('click', function () {
+                resetFilters();
+            });
+
+            // Distributor filter change event
+            $('#distributorFilter').on('change', function () {
+                if ($(this).val()) {
+                    $('#filterBtn').prop('disabled', false);
+                } else {
+                    $('#filterBtn').prop('disabled', true);
+                }
+            });
+
+            function loadDistributors() {
+                $.ajax({
+                    url: '@Url.Action("GetDistributors", "DealerOutstanding")',
+                    type: 'GET',
+                    success: function (result) {
+                        if (result.success) {
+                            var select = $('#distributorFilter');
+                            select.empty().append('<option value="">-- Select Distributor --</option>');
+
+                            $.each(result.distributors, function (index, distributor) {
+                                select.append('<option value="' + distributor.id + '">' + distributor.name + '</option>');
+                            });
+                        }
+                    },
+                    error: function () {
+                        console.log('Error loading distributors');
+                    }
+                });
+            }
+
+            function loadData() {
+                var distributorId = $('#distributorFilter').val();
+
+                // Validate that distributor is selected
+                if (!distributorId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Filter',
+                        text: 'Please select a distributor to load data.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Show loading indicator
+                var tbody = $('#outstandingTable tbody');
+                tbody.empty().append('<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div><p class="small mb-0 mt-1">Loading data...</p></td></tr>');
+
+                $.ajax({
+                    url: '@Url.Action("GetDealerOutstandings", "DealerOutstanding")',
+                    type: 'GET',
+                    data: {
+                        distributorId: distributorId
+                    },
+                    success: function (result) {
+                        if (result.success) {
+                            tbody.empty();
+
+                            if (result.outstandings && result.outstandings.length > 0) {
+                                var totalInvoice = 0;
+                                var totalOutstanding = 0;
+                                var totalReceived = 0;
+
+                                $.each(result.outstandings, function (index, item) {
+                                    // Note: The API returns different field names than what's expected
+                                    // We'll adjust based on what we receive from the backend
+                                    var dealerId = item.id || item.dealerId;
+                                    var dealerName = item.name || item.dealerName;
+                                    var deliverDate = item.deliverDate || '';
+                                    var invoiceAmount = item.invoiceAmount || 0;
+                                    var outstandingAmount = item.balanceAmount || item.outstandingAmount || 0;
+                                    var receivedAmount = item.paidAmount || item.receivedAmount || 0;
+
+                                    totalInvoice += invoiceAmount;
+                                    totalOutstanding += outstandingAmount;
+                                    totalReceived += receivedAmount;
+
+                                    var row = '<tr data-dealer-id="' + dealerId + '">' +
+                                        '<td class="d-none d-md-table-cell">' + dealerName + '</td>' +
+                                        '<td class="d-md-none">' + dealerName + '</td>' +
+                                        '<td class="d-none d-lg-table-cell">' + deliverDate + '</td>' +
+                                        '<td class="text-right">₹' + invoiceAmount.toFixed(2) + '</td>' +
+                                        '<td class="text-right ' + (outstandingAmount > 0 ? 'text-danger' : 'text-success') + '">₹' + outstandingAmount.toFixed(2) + '</td>' +
+                                        '<td>' +
+                                        '<div class="input-group input-group-sm">' +
+                                        '<input type="number" class="form-control form-control-sm received-amount p-1" ' +
+                                        'value="' + receivedAmount + '" min="0" step="0.01" style="width: 80px; height: 30px; font-size: 0.8rem;">' +
+                                        '</div>' +
+                                        '</td>' +
+                                        '<td class="text-center">' +
+                                        '<button class="btn btn-success btn-sm save-received-btn d-lg-none" type="button" title="Save">' +
+                                        '<i class="fas fa-save"></i>' +
+                                        '</button>' +
+                                        '<button class="btn btn-success btn-sm save-received-btn d-none d-lg-inline" type="button" title="Save">' +
+                                        '<i class="fas fa-save"></i>' +
+                                        '</button>' +
+                                        '</td>' +
+                                        '</tr>';
+                                    tbody.append(row);
+                                });
+
+
+                            } else {
+                                tbody.append('<tr><td colspan="7" class="text-center small">No data found</td></tr>');
+                            }
+                        } else {
+                            tbody.empty().append('<tr><td colspan="7" class="text-center small text-danger">Error: ' + result.message + '</td></tr>');
+                        }
+                    },
+                    error: function () {
+                        tbody.empty().append('<tr><td colspan="7" class="text-center small text-danger">Error loading data</td></tr>');
+                    }
+                });
+            }
+
+            function resetFilters() {
+                // Reset distributor filter
+                $('#distributorFilter').val('').trigger('change');
+                $('#filterBtn').prop('disabled', true);
+                
+                // Clear table
+                var tbody = $('#outstandingTable tbody');
+                tbody.empty().append('<tr><td colspan="7" class="text-center small">Select a distributor and click Filter</td></tr>');
+            }
+
+            // Handle save received amount button click
+            $(document).on('click', '.save-received-btn', function () {
+                var row = $(this).closest('tr');
+                var dealerId = row.data('dealer-id');
+                var receivedAmount = parseFloat(row.find('.received-amount').val()) || 0;
+
+                if (dealerId && receivedAmount >= 0) {
+                    // Show loading indicator on button
+                    var button = $(this);
+                    var originalHtml = button.html();
+                    button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+                    button.prop('disabled', true);
+
+                    $.ajax({
+                        url: '@Url.Action("SaveReceivedAmount", "DealerOutstanding")',
+                        type: 'POST',
+                        data: {
+                            dealerId: dealerId,
+                            receivedAmount: receivedAmount
+                        },
+                        success: function (result) {
+                            if (result.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Saved!',
+                                    text: result.message,
+                                    confirmButtonText: 'OK',
+                                    timer: 1500,
+                                    timerProgressBar: true,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    // Reload data after successful save
+                                    loadData();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: result.message,
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred while saving the received amount.',
+                                confirmButtonText: 'OK'
+                            });
+                        },
+                        complete: function () {
+                            // Reset button state
+                            button.html(originalHtml);
+                            button.prop('disabled', false);
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Input',
+                        text: 'Please enter a valid received amount.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        });
+    </script>
+
+    <style>
+        /* Compact styling for mobile */
+        @@media (max-width: 575.98px) {
+            .card-body {
+                padding: 0.5rem !important;
+            }
+
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+
+            .mb-2 {
+                margin-bottom: 0.5rem !important;
+            }
+
+            .p-2 {
+                padding: 0.5rem !important;
+            }
+
+            .table th, .table td {
+                padding: 0.25rem !important;
+                font-size: 0.75rem;
+            }
+
+            .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .input-group .btn {
+                padding: 0.1rem 0.25rem;
+                font-size: 0.7rem;
+            }
+
+            .form-control {
+                padding: 0.1rem 0.25rem;
+                font-size: 0.75rem;
+                height: calc(1.5em + 0.2rem + 2px);
+            }
+
+            .small, small {
+                font-size: 0.7rem !important;
+            }
+        }
+
+        /* Additional compact styles for very small screens */
+        @@media (max-width: 375px) {
+            .table th, .table td {
+                padding: 0.15rem !important;
+                font-size: 0.7rem;
+            }
+
+            .btn {
+                padding: 0.15rem 0.35rem;
+                font-size: 0.65rem;
+            }
+
+            .input-group .btn {
+                padding: 0.05rem 0.2rem;
+                font-size: 0.6rem;
+            }
+
+            .form-control {
+                padding: 0.05rem 0.2rem;
+                font-size: 0.65rem;
+                height: calc(1.5em + 0.1rem + 2px);
+            }
+        }
+
+        /* Right align amount columns */
+        .text-right {
+            text-align: right !important;
+        }
+
+        /* Highlight outstanding amounts */
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .text-success {
+            color: #28a745 !important;
+        }
+    </style>
+}

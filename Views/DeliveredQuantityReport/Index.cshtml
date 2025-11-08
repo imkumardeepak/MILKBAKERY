@@ -1,0 +1,479 @@
+@model Milk_Bakery.ViewModels.DeliveredQuantityReportViewModel
+@{
+    ViewData["Title"] = "Delivered Quantity Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Delivered Quantity Report</h1>
+    </div>
+
+    <!-- Report Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Report Filters</h6>
+        </div>
+        <div class="card-body">
+            <form asp-action="GenerateReport" method="post" id="reportForm">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label asp-for="FromDate" class="control-label font-weight-bold">From Date</label>
+                            <input asp-for="FromDate" type="date" class=" form-control"
+                                value="@(Model.FromDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" />
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label asp-for="ToDate" class="control-label font-weight-bold">To Date</label>
+                            <input asp-for="ToDate" type="date" class="form-control"
+                                value="@(Model.ToDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" />
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label asp-for="CustomerName" class="control-label font-weight-bold">Customer</label>
+                            <select asp-for="CustomerName" class="form-control select2" asp-items="ViewBag.Customers" id="customerSelect">
+                                <option value="">-- Select Customer --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label asp-for="DealerId" class="control-label font-weight-bold">Dealer</label>
+                            <select asp-for="DealerId" class="form-control select2" id="dealerSelect" disabled>
+                                <option value="">-- Select Customer First --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label class="control-label font-weight-bold">Options</label>
+                            <div class="custom-control custom-checkbox">
+                                <input asp-for="ShowOnlyVariance" class="custom-control-input" />
+                                <label asp-for="ShowOnlyVariance" class="custom-control-label">Show Only
+                                    Variance</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-chart-bar"></i> Generate Report
+                            </button>
+                            @if (Model.ReportItems.Any())
+                            {
+                                <button type="button" id="exportButton" class="btn btn-success">
+                                    <i class="fas fa-file-excel"></i> Export to Excel
+                                </button>
+                                <button type="button" id="exportPivotButton" class="btn btn-info">
+                                    <i class="fas fa-file-excel"></i> Export Pivot to Excel
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Report Results -->
+    @if (Model.ReportItems.Any())
+    {
+        <!-- Summary Cards -->
+        <div class="row">
+            @{
+                var totalOrdered = Model.ReportItems.Sum(r => r.OrderedQuantity);
+                var totalDelivered = Model.ReportItems.Sum(r => r.DeliveredQuantity);
+                // Changed to Delivered - Ordered to show positive values when delivered exceeds ordered
+                var totalVariance = totalDelivered - totalOrdered;
+                var totalOrderedAmount = Model.ReportItems.Sum(r => r.OrderedAmount);
+                var totalDeliveredAmount = Model.ReportItems.Sum(r => r.DeliveredAmount);
+                // Changed to Delivered - Ordered for amount as well
+                var totalAmountVariance = totalDeliveredAmount - totalOrderedAmount;
+            }
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Ordered</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">@totalOrdered.ToString("N0")</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Delivered</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">@totalDelivered.ToString("N0")</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-truck-loading fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div
+                    class="card border-left-@(totalVariance == 0 ? "secondary" : totalVariance > 0 ? "success" : "danger") shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div
+                                    class="text-xs font-weight-bold text-@(totalVariance == 0 ? "secondary" : totalVariance > 0 ? "success" : "danger") text-uppercase mb-1">
+                                    Quantity Variance</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">@(totalVariance > 0 ? "+" : "")@totalVariance.ToString("N0")</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-balance-scale fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div
+                    class="card border-left-@(totalAmountVariance == 0 ? "secondary" : totalAmountVariance > 0 ? "success" : "danger") shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div
+                                    class="text-xs font-weight-bold text-@(totalAmountVariance == 0 ? "secondary" : totalAmountVariance > 0 ? "success" : "danger") text-uppercase mb-1">
+                                    Amount Variance</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">@(totalAmountVariance > 0 ? "+" : "")₹@totalAmountVariance.ToString("N2")
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Table Grouped by Dealer -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Delivered Quantity Details</h6>
+                <div class="small">Total Records: @Model.ReportItems.Count</div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Dealer</th>
+                                <th>Order Date</th>
+                                <th>Short Code</th>
+                                <th>Ordered Qty</th>
+                                <th>Delivered Qty</th>
+                                <th>Qty Variance</th>
+                                <th>Unit Price</th>
+                                <th>Ordered Amount</th>
+                                <th>Delivered Amount</th>
+                                <th>Amount Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var dealers = Model.ReportItems.GroupBy(r => r.DealerName);
+                                var grandTotalOrdered = 0;
+                                var grandTotalDelivered = 0;
+                                var grandTotalOrderedAmount = 0m;
+                                var grandTotalDeliveredAmount = 0m;
+                            }
+
+                            @foreach (var dealerGroup in dealers)
+                            {
+                                var dealerTotalOrdered = 0;
+                                var dealerTotalDelivered = 0;
+                                var dealerTotalOrderedAmount = 0m;
+                                var dealerTotalDeliveredAmount = 0m;
+
+                                @foreach (var item in dealerGroup)
+                                {
+                                    dealerTotalOrdered += item.OrderedQuantity;
+                                    dealerTotalDelivered += item.DeliveredQuantity;
+                                    dealerTotalOrderedAmount += item.OrderedAmount;
+                                    dealerTotalDeliveredAmount += item.DeliveredAmount;
+
+                                    grandTotalOrdered += item.OrderedQuantity;
+                                    grandTotalDelivered += item.DeliveredQuantity;
+                                    grandTotalOrderedAmount += item.OrderedAmount;
+                                    grandTotalDeliveredAmount += item.DeliveredAmount;
+
+                                    // Calculate variance as Delivered - Ordered
+                                    var quantityVariance = item.DeliveredQuantity - item.OrderedQuantity;
+                                    var amountVariance = item.DeliveredAmount - item.OrderedAmount;
+
+                                    <tr>
+
+                                        <td>@item.DealerName</td>
+                                        <td>@item.OrderDate.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.ShortCode</td>
+                                        <td class="text-right">@item.OrderedQuantity.ToString("N0")</td>
+                                        <td class="text-right">@item.DeliveredQuantity.ToString("N0")</td>
+                                        <td
+                                            class="text-right font-weight-bold @(quantityVariance == 0 ? "text-secondary" : quantityVariance > 0 ? "text-success" : "text-danger")">
+                                            @(quantityVariance > 0 ? "+" : "")@quantityVariance.ToString("N0")
+                                        </td>
+                                        <td class="text-right">₹@item.UnitPrice.ToString("F2")</td>
+                                        <td class="text-right">₹@item.OrderedAmount.ToString("F2")</td>
+                                        <td class="text-right">₹@item.DeliveredAmount.ToString("F2")</td>
+                                        <td
+                                            class="text-right font-weight-bold  @(amountVariance == 0 ? "text-secondary" : amountVariance > 0 ? "text-success" : "text-danger")">
+                                            @(amountVariance > 0 ? "+" : "")₹@amountVariance.ToString("F2")
+                                        </td>
+                                    </tr>
+                                }
+
+                                <!-- Dealer Total Row -->
+                                <tr class="table-warning font-weight-bold">
+                                    <td colspan="3">Dealer Total: @dealerGroup.Key</td>
+                                    <td class="text-right">@dealerTotalOrdered.ToString("N0")</td>
+                                    <td class="text-right">@dealerTotalDelivered.ToString("N0")</td>
+                                    <!-- Changed to Delivered - Ordered -->
+                                    @{
+                                        var dealerQuantityVariance = dealerTotalDelivered - dealerTotalOrdered;
+                                    }
+                                    <td class="text-right font-weight-bold @(dealerQuantityVariance == 0 ? "text-secondary" : dealerQuantityVariance > 0 ? "text-success" : "text-danger")">@(dealerQuantityVariance > 0 ? "+" : "")@dealerQuantityVariance.ToString("N0")</td>
+                                    <td></td>
+                                    <td class="text-right">₹@dealerTotalOrderedAmount.ToString("F2")</td>
+                                    <td class="text-right">₹@dealerTotalDeliveredAmount.ToString("F2")</td>
+                                    <!-- Changed to Delivered - Ordered for amount -->
+                                    @{
+                                        var dealerAmountVariance = dealerTotalDeliveredAmount - dealerTotalOrderedAmount;
+                                    }
+                                    <td class="text-right font-weight-bold @(dealerAmountVariance == 0 ? "text-secondary" : dealerAmountVariance > 0 ? "text-success" : "text-danger")">@(dealerAmountVariance > 0 ? "+" : "")₹@dealerAmountVariance.ToString("F2")</td>
+                                </tr>
+                            }
+
+                            <!-- Grand Total Row -->
+                            <tr class="table-primary font-weight-bold">
+                                <td colspan="3">Grand Total</td>
+                                <td class="text-right">@grandTotalOrdered.ToString("N0")</td>
+                                <td class="text-right">@grandTotalDelivered.ToString("N0")</td>
+                                <!-- Changed to Delivered - Ordered -->
+                                @{
+                                    var grandQuantityVariance = grandTotalDelivered - grandTotalOrdered;
+                                }
+                                <td class="text-right font-weight-bold @(grandQuantityVariance == 0 ? "text-secondary" : grandQuantityVariance > 0 ? "text-success" : "text-danger")">@(grandQuantityVariance > 0 ? "+" : "")@grandQuantityVariance.ToString("N0")</td>
+                                <td></td>
+                                <td class="text-right">₹@grandTotalOrderedAmount.ToString("F2")</td>
+                                <td class="text-right">₹@grandTotalDeliveredAmount.ToString("F2")</td>
+                                <!-- Changed to Delivered - Ordered for amount -->
+                                @{
+                                    var grandAmountVariance = grandTotalDeliveredAmount - grandTotalOrderedAmount;
+                                }
+                                <td class="text-right font-weight-bold @(grandAmountVariance == 0 ? "text-secondary" : grandAmountVariance > 0 ? "text-success" : "text-danger")">@(grandAmountVariance > 0 ? "+" : "")₹@grandAmountVariance.ToString("F2")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.FromDate.HasValue && Model.ToDate.HasValue)
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No data found for the selected filters.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2
+            $('.select2').select2();
+
+            // Initialize DataTable
+            if ($('#reportTable').length) {
+                $('#reportTable').DataTable({
+                    "order": [[2, "desc"]], // Sort by Order Date descending
+                    "pageLength": 25,
+                    "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                    "responsive": true,
+                    "dom": 'Bfrtip',
+                    "buttons": [
+                        'copy', 'csv', 'excel', 'pdf', 'print'
+                    ]
+                });
+            }
+
+            // Set default dates to current date if not set
+            if (!$('#FromDate').val()) {
+                var today = new Date().toISOString().split('T')[0];
+                $('#FromDate').val(today);
+            }
+            if (!$('#ToDate').val()) {
+                var today = new Date().toISOString().split('T')[0];
+                $('#ToDate').val(today);
+            }
+
+            // Handle customer selection change
+            $('#customerSelect').on('change', function () {
+                var customerName = $(this).val();
+                var dealerSelect = $('#dealerSelect');
+                
+                // Clear and disable dealer dropdown
+                dealerSelect.html('<option value="">Loading...</option>');
+                dealerSelect.prop('disabled', true);
+                
+                if (customerName) {
+                    // Load dealers for the selected customer
+                    $.ajax({
+                        url: '@Url.Action("GetDealersByCustomer", "DeliveredQuantityReport")',
+                        type: 'GET',
+                        data: { customerName: customerName },
+                        success: function (result) {
+                            dealerSelect.html('<option value="">All Dealers</option>');
+                            
+                            if (result.success && result.dealers && result.dealers.length > 0) {
+                                $.each(result.dealers, function (index, dealer) {
+                                    if (dealer.id !== 0) { // Skip "All Dealers" option as we already added it
+                                        dealerSelect.append('<option value="' + dealer.id + '">' + dealer.name + '</option>');
+                                    }
+                                });
+                                dealerSelect.prop('disabled', false);
+                            } else {
+                                dealerSelect.html('<option value="">No dealers found</option>');
+                            }
+                        },
+                        error: function () {
+                            dealerSelect.html('<option value="">Error loading dealers</option>');
+                        }
+                    });
+                } else {
+                    dealerSelect.html('<option value="">-- Select Customer First --</option>');
+                }
+            });
+
+            // Handle export button click
+            $('#exportButton').click(function () {
+                // Create a temporary form for export
+                var exportForm = $('<form>', {
+                    'action': '@Url.Action("ExportToExcel")',
+                    'method': 'POST'
+                }).append('@Html.AntiForgeryToken()');
+
+                // Add form data
+                var fromDate = $('#FromDate').val();
+                var toDate = $('#ToDate').val();
+                var customerName = $('#CustomerName').val();
+                var dealerId = $('#DealerId').val();
+                var showOnlyVariance = $('#ShowOnlyVariance').is(':checked');
+
+                if (fromDate) {
+                    exportForm.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'FromDate',
+                        'value': fromDate
+                    }));
+                }
+
+                if (toDate) {
+                    exportForm.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'ToDate',
+                        'value': toDate
+                    }));
+                }
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'CustomerName',
+                    'value': customerName
+                }));
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'DealerId',
+                    'value': dealerId
+                }));
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'ShowOnlyVariance',
+                    'value': showOnlyVariance
+                }));
+
+                // Submit the form
+                $('body').append(exportForm);
+                exportForm.submit();
+                exportForm.remove();
+            });
+
+            // Handle pivot export button click
+            $('#exportPivotButton').click(function () {
+                // Create a temporary form for pivot export
+                var exportForm = $('<form>', {
+                    'action': '@Url.Action("ExportToExcelPivot")',
+                    'method': 'POST'
+                }).append('@Html.AntiForgeryToken()');
+
+                // Add form data
+                var fromDate = $('#FromDate').val();
+                var toDate = $('#ToDate').val();
+                var customerName = $('#CustomerName').val();
+                var dealerId = $('#DealerId').val();
+                var showOnlyVariance = $('#ShowOnlyVariance').is(':checked');
+
+                if (fromDate) {
+                    exportForm.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'FromDate',
+                        'value': fromDate
+                    }));
+                }
+
+                if (toDate) {
+                    exportForm.append($('<input>', {
+                        'type': 'hidden',
+                        'name': 'ToDate',
+                        'value': toDate
+                    }));
+                }
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'CustomerName',
+                    'value': customerName
+                }));
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'DealerId',
+                    'value': dealerId
+                }));
+
+                exportForm.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'ShowOnlyVariance',
+                    'value': showOnlyVariance
+                }));
+
+                // Submit the form
+                $('body').append(exportForm);
+                exportForm.submit();
+                exportForm.remove();
+            });
+        });
+    </script>
+}

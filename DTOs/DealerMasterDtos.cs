@@ -10,7 +10,6 @@ namespace Milk_Bakery.DTOs
         public string Name { get; set; } = string.Empty;
         public string RouteCode { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
         public string PhoneNo { get; set; } = string.Empty;
         public string Email { get; set; } = "N/A";
         public List<DealerBasicOrderResponseDto> DealerBasicOrders { get; set; } = new List<DealerBasicOrderResponseDto>();
@@ -33,10 +32,6 @@ namespace Milk_Bakery.DTOs
         [Required(ErrorMessage = "Address is required")]
         [StringLength(500, ErrorMessage = "Address cannot exceed 500 characters")]
         public string Address { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "City is required")]
-        [StringLength(100, ErrorMessage = "City cannot exceed 100 characters")]
-        public string City { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Phone No is required")]
         [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number should have exactly 10 digits")]
@@ -68,10 +63,6 @@ namespace Milk_Bakery.DTOs
         [StringLength(500, ErrorMessage = "Address cannot exceed 500 characters")]
         public string Address { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "City is required")]
-        [StringLength(100, ErrorMessage = "City cannot exceed 100 characters")]
-        public string City { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "Phone No is required")]
         [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number should have exactly 10 digits")]
         public string PhoneNo { get; set; } = string.Empty;
@@ -88,7 +79,6 @@ namespace Milk_Bakery.DTOs
         public int DistributorId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string RouteCode { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
         public string PhoneNo { get; set; } = string.Empty;
         public string Email { get; set; } = "N/A";
         public int OrderCount { get; set; }

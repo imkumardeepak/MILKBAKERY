@@ -20,6 +20,14 @@ build_property._RazorSourceGeneratorDebug =
 build_property.EffectiveAnalysisLevelStyle = 7.0
 build_property.EnableCodeStyleSeverity = 
 
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/BackgroundServiceTest/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja2dyb3VuZFNlcnZpY2VUZXN0XEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/BackgroundServiceTest/ViewInvoicesWithSetFlagZero.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQmFja2dyb3VuZFNlcnZpY2VUZXN0XFZpZXdJbnZvaWNlc1dpdGhTZXRGbGFnWmVyby5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CategoryMasters/AddOrEdit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2F0ZWdvcnlNYXN0ZXJzXEFkZE9yRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -46,6 +54,62 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Company_SegementMap/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29tcGFueV9TZWdlbWVudE1hcFxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/ConsolidatedOrders/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29uc29saWRhdGVkT3JkZXJzXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesManages/BulkInwardEntry.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzTWFuYWdlc1xCdWxrSW53YXJkRW50cnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesManages/CreateBulkOpeningEntry.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzTWFuYWdlc1xDcmVhdGVCdWxrT3BlbmluZ0VudHJ5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesManages/CreditDebitRecords.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzTWFuYWdlc1xDcmVkaXREZWJpdFJlY29yZHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesManages/DebitCreditEntry.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzTWFuYWdlc1xEZWJpdENyZWRpdEVudHJ5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesManages/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzTWFuYWdlc1xEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesManages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzTWFuYWdlc1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesManages/UploadBulkInwardEntry.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzTWFuYWdlc1xVcGxvYWRCdWxrSW53YXJkRW50cnkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesManages/UploadBulkOpeningEntry.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzTWFuYWdlc1xVcGxvYWRCdWxrT3BlbmluZ0VudHJ5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesOutwardManages/BulkOutwardEntry.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzT3V0d2FyZE1hbmFnZXNcQnVsa091dHdhcmRFbnRyeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesOutwardManages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzT3V0d2FyZE1hbmFnZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesOutwardManages/UploadBulkOutwardEntry.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzT3V0d2FyZE1hbmFnZXNcVXBsb2FkQnVsa091dHdhcmRFbnRyeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesTrackingReport/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzVHJhY2tpbmdSZXBvcnRcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesTrackingReport/_ReportTable.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3JhdGVzVHJhY2tpbmdSZXBvcnRcX1JlcG9ydFRhYmxlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CratesTypes/AddOrEdit.cshtml]
@@ -76,6 +140,14 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJTZWdlbWVudE1hcHNcVXBsb2FkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CustomerSegmentMapping/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJTZWdtZW50TWFwcGluZ1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/CustomerSegmentMapping/_MappingTable.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJTZWdtZW50TWFwcGluZ1xfTWFwcGluZ1RhYmxlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Customer_Master/AddOrEdit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJfTWFzdGVyXEFkZE9yRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -92,40 +164,60 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdFRyYW5zXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerBasicOrders/Create.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyQmFzaWNPcmRlcnNcQ3JlYXRlLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerBasicOrders/Details.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyQmFzaWNPcmRlcnNcRGV0YWlscy5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerBasicOrders/Edit.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyQmFzaWNPcmRlcnNcRWRpdC5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerBasicOrders/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyQmFzaWNPcmRlcnNcSW5kZXguY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
-
-[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerMasters/Create.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyTWFzdGVyc1xDcmVhdGUuY3NodG1s
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerMasters/AddOrEdit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyTWFzdGVyc1xBZGRPckVkaXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerMasters/Delete.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyTWFzdGVyc1xEZWxldGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerMasters/Details.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyTWFzdGVyc1xEZXRhaWxzLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerMasters/Edit.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyTWFzdGVyc1xFZGl0LmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerMasters/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyTWFzdGVyc1xJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerMasters/UploadDealers.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyTWFzdGVyc1xVcGxvYWREZWFsZXJzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerOrders/DispatchRouteSheet.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3JkZXJzXERpc3BhdGNoUm91dGVTaGVldC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerOrders/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3JkZXJzXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerOrders/_DealerOrdersPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3JkZXJzXF9EZWFsZXJPcmRlcnNQYXJ0aWFsLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerOrders/_ExcelViewPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3JkZXJzXF9FeGNlbFZpZXdQYXJ0aWFsLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerOutstanding/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3V0c3RhbmRpbmdcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DealerOutstanding/OutstandingReport.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVhbGVyT3V0c3RhbmRpbmdcT3V0c3RhbmRpbmdSZXBvcnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DeliveredQuantityReport/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVsaXZlcmVkUXVhbnRpdHlSZXBvcnRcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DeliveredQuantity/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVsaXZlcmVkUXVhbnRpdHlcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DeliveredQuantity/_DeliveredQuantityExcelPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVsaXZlcmVkUXVhbnRpdHlcX0RlbGl2ZXJlZFF1YW50aXR5RXhjZWxQYXJ0aWFsLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DeliveredQuantity/_DeliveredQuantityPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGVsaXZlcmVkUXVhbnRpdHlcX0RlbGl2ZXJlZFF1YW50aXR5UGFydGlhbC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/DepartmentMasters/AddOrEdit.cshtml]
@@ -164,6 +256,14 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRW1wVG9DdXN0TWFwc1xJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/GatePass/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcR2F0ZVBhc3NcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/GatePass/PrintGatePass.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcR2F0ZVBhc3NcUHJpbnRHYXRlUGFzcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/GradeMasters/AddOrEdit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcR3JhZGVNYXN0ZXJzXEFkZE9yRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -176,12 +276,24 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxDaGFuZ2VQYXNzd29yZC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Home/Index - New.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleCAtIE5ldy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Home/Index_old.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleF9vbGQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Home/Login.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Home/Login_old.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxMb2dpbl9vbGQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Home/Privacy.cshtml]
@@ -238,6 +350,18 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/OrderProcess/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcT3JkZXJQcm9jZXNzXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/OrderReconciliation/DispatchRouteSheet.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcT3JkZXJSZWNvbmNpbGlhdGlvblxEaXNwYXRjaFJvdXRlU2hlZXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/OrderReconciliation/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcT3JkZXJSZWNvbmNpbGlhdGlvblxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/OrderReconciliation/_OrderReconciliationExcelPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcT3JkZXJSZWNvbmNpbGlhdGlvblxfT3JkZXJSZWNvbmNpbGlhdGlvbkV4Y2VsUGFydGlhbC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Outstanding/Index.cshtml]
@@ -304,6 +428,18 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUmVQcm9jZXNzXF9SZUZpbGVHZW5lcmF0aW9uLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/RoleMaster/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUm9sZU1hc3RlclxDcmVhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/RoleMaster/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUm9sZU1hc3RlclxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/RoleMaster/Manage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUm9sZU1hc3RlclxNYW5hZ2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/RouteMasters/AddOrEdit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUm91dGVNYXN0ZXJzXEFkZE9yRWRpdC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -332,8 +468,36 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2VnZW1lbnRNYXN0ZXJzXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Shared/Components/Menu/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNcTWVudVxEZWZhdWx0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Shared/_CommonModals.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9Db21tb25Nb2RhbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Shared/_LayoutHead.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRIZWFkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Shared/_LayoutScripts.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRTY3JpcHRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Shared/_Layout_old.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRfb2xkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Shared/_Navbar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZiYXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Shared/_Sidebar.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9TaWRlYmFyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Shared/_ValidationScriptsPartial.cshtml]
@@ -374,6 +538,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/Users/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlcnNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/VarianceOrderReport/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVmFyaWFuY2VPcmRlclJlcG9ydFxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/PROJECT/HALDIRAM/Milk&Bakery/Milk&Bakery/Views/VisitEnteries/Create.cshtml]

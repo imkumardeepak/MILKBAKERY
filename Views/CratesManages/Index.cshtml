@@ -1,0 +1,223 @@
+@model IEnumerable<Milk_Bakery.Models.CratesManage>
+
+@{
+    ViewData["Title"] = "Crates Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card-header-custom {
+        background-color: #FC2947;
+        color: white;
+        padding: 0.75rem 1rem;
+    }
+
+    .action-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .action-card .card-header {
+        font-weight: 600;
+        border-bottom: none;
+    }
+
+    .action-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .action-icon {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .table-container {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        overflow: hidden;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .table-header {
+        background-color: #343a40;
+        color: white;
+    }
+
+    .dataTables_wrapper {
+        padding: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .action-card .card-body {
+            padding: 1rem;
+        }
+
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+    }
+</style>
+
+<div class="container-fluid p-2">
+    <!-- Action Cards -->
+    <div class="row mb-4 g-3">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary action-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-plus-circle action-icon"></i> Opening Entry</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Set initial opening balances for crates by segment and customer.</p>
+                    <a asp-action="CreateBulkOpeningEntry" class="btn btn-light btn-sm w-100 mb-2">
+                        <i class="fas fa-plus me-1"></i>Manual Entry
+                    </a>
+                    <a asp-action="UploadBulkOpeningEntry" class="btn btn-light btn-sm w-100">
+                        <i class="fas fa-upload me-1"></i>Upload CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info action-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-boxes action-icon"></i> Bulk Inward Entry</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Record bulk inward crates entries for multiple customers.</p>
+                    <a asp-action="BulkInwardEntry" class="btn btn-light btn-sm w-100 mb-2">
+                        <i class="fas fa-boxes me-1"></i>Manual Entry
+                    </a>
+                    <a asp-action="UploadBulkInwardEntry" class="btn btn-light btn-sm w-100">
+                        <i class="fas fa-upload me-1"></i>Upload CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success action-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-exchange-alt action-icon"></i> Debit & Credit Crates
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Process debit and credit transactions for crate balances.</p>
+                    <a asp-action="DebitCreditEntry" class="btn btn-light btn-sm w-100">
+                        <i class="fas fa-exchange-alt me-1"></i>Process Debit/Credit
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning action-card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-history action-icon"></i> Transaction History</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">View all debit and credit transactions records.</p>
+                    <a asp-action="CreditDebitRecords" class="btn btn-light btn-sm w-100">
+                        <i class="fas fa-history me-1"></i>View History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card mb-3">
+        <div class="card-header card-header-custom p-2">
+            <div class="d-flex align-items-center">
+                <a href="/Home/Index" class="btn btn-link text-white p-0 me-2">
+                    <i class="fas fa-arrow-left fa-lg"></i>
+                </a>
+                <h5 class="mb-0 text-white flex-grow-1 text-center">Crates Management Data</h5>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped mb-0" id="dataTable" width="100%" cellspacing="0">
+                        <thead class="table-header">
+                            <tr>
+                                <th>@Html.DisplayNameFor(model => model.Customer)</th>
+                                <th>Segment Name</th>
+                                <th>@Html.DisplayNameFor(model => model.DispDate)</th>
+                                <th>@Html.DisplayNameFor(model => model.Opening)</th>
+                                <th>@Html.DisplayNameFor(model => model.Outward)</th>
+                                <th>@Html.DisplayNameFor(model => model.Inward)</th>
+                                <th>@Html.DisplayNameFor(model => model.Balance)</th>
+                                <th>Crates Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@Html.DisplayFor(modelItem => item.Customer.Name)</td>
+                                    <td>
+                                        @{
+                                            var segmentName = ViewData["SegmentName_" + item.Id] as string ?? "N/A";
+                                        }
+                                        @segmentName
+                                    </td>
+                                    <td>@Html.DisplayFor(modelItem => item.DispDate)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.Opening)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.Outward)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.Inward)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.Balance)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.CratesType.Cratestype)</td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm"
+                                            title="Details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize dataTable with specific options only if not already initialized
+            if (!$.fn.DataTable.isDataTable("#dataTable")) {
+                $('#dataTable').DataTable({
+                    "order": [[3, "desc"]], // Sort by dispatch date descending by default
+                    "pageLength": 25,
+                    "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                    "responsive": true,
+                    "paging": true,
+                    "pagingType": "full_numbers",
+                    "language": {
+                        "paginate": {
+                            "first": "First",
+                            "last": "Last",
+                            "next": "Next",
+                            "previous": "Previous"
+                        },
+                        "lengthMenu": "Show _MENU_ entries per page",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                        "search": "Search:"
+                    }
+                });
+            }
+        });
+    </script>
+}

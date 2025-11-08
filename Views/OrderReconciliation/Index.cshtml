@@ -1,0 +1,233 @@
+@{
+    ViewData["Title"] = "Order Reconciliation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-2">
+    <div class="card mb-2">
+        <div class="card-header text-white p-2" style="background-color:#17a2b8;">
+            <div class="d-flex align-items-center">
+                <a href="@Url.Action("Index", "Home")" class="btn btn-link text-white p-0 mr-2">
+                    <i class="fa fa-arrow-left"></i>
+                </a>
+                <h5 class="mb-0 text-white font-weight-bold">Order Reconciliation</h5>
+            </div>
+        </div>
+        <div class="card-body p-2">
+            <div class="row mb-2">
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
+                    <label for="orderDate" class="form-label font-weight-bold mb-1">Order Date:</label>
+                    <input type="date" id="orderDate" class="form-control form-control-sm" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
+                    <label for="customerFilter" class="form-label font-weight-bold mb-1">Customer/Distributor:</label>
+                    <select id="customerFilter" class="form-control form-control-sm select2">
+                        <option value="">-- Select Customer --</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="d-flex flex-column h-100 justify-content-end">
+                        <div class="d-flex justify-content-between justify-content-md-end align-items-center">
+                            <button id="filterBtn" class="btn btn-primary btn-sm mr-1">
+                                <i class="fas fa-filter"></i> <span class="d-none d-sm-inline">Filter</span>
+                            </button>
+                            <a href="@Url.Action("DispatchRouteSheet", "OrderReconciliation")" class="btn btn-primary btn-sm mr-2">
+                                <i class="fas fa-truck"></i> <span class="d-none d-sm-inline">Dispatch RouteSheet</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <!-- Excel View (Only View Now) -->
+                    <div id="excelView">
+                        <div id="excelViewContent">
+                            <!-- Excel view content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2
+            $('.select2').select2({
+                width: '100%',
+                placeholder: "-- Select Customer --",
+                allowClear: true
+            });
+            
+            // Load customers/distributors
+            loadCustomers();
+            
+            // Filter button click event
+            $('#filterBtn').on('click', function () {
+                loadExcelView();
+            });
+            
+            // Export button click event
+            $('#exportBtn').on('click', function () {
+                exportToExcel();
+            });
+            
+            function loadCustomers() {
+                $.ajax({
+                    url: '@Url.Action("GetAllCustomers", "OrderReconciliation")',
+                    type: 'GET',
+                    success: function (result) {
+                        if (result.success) {
+                            var select = $('#customerFilter');
+                            select.empty().append('<option value="">-- Select Customer --</option>');
+                            
+                            $.each(result.customers, function (index, customer) {
+                                select.append('<option value="' + customer.id + '">' + customer.name + '</option>');
+                            });
+                        }
+                    },
+                    error: function () {
+                        console.log('Error loading customers');
+                    }
+                });
+            }
+            
+            function loadExcelView() {
+                var date = $('#orderDate').val();
+                var customerId = $('#customerFilter').val();
+                
+                // Validate that both date and customer are selected
+                if (!date || !customerId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Filters',
+                        text: 'Please select both a date and a customer to load data.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+                
+                // Show loading indicator
+                $('#excelViewContent').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading Excel view...</p></div>');
+                
+                $.ajax({
+                    url: '@Url.Action("LoadExcelView", "OrderReconciliation")',
+                    type: 'POST',
+                    data: {
+                        orderDate: date,
+                        customerId: customerId
+                    },
+                    success: function (result) {
+                        $('#excelViewContent').html(result);
+                        // Enable export button
+                        $('#exportBtn').prop('disabled', false);
+                    },
+                    error: function () {
+                        $('#excelViewContent').html('<div class="alert alert-danger text-center">Error loading Excel view. Please try again.</div>');
+                        // Disable export button on error
+                        $('#exportBtn').prop('disabled', true);
+                    }
+                });
+            }
+            
+            function exportToExcel() {
+                // Simple export to CSV functionality
+                var table = $('.excel-table')[0];
+                if (!table) {
+                    alert('No data to export.');
+                    return;
+                }
+                
+                var csv = [];
+                var rows = table.querySelectorAll('tr');
+                
+                for (var i = 0; i < rows.length; i++) {
+                    var row = [], cols = rows[i].querySelectorAll('td, th');
+                    
+                    for (var j = 0; j < cols.length; j++) {
+                        // For quantity input cells, get the input value
+                        var input = cols[j].querySelector('input');
+                        var data = input ? input.value : cols[j].innerText;
+                        data = data.replace(/"/g, '""');
+                        row.push('"' + data + '"');
+                    }
+                    
+                    csv.push(row.join(','));
+                }
+                
+                var csvString = csv.join('\n');
+                var blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                var link = document.createElement('a');
+                var url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'order_reconciliation_' + new Date().toISOString().slice(0,10) + '.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        });
+    </script>
+    
+    <style>
+        /* Responsive adjustments for small screens */
+        @@media (max-width: 575.98px) {
+            .card-body {
+                padding: 0.5rem !important;
+            }
+            
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+            
+            .mb-2 {
+                margin-bottom: 0.5rem !important;
+            }
+            
+            .p-2 {
+                padding: 0.5rem !important;
+            }
+            
+            .table th, .table td {
+                padding: 0.25rem !important;
+                font-size: 0.8rem;
+            }
+            
+            .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+            }
+            
+            .card-header h6 {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Additional compact styles */
+        .card-body .row {
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-label {
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .select2-container .select2-selection--single {
+            height: calc(1.5em + 0.5rem + 2px);
+        }
+        
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            line-height: 1.25;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+        
+        .select2-container .select2-selection--single .select2-selection__arrow {
+            height: calc(1.5em + 0.5rem + 2px);
+        }
+    </style>
+}

@@ -1,0 +1,33 @@
+@model IEnumerable<Milk_Bakery.Models.CratesManage>
+
+<div class="table-responsive">
+    <table class="table table-bordered" id="reportTable" width="100%" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Division</th>
+                <th>Dispatch Date</th>
+                <th>Crates Type</th>
+                <th>Opening</th>
+                <th>Outward</th>
+                <th>Inward</th>
+                <th>Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Customer?.Name</td>
+                    <td>@item.Customer?.Division</td>
+                    <td>@item.DispDate.ToString("dd-MM-yyyy")</td>
+                    <td class="font-bold">@item.CratesType?.Cratestype</td>
+                    <td class="text-warning font-bold text-strong">@item.Opening</td>
+                    <td class="text-danger font-bold text-strong">@item.Outward</td>
+                    <td class="text-success font-bold text-strong">@item.Inward</td>
+                    <td class="text-info font-bold text-strong">@item.Balance</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

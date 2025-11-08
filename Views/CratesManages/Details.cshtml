@@ -1,0 +1,96 @@
+@model Milk_Bakery.Models.CratesManage
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card-header-custom {
+        background-color: #FC2947;
+        color: white;
+        padding: 0.75rem 1rem;
+    }
+
+    .detail-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .detail-value {
+        color: #212529;
+    }
+
+    @@media (max-width: 768px) {
+        .detail-item {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <div class="card mb-3">
+        <div class="card-header card-header-custom p-2">
+            <div class="d-flex align-items-center">
+                <a asp-action="Index" class="btn btn-link text-white p-0 me-2">
+                    <i class="fas fa-arrow-left fa-lg"></i>
+                </a>
+                <h5 class="mb-0 text-white flex-grow-1 text-center">Crates Management Details</h5>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <div class="col-12">
+                    <div class="detail-item">
+                        <div class="detail-label">Customer</div>
+                        <div class="detail-value">@Html.DisplayFor(model => model.Customer.Name)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Segment Code</div>
+                        <div class="detail-value">@Html.DisplayFor(model => model.SegmentCode)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Dispatch Date</div>
+                        <div class="detail-value">@Html.DisplayFor(model => model.DispDate)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Opening</div>
+                        <div class="detail-value">@Html.DisplayFor(model => model.Opening)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Outward</div>
+                        <div class="detail-value">@Html.DisplayFor(model => model.Outward)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Inward</div>
+                        <div class="detail-value">@Html.DisplayFor(model => model.Inward)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Balance</div>
+                        <div class="detail-value">@Html.DisplayFor(model => model.Balance)</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Crates Type</div>
+                        <div class="detail-value">@Html.DisplayFor(model => model.CratesType.Cratestype)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-3 py-3">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a asp-action="Index" class="btn btn-secondary flex-grow-1 flex-md-grow-0">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

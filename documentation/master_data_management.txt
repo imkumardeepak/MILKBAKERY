@@ -1,0 +1,87 @@
+MASTER DATA MANAGEMENT
+
+The Milk & Bakery Management System provides comprehensive master data management capabilities across multiple business entities:
+
+1. Customer Management:
+- Customer_Master entity stores detailed customer information
+- Fields include: name, contact person, division, account type, route, address, phone, email
+- Sequence field for ordering
+- Related to DealerMaster through DistributorId
+- Supports customer segmentation through CustomerSegementMap
+
+2. Dealer Management:
+- DealerMaster entity for distributor information
+- Includes: name, route code, address, city, phone, email
+- Related to customers through DistributorId
+- Supports basic order creation with DealerBasicOrder
+
+3. Employee Management:
+- EmployeeMaster stores employee details
+- Fields: name, phone number, designation, department, grade
+- Related to customer mapping through EmpToCustMap
+
+4. Product/ Material Management:
+- MaterialMaster entity for product information
+- Fields: material name, short name, unit, category, subcategory
+- Price, sequence, segment name, 3rd party code
+- Active status flag
+- Crate type association
+
+5. Company and Segment Management:
+- CompanyMaster for company information
+- SegementMaster for business segments
+- Company_SegementMap for company-segment relationships
+- CustomerSegementMap for customer-segment relationships
+
+6. Route Management:
+- RouteMaster for delivery route information
+- Connected to customers through route field in Customer_Master
+
+7. Category Management:
+- CategoryMaster for product categories
+- Sub_CategoryMaster for sub-categories
+- UnitMaster for units of measure
+- DepartmentMaster, DesignationMaster, GradeMaster for organizational data
+
+8. Plant Management:
+- PlantMaster for plant location information
+
+9. Crates Management:
+- CratesType for different crate types
+- Related to CratesManage records
+
+10. User Management:
+- User entity for system users
+- Role entity for user roles
+- PageAccess and MenuItem for menu/navigation control
+
+11. Mapping Entities:
+- Cust2CustMap for customer-to-customer relationships
+- EmpToCustMap for employee-to-customer relationships
+
+Controllers for Master Data Management:
+- Customer_MasterController
+- DealerMastersController
+- EmployeeMastersController
+- MaterialMastersController
+- CompanyMastersController
+- SegementMastersController
+- RouteMastersController
+- CategoryMastersController
+- Sub_CategoryMasterController
+- UnitMastersController
+- DepartmentMastersController
+- DesignationMastersController
+- GradeMastersController
+- PlantMastersController
+- CratesTypesController
+- UsersController
+- RoleMasterController
+
+Key Features:
+- CRUD operations for all master entities
+- Role-based access control
+- Data validation through model annotations
+- Relationship management between entities
+- Search and filtering capabilities
+- Integration with order processing and reporting

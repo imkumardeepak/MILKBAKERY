@@ -1,0 +1,56 @@
+AUTHENTICATION AND AUTHORIZATION
+
+User Authentication:
+The system implements a custom authentication mechanism using ASP.NET Core Session State:
+
+1. Authentication Process:
+- Users access the Login page (/Home/Login)
+- Credentials (phone number and password) are validated against the Users table
+- On successful authentication:
+  - UserName is stored in session
+  - User role is stored in session
+  - User name is stored in session
+- Session-based authentication is enforced using a custom Authentication attribute
+
+2. Custom Authentication Attribute:
+- Authentication.cs implements ActionFilterAttribute
+- OnActionExecuting method checks for UserName in session
+- If not found, redirects to Login page
+- Applied to controllers requiring authentication
+
+3. User Roles:
+- Admin: Full system access
+- Manager: High-level access to operations and reports
+- Sales: Medium access for order creation and customer data
+- Customer: Limited access to view own orders and account info
+- Plant: Specific access to plant-related operations
+
+4. Session Management:
+- Sessions are used to maintain user state
+- Session timeout handled by ASP.NET Core
+- Logout functionality clears session data
+- Session data includes:
+  - UserName (phone number)
+  - Role
+  - Name
+
+5. Password Management:
+- Simple password storage in Users table
+- Change password functionality available
+- No mentioned encryption/hashing mechanism in current implementation
+
+6. Authorization:
+- Role-based access control implemented through session role checking
+- Controllers and actions check HttpContext.Session.GetString("role") 
+- Different UI elements and navigation options based on user role
+- Customer users have simplified interfaces
+- Sales users have access to customer mapping
+- Admin users have full system access
+
+7. Security Considerations:
+- Session-based authentication (not token-based)
+- No explicit mention of HTTPS enforcement in code
+- Passwords stored directly without hashing (security risk)
+- Role checking happens at controller level
+- No explicit CSRF protection mentioned
+- No explicit input validation beyond basic model validation

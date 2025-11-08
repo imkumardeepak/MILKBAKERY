@@ -1,0 +1,59 @@
+INVOICE PROCESSING SYSTEM
+
+The Milk & Bakery Management System includes an automated invoice processing module that integrates with the crates management system:
+
+1. Invoice Entities:
+- Invoice (parent entity):
+  - Fields: InvoiceId, InvoiceNo, InvoiceDate, CustomerRefPO
+  - TotalAmount, OrderDate, BillTo information
+  - ShipTo information, Company details, VehicleNo
+  - setflag for processing status (default 0)
+  - Navigation property to InvoiceMaterials
+- InvoiceMaterialDetail (child entity):
+  - Fields: MaterialId, InvoiceId, ProductDescription
+  - MaterialSapCode, Batch, UnitPerCase
+  - QuantityCases, QuantityUnits, UOM
+
+2. Invoice Processing Workflow:
+- Invoices are created with setflag = 0 (unprocessed)
+- Background service processes invoices with setflag = 0
+- After processing, setflag is updated to 1
+- Crate movements are automatically calculated and recorded
+
+3. Invoice Processing Logic:
+- Match invoice to purchase order using CustomerRefPO
+- Find customer using ShipToCode
+- Process each invoice material line
+- Extract crate type information from materials
+- Create/update crates management records for outward movements
+- Calculate crate counts based on QuantityCases
+- Create records for each customer segment
+- Update existing records or create new ones
+
+4. Controllers:
+- InvoiceController for invoice operations
+- InvoiceMaterialController for invoice material operations
+
+5. Background Services:
+- InvoiceBackgroundService for automated processing
+- Runs every minute to check for unprocessed invoices
+- Processes invoices with setflag = 0
+- Automatically creates crate outward records
+- Links invoices to customer crate accounts
+- Error handling for missing customers or materials
+
+6. Integration Points:
+- Purchase Order matching through CustomerRefPO
+- Customer_Master integration through ShipToCode
+- MaterialMaster integration through MaterialSapCode
+- CratesType integration for crate movements
+- CratesManage for crate transaction recording
+
+7. Key Features:
+- Automated invoice processing
+- Crate movement calculation
+- Customer segment integration
+- Error handling for missing data
+- Logging for processing activities
+- Duplicate prevention
+- Balance calculation for crate accounts

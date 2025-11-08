@@ -1,0 +1,367 @@
+@{
+    ViewData["Title"] = "Outstanding Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-2">
+    <div class="card mb-2">
+        <div class="card-header text-white p-2" style="background-color:#007bff;">
+            <div class="d-flex align-items-center">
+                <a href="@Url.Action("Index", "DealerOutstanding")" class="btn btn-link text-white p-0 mr-2">
+                    <i class="fa fa-arrow-left"></i>
+                </a>
+                <h5 class="mb-0 text-white font-weight-bold">Outstanding Report</h5>
+            </div>
+        </div>
+        <div class="card-body p-2">
+            <div class="row mb-2">
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                    <label for="customerFilter" class="form-label font-weight-bold small mb-1">Customer/Distributor:</label>
+                    <select id="customerFilter" class="form-control form-control-sm select2">
+                        <option value="">-- Select Customer/Distributor --</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                    <label for="dealerFilter" class="form-label font-weight-bold small mb-1">Dealer:</label>
+                    <select id="dealerFilter" class="form-control form-control-sm select2" disabled>
+                        <option value="0">-- All Dealers --</option>
+                        <option value="">-- Select Dealer --</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                    <div class="form-group">
+                        <label for="fromDate" class="form-label font-weight-bold small mb-1">From Date:</label>
+                        <input type="date" id="fromDate" class="form-control form-control-sm" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                    <div class="form-group">
+                        <label for="toDate" class="form-label font-weight-bold small mb-1">To Date:</label>
+                        <input type="date" id="toDate" class="form-control form-control-sm" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                    <div class="d-flex align-items-end h-100">
+                        <button id="generateReportBtn" class="btn btn-primary btn-sm" disabled>
+                            <i class="fas fa-chart-bar"></i> <span class="d-none d-sm-inline">Generate Report</span>
+                        </button>
+                        <button id="resetFiltersBtn" class="btn btn-outline-secondary btn-sm ml-2">
+                            <i class="fas fa-redo"></i> <span class="d-none d-sm-inline">Reset</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table id="reportTable" class="table table-striped table-bordered table-sm" style="width:100%">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th class="d-none d-md-table-cell">Dealer Name</th>
+                                    <th class="d-md-none">Dealer</th>
+                                    <th class="d-none d-lg-table-cell">Delivery Date</th>
+                                    <th>Invoice Amount</th>
+                                    <th>Paid Amount</th>
+                                    <th>Outstanding</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="text-center small">Select filters and click Generate Report</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2 with compact settings
+            $('.select2').select2({
+                width: '100%',
+                placeholder: "-- Select --",
+                allowClear: true
+            });
+
+            // Load customers
+            loadCustomers();
+
+            // Customer filter change event
+            $('#customerFilter').on('change', function () {
+                var customerId = $(this).val();
+                if (customerId) {
+                    loadDealers(customerId);
+                    $('#dealerFilter').prop('disabled', false);
+                } else {
+                    $('#dealerFilter').empty().append('<option value="">-- Select Dealer --</option>').prop('disabled', true);
+                    $('#generateReportBtn').prop('disabled', true);
+                }
+            });
+
+            // Dealer filter change event
+            $('#dealerFilter').on('change', function () {
+                if ($(this).val() !== '') {
+                    $('#generateReportBtn').prop('disabled', false);
+                } else {
+                    $('#generateReportBtn').prop('disabled', true);
+                }
+            });
+
+            // Generate report button click event
+            $('#generateReportBtn').on('click', function () {
+                generateReport();
+            });
+
+            // Reset filters button click event
+            $('#resetFiltersBtn').on('click', function () {
+                resetFilters();
+            });
+
+            function loadCustomers() {
+                $.ajax({
+                    url: '@Url.Action("GetCustomers", "DealerOutstanding")',
+                    type: 'GET',
+                    success: function (result) {
+                        if (result.success) {
+                            var select = $('#customerFilter');
+                            select.empty().append('<option value="">-- Select Customer/Distributor --</option>');
+
+                            $.each(result.customers, function (index, customer) {
+                                select.append('<option value="' + customer.id + '">' + customer.name + '</option>');
+                            });
+                        }
+                    },
+                    error: function () {
+                        console.log('Error loading customers');
+                    }
+                });
+            }
+
+            function loadDealers(customerId) {
+                $.ajax({
+                    url: '@Url.Action("GetDealersByCustomer", "DealerOutstanding")',
+                    type: 'GET',
+                    data: { customerId: customerId },
+                    success: function (result) {
+                        if (result.success) {
+                            var select = $('#dealerFilter');
+                            select.empty().append('<option value="0">-- All Dealers --</option>');
+
+                            $.each(result.dealers, function (index, dealer) {
+                                select.append('<option value="' + dealer.id + '">' + dealer.name + '</option>');
+                            });
+                        }
+                    },
+                    error: function () {
+                        console.log('Error loading dealers');
+                    }
+                });
+            }
+
+            function generateReport() {
+                var customerId = $('#customerFilter').val();
+                var dealerId = $('#dealerFilter').val();
+                var fromDate = $('#fromDate').val();
+                var toDate = $('#toDate').val();
+
+                // Validate inputs
+                if (!customerId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Filter',
+                        text: 'Please select a customer/distributor.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                if (dealerId === '') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Filter',
+                        text: 'Please select a dealer or "All Dealers".',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                if (!fromDate || !toDate) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Dates',
+                        text: 'Please select both from and to dates.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Show loading indicator
+                var tbody = $('#reportTable tbody');
+                tbody.empty().append('<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div><p class="small mb-0 mt-1">Loading report...</p></td></tr>');
+
+                $.ajax({
+                    url: '@Url.Action("GenerateOutstandingReport", "DealerOutstanding")',
+                    type: 'GET',
+                    data: {
+                        dealerId: dealerId,
+                        customerId: customerId,
+                        fromDate: fromDate,
+                        toDate: toDate
+                    },
+                    success: function (result) {
+                        var tbody = $('#reportTable tbody');
+                        tbody.empty();
+
+                        if (result.success && result.outstandings.length > 0) {
+                            var totalInvoice = 0;
+                            var totalPaid = 0;
+                            var totalOutstanding = 0;
+
+                            $.each(result.outstandings, function (index, item) {
+                                totalInvoice += item.invoiceAmount;
+                                totalPaid += item.paidAmount;
+                                totalOutstanding += item.balanceAmount;
+
+                                var row = '<tr>' +
+                                    '<td class="d-none d-md-table-cell">' + item.dealerName + '</td>' +
+                                    '<td class="d-md-none">' + item.dealerName + '</td>' +
+                                    '<td class="d-none d-lg-table-cell">' + item.deliverDate + '</td>' +
+                                    '<td class="text-right">₹' + item.invoiceAmount.toFixed(2) + '</td>' +
+                                    '<td class="text-right">₹' + item.paidAmount.toFixed(2) + '</td>' +
+                                    '<td class="text-right ' + (item.balanceAmount > 0 ? 'text-danger' : 'text-success') + '">₹' + item.balanceAmount.toFixed(2) + '</td>' +
+                                    '</tr>';
+                                tbody.append(row);
+                            });
+
+                            // Add summary row
+                            var summaryRow = '<tr class="table-info font-weight-bold">' +
+                                '<td colspan="2" class="text-right">Total:</td>' +
+                                '<td class="text-right">₹' + totalInvoice.toFixed(2) + '</td>' +
+                                '<td class="text-right">₹' + totalPaid.toFixed(2) + '</td>' +
+                                '<td class="text-right">₹' + totalOutstanding.toFixed(2) + '</td>' +
+                                '</tr>';
+                            tbody.append(summaryRow);
+                        } else {
+                            tbody.append('<tr><td colspan="6" class="text-center small">No records found</td></tr>');
+                        }
+                    },
+                    error: function () {
+                        var tbody = $('#reportTable tbody');
+                        tbody.empty().append('<tr><td colspan="6" class="text-center small text-danger">Error loading report data</td></tr>');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while generating the report.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            }
+
+            function resetFilters() {
+                // Reset all filters
+                $('#customerFilter').val('').trigger('change');
+                $('#dealerFilter').empty().append('<option value="">-- Select Dealer --</option>').prop('disabled', true);
+                $('#fromDate').val('@DateTime.Today.ToString("yyyy-MM-dd")');
+                $('#toDate').val('@DateTime.Today.ToString("yyyy-MM-dd")');
+                $('#generateReportBtn').prop('disabled', true);
+                
+                // Clear table
+                var tbody = $('#reportTable tbody');
+                tbody.empty().append('<tr><td colspan="6" class="text-center small">Select filters and click Generate Report</td></tr>');
+            }
+        });
+    </script>
+
+    <style>
+        /* Compact styling for mobile */
+        @@media (max-width: 575.98px) {
+            .card-body {
+                padding: 0.5rem !important;
+            }
+
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+
+            .mb-2 {
+                margin-bottom: 0.5rem !important;
+            }
+
+            .p-2 {
+                padding: 0.5rem !important;
+            }
+
+            .table th, .table td {
+                padding: 0.25rem !important;
+                font-size: 0.75rem;
+            }
+
+            .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .input-group .btn {
+                padding: 0.1rem 0.25rem;
+                font-size: 0.7rem;
+            }
+
+            .form-control {
+                padding: 0.1rem 0.25rem;
+                font-size: 0.75rem;
+                height: calc(1.5em + 0.2rem + 2px);
+            }
+
+            .small, small {
+                font-size: 0.7rem !important;
+            }
+        }
+
+        /* Additional compact styles for very small screens */
+        @@media (max-width: 375px) {
+            .table th, .table td {
+                padding: 0.15rem !important;
+                font-size: 0.7rem;
+            }
+
+            .btn {
+                padding: 0.15rem 0.35rem;
+                font-size: 0.65rem;
+            }
+
+            .input-group .btn {
+                padding: 0.05rem 0.2rem;
+                font-size: 0.6rem;
+            }
+
+            .form-control {
+                padding: 0.05rem 0.2rem;
+                font-size: 0.65rem;
+                height: calc(1.5em + 0.1rem + 2px);
+            }
+        }
+
+        /* Right align amount columns */
+        .text-right {
+            text-align: right !important;
+        }
+
+        /* Highlight outstanding amounts */
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .text-success {
+            color: #28a745 !important;
+        }
+    </style>
+}

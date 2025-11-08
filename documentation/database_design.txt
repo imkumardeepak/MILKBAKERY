@@ -1,0 +1,101 @@
+DATABASE DESIGN
+
+The Milk & Bakery Management System uses SQL Server as its database backend with Entity Framework Core for ORM operations. The database schema includes the following key entities:
+
+Core Entities:
+
+1. Customer_Master:
+- Id (Primary Key)
+- shortname, Name, ContactPerson
+- Division, accounttype, route
+- address, phoneno, email
+- city, PostalCode, country, state
+- Sequence
+
+2. PurchaseOrder:
+- Id (Primary Key)
+- OrderNo, OrderDate
+- Customername, CustomerCode
+- companycode, Segementname, Segementcode
+- verifyflag, processflag
+- ProductDetails (One-to-Many relationship)
+
+3. ProductDetail:
+- Id (Primary Key)
+- PurchaseOrderId (Foreign Key)
+- ProductName, ProductCode, Unit
+- qty, Rate, Price
+
+4. DealerMaster:
+- Id (Primary Key)
+- DistributorId, Name
+- RouteCode, Address, City
+- PhoneNo, Email
+- DealerBasicOrders (One-to-Many relationship)
+
+5. DealerOrder:
+- Id (Primary Key)
+- OrderDate, DistributorId, DealerId
+- DistributorCode, ProcessFlag
+- DealerOrderItems (One-to-Many relationship)
+
+6. DealerOrderItem:
+- Id (Primary Key)
+- DealerOrderId (Foreign Key)
+- MaterialName, ShortCode, SapCode
+- Qty, Rate, DeliverQnty
+
+7. CratesManage:
+- Id (Primary Key)
+- CustomerId (Foreign Key)
+- SegmentCode, DispDate
+- Opening, Outward, Inward, Balance
+- CratesTypeId (Foreign Key)
+
+8. InvoiceDetails:
+- Invoice (Parent entity)
+  - InvoiceId (Primary Key)
+  - InvoiceNo, InvoiceDate
+  - CustomerRefPO, TotalAmount
+  - OrderDate, BillToName, BillToCode
+  - ShipToName, ShipToCode, ShipToRoute
+  - CompanyName, CompanyCode, VehicleNo
+  - setflag (default 0)
+  - InvoiceMaterials (One-to-Many relationship)
+- InvoiceMaterialDetail (Child entity)
+  - MaterialId (Primary Key)
+  - InvoiceId (Foreign Key)
+  - ProductDescription, MaterialSapCode
+  - Batch, UnitPerCase, QuantityCases
+  - QuantityUnits, UOM
+
+Master Data Entities:
+- CategoryMaster, CompanyMaster, DepartmentMaster
+- DesignationMaster, GradeMaster, RouteMaster
+- UnitMaster, Sub_CategoryMaster, EmployeeMaster
+- SegementMaster, Company_SegementMap, CustomerSegementMap
+- MaterialMaster, PlantMaster, CratesType
+- Role, PageAccess, MenuItem
+- User, CustTransaction, Cust2CustMap
+- EmpToCustMap, VisitEntery, CreditDebitRecord
+
+Key Relationships:
+- PurchaseOrder to ProductDetail (One-to-Many)
+- DealerMaster to DealerBasicOrder (One-to-Many)
+- DealerOrder to DealerOrderItem (One-to-Many)
+- Customer_Master to CratesManage (One-to-Many)
+- Invoice to InvoiceMaterialDetail (One-to-Many)
+- Customer_Master to DealerMaster (One-to-Many via DistributorId)
+
+Indexing Strategy:
+- Customer_Master: Index on Sequence column
+- DealerOrder: Composite index on OrderDate, DealerId, DistributorId, ProcessFlag
+- DealerOrderItem: Composite index on DealerOrderId, SapCode, ShortCode
+- InvoiceMaterialDetail: Composite index on InvoiceId, MaterialId
+- Invoice: Composite index on InvoiceId, ShipToCode, BillToCode, InvoiceDate, VehicleNo
+- Invoice: Index on setflag column
+
+Default Values:
+- Customer_Master.Sequence: Default 0
+- DealerOrderItem.DeliverQnty: Default 0
+- Invoice.setflag: Default 0

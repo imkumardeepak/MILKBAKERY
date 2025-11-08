@@ -1,0 +1,75 @@
+ERROR HANDLING
+
+The Milk & Bakery Management System implements comprehensive error handling through custom middleware and standard ASP.NET Core practices:
+
+1. Exception Handling Middleware:
+- ExceptionHandlingMiddleware for global exception handling
+- Catches all unhandled exceptions in the application
+- Differentiates between AJAX and regular requests
+- Returns appropriate responses based on request type
+- Custom error pages for user-friendly error display
+- JSON responses for AJAX requests
+- Detailed error information for debugging
+
+2. Exception Types Handled:
+- DbUpdateException with SqlException inner exceptions
+- Foreign key constraint violations (SQL Error 547)
+- UnauthorizedAccessException for access denied scenarios
+- InvalidOperationException for invalid operations
+- General exceptions for unexpected errors
+
+3. Error Response Handling:
+- AJAX requests receive JSON error responses
+- Regular requests receive rendered error views
+- Appropriate HTTP status codes (500 Internal Server Error)
+- User-friendly error messages
+- Technical error details for support
+- Navigation options to return to previous pages or home
+
+4. Error ViewModel:
+- ErrorViewModel for structured error information
+- RequestId for tracking
+- ErrorMessage for user-friendly descriptions
+- ErrorDetails for technical information
+- RedirectUrl for navigation
+- RedirectText for button labels
+
+5. Database Error Handling:
+- Foreign key constraint violations prevent deletion of referenced records
+- User-friendly messages for constraint violations
+- Guidance to remove related records before deletion
+- Specific handling for SQL Server exceptions
+
+6. Controller-Level Error Handling:
+- Try-catch blocks in controller actions
+- Specific error handling for business logic
+- User notifications through Toast notifications
+- ModelState validation for input errors
+- Redirects with error messages
+
+7. Background Service Error Handling:
+- Exception handling in background service loops
+- Logging of errors with timestamps
+- Service continuation despite individual errors
+- Detailed exception logging for debugging
+
+8. Validation Error Handling:
+- Model validation through Data Annotations
+- Client-side validation through jQuery validation
+- Server-side validation in controller actions
+- User feedback through validation summaries
+- Field-specific error messages
+
+9. Error Logging:
+- ILogger integration for error logging
+- Timestamp information for error occurrences
+- Error categorization by exception type
+- Context information for debugging
+- Request tracking through RequestId
+
+10. User Experience Considerations:
+- Meaningful error messages for end users
+- Technical details for support personnel
+- Navigation options to continue using the application
+- Consistent error page design
+- Session preservation during errors when possible

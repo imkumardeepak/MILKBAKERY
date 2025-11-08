@@ -1,4 +1,4 @@
-﻿using AspNetCoreHero.ToastNotification.Abstractions;
+﻿﻿﻿using AspNetCoreHero.ToastNotification.Abstractions;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,13 +17,15 @@ namespace Milk_Bakery.Controllers
 	{
 		private readonly ILogger<HomeController> _logger;
 		private readonly MilkDbContext _context;
+		private readonly IMemoryCache _memoryCache;
 		public INotyfService _notifyService { get; }
 
-		public HomeController(ILogger<HomeController> logger, MilkDbContext milkDb, INotyfService notyf)
+		public HomeController(ILogger<HomeController> logger, MilkDbContext milkDb, INotyfService notyf, IMemoryCache memoryCache)
 		{
 			_logger = logger;
 			_context = milkDb;
 			_notifyService = notyf;
+			_memoryCache = memoryCache;
 		}
 
 		[Authentication]
@@ -31,20 +33,85 @@ namespace Milk_Bakery.Controllers
 		{
 			try
 			{
-				ViewBag.pendingverify = _context.PurchaseOrder.Where(a => a.verifyflag == 0 && a.processflag == 0).ToList().Count();
-				ViewBag.pendingprocess = _context.PurchaseOrder.Where(a => a.verifyflag == 1 && a.processflag == 0).ToList().Count();
-				ViewBag.totalprocess = _context.PurchaseOrder.Where(a => a.verifyflag == 1 && a.processflag == 1).ToList().Count();
-				ViewBag.totalmoney = "₹" + _context.ProductDetails.Sum(a => a.Price);
-				var purchase = await _context.PurchaseOrder.AsNoTracking().OrderByDescending(a => a.Id).Take(100).ToListAsync();
+				var cacheKey = $"DashboardStats_{HttpContext.Session.GetString("role")}_{HttpContext.Session.GetString("UserName")}";
+
+				if (!_memoryCache.TryGetValue(cacheKey, out DashboardStats stats))
+				{
+					stats = await GetDashboardStatsAsync();
+					_memoryCache.Set(cacheKey, stats, TimeSpan.FromMinutes(5));
+				}
+
+				ViewBag.pendingverify = stats.PendingVerify;
+				ViewBag.pendingprocess = stats.PendingProcess;
+				ViewBag.totalprocess = stats.TotalProcess;
+				ViewBag.totalmoney = stats.TotalMoney;
+				ViewBag.dealerCount = stats.DealerCount;
+
+				var purchase = await GetRecentPurchasesAsync();
 				return View(purchase);
 			}
 			catch (Exception ex)
 			{
 				Console.WriteLine(ex.ToString());
-				return View();
+				return View(new List<PurchaseOrder>());
+			}
+		}
+
+		private async Task<DashboardStats> GetDashboardStatsAsync()
+		{
+			// Execute sequentially to avoid DbContext threading issues
+			var pendingVerify = await _context.PurchaseOrder.AsNoTracking()
+				.CountAsync(a => a.verifyflag == 0 && a.processflag == 0);
+
+			var pendingProcess = await _context.PurchaseOrder.AsNoTracking()
+				.CountAsync(a => a.verifyflag == 1 && a.processflag == 0);
+
+			var totalProcess = await _context.PurchaseOrder.AsNoTracking()
+				.CountAsync(a => a.verifyflag == 1 && a.processflag == 1);
+
+			var totalMoney = await _context.ProductDetails.AsNoTracking()
+				.SumAsync(a => a.Price);
+
+			var dealerCount = await GetDealerCountAsync();
+
+			return new DashboardStats
+			{
+				PendingVerify = pendingVerify,
+				PendingProcess = pendingProcess,
+				TotalProcess = totalProcess,
+				TotalMoney = "₹" + totalMoney,
+				DealerCount = dealerCount
+			};
+		}
+
+		private async Task<int> GetDealerCountAsync()
+		{
+			if (HttpContext.Session.GetString("role") == "Customer")
+			{
+				var userName = HttpContext.Session.GetString("UserName");
+				var customer = await _context.Customer_Master
+					.AsNoTracking()
+					.FirstOrDefaultAsync(c => c.phoneno == userName);
+
+				return customer != null
+					? await _context.DealerMasters
+						.AsNoTracking()
+						.CountAsync(d => d.DistributorId == customer.Id)
+					: 0;
 			}
 
+			return await _context.DealerMasters
+				.AsNoTracking()
+				.CountAsync();
+		}
 
+		private async Task<List<PurchaseOrder>> GetRecentPurchasesAsync()
+		{
+			return await _context.PurchaseOrder
+				.AsNoTracking()
+				.OrderByDescending(a => a.Id)
+				.Take(100)
+				.ToListAsync();
 		}
 
 		public IActionResult Privacy()
@@ -84,6 +151,8 @@ namespace Milk_Bakery.Controllers
 			}
 		}
 
+
+
 		public IActionResult change(User user)
 		{
 			if (HttpContext.Session.GetString("UserName") != null)
@@ -120,19 +189,22 @@ namespace Milk_Bakery.Controllers
 				var obj = _context.Users.Where(a => a.phoneno.Equals(u.phoneno) && a.Password.Equals(u.Password)).FirstOrDefault();
 				if (obj != null)
 				{
-					HttpContext.Session.SetString("UserName", obj.phoneno.ToString());
-					HttpContext.Session.SetString("role", obj.Role.ToString());
-					HttpContext.Session.SetString("name", obj.name.ToString());
+					HttpContext.Session.SetString("UserName", obj.phoneno?.ToString() ?? "");
+					HttpContext.Session.SetString("role", obj.Role?.ToString() ?? "");
+					HttpContext.Session.SetString("name", obj.name?.ToString() ?? "");
 					_notifyService.Success("Login Success");
 					return RedirectToAction("Index");
+				}
+				else
+				{
+					_notifyService.Error("Login Failed");
+					return RedirectToAction("Login");
 				}
 			}
 			else
 			{
-				_notifyService.Error("Login Failed");
-				return RedirectToAction("Login");
+				return RedirectToAction("Index");
 			}
-			return View();
 		}
 		public ActionResult Logout()
 		{
@@ -188,6 +260,41 @@ namespace Milk_Bakery.Controllers
 				iData.Add(x);
 			}
 			//Source data returned as JSON  
+			return Json(iData);
+		}
+		[HttpPost]
+		public JsonResult CratesOutwardChart()
+		{
+			var query = _context.CratesManages
+		.Where(cm => cm.CratesTypeId != null)
+		.GroupBy(cm => cm.CratesTypeId.Value)
+		.Select(g => new
+		{
+			CratesTypeId = g.Key,
+			TotalOutward = g.Sum(cm => cm.Outward)
+		})
+		.ToList();
+
+			var crateTypes = _context.CratesTypes.ToDictionary(ct => ct.Id, ct => ct.Cratestype);
+
+			var chartData = query.Select(q => new
+			{
+				Label = crateTypes.ContainsKey(q.CratesTypeId) ? crateTypes[q.CratesTypeId] : "Unknown",
+				Value = q.TotalOutward
+			}).ToList();
+
+			List<object> iData = new List<object>();
+			List<object> labels = new List<object>();
+			List<object> values = new List<object>();
+
+			foreach (var item in chartData)
+			{
+				labels.Add(item.Label);
+				values.Add(item.Value);
+			}
+			iData.Add(labels);
+			iData.Add(values);
+
 			return Json(iData);
 		}
 	}

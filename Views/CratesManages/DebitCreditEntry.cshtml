@@ -1,0 +1,430 @@
+@{
+    ViewData["Title"] = "Debit & Credit Crates";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card-header-custom {
+        background-color: #28a745;
+        /* Green color for debit/credit */
+        color: white;
+        padding: 0.75rem 1rem;
+    }
+
+    .form-section {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .form-section-title {
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #495057;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 0.5rem;
+    }
+
+    .action-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .action-card .card-header {
+        font-weight: 600;
+        border-bottom: none;
+    }
+
+    .action-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .action-icon {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .balance-display {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .loading-spinner {
+        display: none;
+    }
+
+    .table-container {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        overflow: hidden;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-top: 1rem;
+    }
+
+    .table-header {
+        background-color: #343a40;
+        color: white;
+    }
+
+    /* Button radio styles */
+    .btn-check:checked+.btn-outline-danger {
+        background-color: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+
+    .btn-check:checked+.btn-outline-success {
+        background-color: #28a745;
+        color: white;
+        border-color: #28a745;
+    }
+
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    @@media (max-width: 768px) {
+        .action-card .card-body {
+            padding: 1rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-lg {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <div class="card mb-3">
+        <div class="card-header card-header-custom p-2">
+            <div class="d-flex align-items-center">
+                <a asp-action="Index" class="btn btn-link text-white p-0 me-2">
+                    <i class="fas fa-arrow-left fa-lg"></i>
+                </a>
+                <h5 class="mb-0 text-white flex-grow-1 text-center">Debit & Credit Crates</h5>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-exchange-alt action-icon"></i>Transaction Details
+                </div>
+                <form id="debitCreditForm" asp-action="ProcessDebitCredit" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row">
+                        <!-- Customer Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label for="customerId" class="form-label">Select Customer/Distributor</label>
+                            <select id="customerId" name="customerId" class="form-select form-control select2" required>
+                                <option value="">-- Select Customer/Distributor --</option>
+                                @foreach (var customer in ViewBag.Customers as List<SelectListItem>)
+                                {
+                                    <option value="@customer.Value">@customer.Text</option>
+                                }
+                            </select>
+                            <div class="invalid-feedback">Please select a customer/distributor.</div>
+                        </div>
+
+                        <!-- Segment Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label for="segmentCode" class="form-label">Select Division/Segment</label>
+                            <select id="segmentCode" name="segmentCode" class="form-select  form-control select2"
+                                required disabled>
+                                <option value="">-- Select Division/Segment --</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a division/segment.</div>
+                            <div class="loading-spinner" id="segmentLoading">
+                                <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading
+                                    segments...</small>
+                            </div>
+                        </div>
+
+                        <!-- Crate Type Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label for="crateTypeId" class="form-label">Select Crate Type</label>
+                            <select id="crateTypeId" name="crateTypeId" class="form-select  form-control select2"
+                                required disabled>
+                                <option value="">-- Select Crate Type --</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a crate type.</div>
+                            <div class="loading-spinner" id="crateTypeLoading">
+                                <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading crate
+                                    types...</small>
+                            </div>
+                        </div>
+
+                        <!-- Crate Information Table -->
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Crate Information</label>
+                            <div class="table-container">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped mb-0" id="crateInfoTable">
+                                        <thead class="table-header">
+                                            <tr>
+                                                <th>Opening</th>
+                                                <th>Outward</th>
+                                                <th>Inward</th>
+                                                <th>Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td id="openingValue">0</td>
+                                                <td id="outwardValue">0</td>
+                                                <td id="inwardValue">0</td>
+                                                <td id="balanceValue">0</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="loading-spinner" id="balanceLoading">
+                                <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Loading crate
+                                    information...</small>
+                            </div>
+                            <input type="hidden" id="currentBalanceValue" value="0" />
+                        </div>
+
+                        <!-- Operation Type -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Operation Type</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check form-check-inline mb-0">
+                                    <input class="form-check-input btn-check" type="radio" name="operationType"
+                                        id="debitOption" value="Debit" required>
+                                    <label class="btn btn-outline-danger btn-lg" for="debitOption">
+                                        <i class="fas fa-minus-circle me-2"></i>Debit
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline mb-0">
+                                    <input class="form-check-input btn-check" type="radio" name="operationType"
+                                        id="creditOption" value="Credit" required>
+                                    <label class="btn btn-outline-success btn-lg" for="creditOption">
+                                        <i class="fas fa-plus-circle me-2"></i>Credit
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="invalid-feedback">Please select an operation type.</div>
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                            <div class="invalid-feedback">Please enter a valid quantity.</div>
+                            <div class="form-text" id="quantityHelp">Enter the number of crates to debit or credit.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+                            <i class="fas fa-check-circle me-2"></i>Process Transaction
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Handle customer selection
+            $('#customerId').change(function () {
+                var customerId = $(this).val();
+                var segmentDropdown = $('#segmentCode');
+                var crateTypeDropdown = $('#crateTypeId');
+
+                // Reset dependent dropdowns
+                segmentDropdown.empty().append('<option value="">-- Select Division/Segment --</option>').prop('disabled', true);
+                crateTypeDropdown.empty().append('<option value="">-- Select Crate Type --</option>').prop('disabled', true);
+                resetCrateInfoTable();
+
+                if (customerId) {
+                    // Show loading indicator
+                    $('#segmentLoading').show();
+
+                    // Fetch segments for the selected customer
+                    $.ajax({
+                        url: '@Url.Action("GetSegmentsForCustomerJson", "CratesManages")',
+                        type: 'GET',
+                        data: { customerId: customerId },
+                        success: function (data) {
+                            segmentDropdown.empty().append('<option value="">-- Select Division/Segment --</option>');
+                            if (data.length > 0) {
+                                $.each(data, function (index, item) {
+                                    segmentDropdown.append('<option value="' + item.value + '">' + item.text + '</option>');
+                                });
+                                segmentDropdown.prop('disabled', false);
+                            } else {
+                                segmentDropdown.append('<option value="">No segments found</option>');
+                            }
+                        },
+                        error: function () {
+                            segmentDropdown.empty().append('<option value="">Error loading segments</option>');
+                        },
+                        complete: function () {
+                            // Hide loading indicator
+                            $('#segmentLoading').hide();
+                        }
+                    });
+                }
+            });
+
+            // Handle segment selection
+            $('#segmentCode').change(function () {
+                var segmentCode = $(this).val();
+                var crateTypeDropdown = $('#crateTypeId');
+
+                // Reset dependent dropdowns
+                crateTypeDropdown.empty().append('<option value="">-- Select Crate Type --</option>').prop('disabled', true);
+                resetCrateInfoTable();
+
+                if (segmentCode) {
+                    // Show loading indicator
+                    $('#crateTypeLoading').show();
+
+                    // Fetch crate types for the selected segment
+                    $.ajax({
+                        url: '@Url.Action("GetCrateTypesForSegmentJson", "CratesManages")',
+                        type: 'GET',
+                        data: { segmentCode: segmentCode },
+                        success: function (data) {
+                            crateTypeDropdown.empty().append('<option value="">-- Select Crate Type --</option>');
+                            if (data.length > 0) {
+                                $.each(data, function (index, item) {
+                                    crateTypeDropdown.append('<option value="' + item.value + '">' + item.text + '</option>');
+                                });
+                                crateTypeDropdown.prop('disabled', false);
+                            } else {
+                                crateTypeDropdown.append('<option value="">No crate types found</option>');
+                            }
+                        },
+                        error: function () {
+                            crateTypeDropdown.empty().append('<option value="">Error loading crate types</option>');
+                        },
+                        complete: function () {
+                            // Hide loading indicator
+                            $('#crateTypeLoading').hide();
+                        }
+                    });
+                }
+            });
+
+            // Handle crate type selection
+            $('#crateTypeId').change(function () {
+                var customerId = $('#customerId').val();
+                var segmentCode = $('#segmentCode').val();
+                var crateTypeId = $(this).val();
+
+                if (customerId && segmentCode && crateTypeId) {
+                    // Show loading indicator
+                    $('#balanceLoading').show();
+
+                    // Fetch last balance for the selected combination
+                    $.ajax({
+                        url: '@Url.Action("GetLastBalance", "CratesManages")',
+                        type: 'GET',
+                        data: {
+                            customerId: customerId,
+                            segmentCode: segmentCode,
+                            crateTypeId: crateTypeId
+                        },
+                        success: function (data) {
+                            if (data.success) {
+                                // Update the table with crate information
+                                $('#openingValue').text(data.opening || 0);
+                                $('#outwardValue').text(data.outward || 0);
+                                $('#inwardValue').text(data.inward || 0);
+                                $('#balanceValue').text(data.balance || 0);
+                                $('#currentBalanceValue').val(data.balance || 0);
+                            } else {
+                                resetCrateInfoTable();
+                                alert('Error loading crate information');
+                            }
+                        },
+                        error: function () {
+                            resetCrateInfoTable();
+                            alert('Error loading crate information');
+                        },
+                        complete: function () {
+                            // Hide loading indicator
+                            $('#balanceLoading').hide();
+                        }
+                    });
+                } else {
+                    resetCrateInfoTable();
+                }
+            });
+
+            // Function to reset the crate info table
+            function resetCrateInfoTable() {
+                $('#openingValue').text('0');
+                $('#outwardValue').text('0');
+                $('#inwardValue').text('0');
+                $('#balanceValue').text('0');
+                $('#currentBalanceValue').val('0');
+            }
+
+            // Handle form submission
+            $('#debitCreditForm').submit(function (e) {
+                // Validate form
+                var customerId = $('#customerId').val();
+                var segmentCode = $('#segmentCode').val();
+                var crateTypeId = $('#crateTypeId').val();
+                var operationType = $('input[name="operationType"]:checked').val();
+                var quantity = $('#quantity').val();
+
+                // Check if all required fields are filled
+                if (!customerId || !segmentCode || !crateTypeId || !operationType || !quantity) {
+                    e.preventDefault();
+                    alert('Please fill all required fields.');
+                    return false;
+                }
+
+                // Validate quantity
+                var quantityValue = parseInt(quantity);
+                if (isNaN(quantityValue) || quantityValue <= 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid quantity.');
+                    return false;
+                }
+
+                // For debit operations, check if quantity doesn't exceed balance
+                if (operationType === 'Debit') {
+                    var currentBalance = parseInt($('#currentBalanceValue').val());
+                    if (quantityValue > currentBalance) {
+                        e.preventDefault();
+                        alert('Debit quantity cannot exceed current balance (' + currentBalance + ').');
+                        return false;
+                    }
+                }
+
+                // Show loading state on submit button
+                var submitBtn = $('#submitBtn');
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Processing...');
+            });
+        });
+    </script>
+}

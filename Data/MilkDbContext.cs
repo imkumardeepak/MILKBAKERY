@@ -1,6 +1,5 @@
 ﻿﻿﻿﻿using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Models;
-using System.ComponentModel.DataAnnotations.Schema;
 using static Milk_Bakery.Models.InvoiceDetails;
 
 namespace Milk_Bakery.Data
@@ -10,40 +9,83 @@ namespace Milk_Bakery.Data
 		public MilkDbContext(DbContextOptions<MilkDbContext> options) : base(options)
 		{
 		}
-		public DbSet<Milk_Bakery.Models.Customer_Master> Customer_Master { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.PlantMaster> PlantMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.CompanyMaster> CompanyMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.CategoryMaster> CategoryMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.DepartmentMaster> DepartmentMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.DesignationMaster> DesignationMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.GradeMaster> GradeMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.RouteMaster> RouteMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.UnitMaster> UnitMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.Sub_CategoryMaster> Sub_CategoryMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.EmployeeMaster> EmployeeMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.SegementMaster> SegementMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.Company_SegementMap> Company_SegementMap { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.CustomerSegementMap> CustomerSegementMap { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.MaterialMaster> MaterialMaster { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.PurchaseOrder> PurchaseOrder { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.ProductDetail> ProductDetails { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.CustTransaction> custTransactions { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.User> Users { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.Cust2CustMap> Cust2CustMap { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.Mappedcust> mappedcusts { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.EmpToCustMap> EmpToCustMap { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.Cust2EmpMap> cust2EmpMaps { get; set; } = default!;
-		public DbSet<Milk_Bakery.Models.VisitEntery> VisitEntery { get; set; } = default!;
+
+		public DbSet<Customer_Master> Customer_Master { get; set; } = default!;
+		public DbSet<PlantMaster> PlantMaster { get; set; } = default!;
+		public DbSet<CompanyMaster> CompanyMaster { get; set; } = default!;
+		public DbSet<CategoryMaster> CategoryMaster { get; set; } = default!;
+		public DbSet<DepartmentMaster> DepartmentMaster { get; set; } = default!;
+		public DbSet<DesignationMaster> DesignationMaster { get; set; } = default!;
+		public DbSet<GradeMaster> GradeMaster { get; set; } = default!;
+		public DbSet<RouteMaster> RouteMaster { get; set; } = default!;
+		public DbSet<UnitMaster> UnitMaster { get; set; } = default!;
+		public DbSet<Sub_CategoryMaster> Sub_CategoryMaster { get; set; } = default!;
+		public DbSet<EmployeeMaster> EmployeeMaster { get; set; } = default!;
+		public DbSet<SegementMaster> SegementMaster { get; set; } = default!;
+		public DbSet<Company_SegementMap> Company_SegementMap { get; set; } = default!;
+		public DbSet<CustomerSegementMap> CustomerSegementMap { get; set; } = default!;
+		public DbSet<MaterialMaster> MaterialMaster { get; set; } = default!;
+		public DbSet<PurchaseOrder> PurchaseOrder { get; set; } = default!;
+		public DbSet<ProductDetail> ProductDetails { get; set; } = default!;
+        public DbSet<Role> Roles { get; set; } = default!;
+        public DbSet<PageAccess> PageAccesses { get; set; } = default!;
+        public DbSet<MenuItem> MenuItems { get; set; } = default!;
+		public DbSet<CustTransaction> custTransactions { get; set; } = default!;
+		public DbSet<User> Users { get; set; } = default!;
+		public DbSet<Cust2CustMap> Cust2CustMap { get; set; } = default!;
+		public DbSet<Mappedcust> mappedcusts { get; set; } = default!;
+		public DbSet<EmpToCustMap> EmpToCustMap { get; set; } = default!;
+		public DbSet<Cust2EmpMap> cust2EmpMaps { get; set; } = default!;
+		public DbSet<VisitEntery> VisitEntery { get; set; } = default!;
 		public DbSet<CratesType> CratesTypes { get; set; } = default!;
 		public DbSet<DealerMaster> DealerMasters { get; set; } = default!;
 		public DbSet<DealerBasicOrder> DealerBasicOrders { get; set; } = default!;
-
+		public DbSet<DealerOrder> DealerOrders { get; set; } = default!;
+		public DbSet<DealerOrderItem> DealerOrderItems { get; set; } = default!;
+		public DbSet<CratesManage> CratesManages { get; set; } = default!;
 		public DbSet<Invoice> Invoices { get; set; } = default!;
 		public DbSet<InvoiceMaterialDetail> InvoiceMaterials { get; set; } = default!;
+		public DbSet<CreditDebitRecord> CreditDebitRecords { get; set; } = default!;
+		public DbSet<ConversionTable> ConversionTables { get; set; } = default!;
+		public DbSet<DealerOutstanding> DealerOutstandings { get; set; } = default!;
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
+
+			// Configure default value for Sequence column in Customer_Master
+			modelBuilder.Entity<Customer_Master>()
+				.Property(e => e.Sequence)
+				.HasDefaultValue(0);
+
+			// Create index for Sequence column in Customer_Master
+			modelBuilder.Entity<Customer_Master>()
+				.HasIndex(e => e.Sequence)
+				.HasDatabaseName("IX_CustomerMaster_Sequence");
+
+			modelBuilder.Entity<DealerBasicOrder>()
+				.HasOne(dbo => dbo.DealerMaster)
+				.WithMany(dm => dm.DealerBasicOrders)
+				.HasForeignKey(dbo => dbo.DealerId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+
+			modelBuilder.Entity<DealerOrderItem>()
+				.HasOne(doi => doi.DealerOrder)
+				.WithMany(so => so.DealerOrderItems)
+				.HasForeignKey(doi => doi.DealerOrderId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			modelBuilder.Entity<DealerOrderItem>()
+			.Property(e => e.DeliverQnty)
+			.HasDefaultValue(0);
+
+			// Composite index on OrderDate, DealerId, DistributorId, and ProcessFlag
+			modelBuilder.Entity<DealerOrder>()
+			   .HasIndex(a => new { a.OrderDate, a.DealerId, a.DistributorId, a.ProcessFlag });
+			// Composite index on DealerOrderId, SapCode, and ShortCode
+			modelBuilder.Entity<DealerOrderItem>()
+				.HasIndex(m => new { m.DealerOrderId, m.SapCode, m.ShortCode });
 
 			modelBuilder.Entity<InvoiceMaterialDetail>()
 				.HasOne(m => m.Invoice)
@@ -52,10 +94,29 @@ namespace Milk_Bakery.Data
 				.OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<InvoiceMaterialDetail>()
-               .HasIndex(m => new { m.InvoiceId, m.MaterialId });
+				.HasIndex(m => new { m.InvoiceId, m.MaterialId });
 
 			modelBuilder.Entity<Invoice>()
-				.HasIndex(m => new { m.InvoiceId, m.ShipToCode,m.BillToCode,m.InvoiceDate ,m.VehicleNo});
+				.HasIndex(m => new { m.InvoiceId, m.ShipToCode, m.BillToCode, m.InvoiceDate, m.VehicleNo });
+
+			// Configure default value for setflag column
+			modelBuilder.Entity<Invoice>()
+				.Property(e => e.setflag)
+				.HasDefaultValue(0);
+
+			// Create index for setflag column
+			modelBuilder.Entity<Invoice>()
+				.HasIndex(e => e.setflag)
+				.HasDatabaseName("IX_Invoices_setflag");
+				
+			// Configure default values for ConversionTable
+			modelBuilder.Entity<ConversionTable>()
+				.Property(e => e.UnitQuantity)
+				.HasDefaultValue(0);
+				
+			modelBuilder.Entity<ConversionTable>()
+				.Property(e => e.TotalQuantity)
+				.HasDefaultValue(0);
 		}
 	}
 }

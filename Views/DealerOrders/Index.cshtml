@@ -1,0 +1,404 @@
+@{
+    ViewData["Title"] = "Dealer Order Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-2">
+    <div class="card mb-2">
+        <div class="card-header text-white p-2" style="background-color:#FC2947;">
+            <div class="d-flex align-items-center">
+                <a href="/Home/Index" class="btn btn-link text-white p-0 mr-2">
+                    <i class="fa fa-arrow-left"></i>
+                </a>
+                <h5 class="mb-0 text-white font-weight-bold">Dealer Order Entry</h5>
+            </div>
+        </div>
+        <div class="card-body p-2">
+            <!-- View Selection Radio Buttons -->
+            <div class="row mb-2">
+                <div class="col-12">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="viewType" id="excelView" value="excel" checked>
+                        <label class="form-check-label" for="excelView">Excel View</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="viewType" id="mobileView" value="mobile">
+                        <label class="form-check-label" for="mobileView">Mobile View</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-2">
+                <div class="col-12">
+                    <div class="d-flex flex-wrap">
+                        <a href="@Url.Action("Index", "ConsolidatedOrders")" class="btn btn-success btn-sm mb-2">
+                            <i class="fas fa-file-alt"></i> <span class="d-none d-sm-inline">Consolidated Order</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow mb-2">
+                        <div class="card-header py-2">
+                            <h6 class="mb-0 font-weight-bold text-primary">Select Distributor & Dealer</h6>
+                        </div>
+                        <div class="card-body p-2">
+                            <form id="dealerOrderForm">
+                                <!-- Responsive layout: column on large screens, stacked rows on small screens -->
+                                <div class="row">
+                                    <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-2">
+                                        <div class="form-group mb-2">
+                                            <label for="distributorSelect" class="font-weight-bold mb-1">Distributor/Customer:</label>
+                                            <select id="distributorSelect" class="form-control form-control-sm select2" asp-items="@(new SelectList(Model.AvailableDistributors, "Id", "Name"))">
+                                                <option value="">-- Select Distributor --</option>
+                                            </select>
+                                            <small class="form-text text-muted">Select distributor first</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 mb-2">
+                                        <div class="form-group mb-2">
+                                            <label for="dealerSelect" class="font-weight-bold mb-1">Dealer:</label>
+                                            <select id="dealerSelect" class="form-control form-control-sm select2" disabled>
+                                                <option value="">-- Select Dealer --</option>
+                                            </select>
+                                            <small class="form-text text-muted">Select after distributor</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="dealerOrdersContainer">
+                <!-- Dealer orders will be loaded here via AJAX -->
+            </div>
+            
+            <!-- Excel View Container -->
+            <div id="excelViewContainer" style="display: none;">
+                <!-- Excel view content will be loaded here -->
+            </div>
+            
+            <!-- Container for successfully ordered dealers -->
+            <div id="successfulOrdersContainer" class="mt-3">
+                <h6 class="font-weight-bold text-success mb-2"><i class="fas fa-check-circle"></i> Ordered Dealers</h6>
+                <div id="successfulOrdersList">
+                    <!-- Successfully ordered dealers will be moved here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2 with mobile-friendly settings
+            $('.select2').select2({
+                width: '100%',
+                placeholder: "-- Select --",
+                allowClear: true
+            });
+            
+            // Initialize view based on selected radio button
+            var initialViewType = $('input[name="viewType"]:checked').val();
+            if (initialViewType === 'excel') {
+                $('#dealerOrdersContainer').hide();
+                $('#excelViewContainer').show();
+                // Load Excel view if distributor is already selected
+                var initialDistributorId = $('#distributorSelect').val();
+                if (initialDistributorId) {
+                    loadExcelView(initialDistributorId);
+                }
+            } else {
+                $('#excelViewContainer').hide();
+                $('#dealerOrdersContainer').show();
+            }
+            
+            // Handle view type change
+            $('input[name="viewType"]').on('change', function() {
+                var viewType = $(this).val();
+                if (viewType === 'excel') {
+                    $('#dealerOrdersContainer').hide();
+                    $('#excelViewContainer').show();
+                    // Load Excel view if distributor is selected
+                    var distributorId = $('#distributorSelect').val();
+                    if (distributorId) {
+                        loadExcelView(distributorId);
+                    }
+                } else {
+                    $('#excelViewContainer').hide();
+                    $('#dealerOrdersContainer').show();
+                }
+            });
+            
+            // Handle distributor selection
+            $('#distributorSelect').on('change', function () {
+                var distributorId = $(this).val();
+                var viewType = $('input[name="viewType"]:checked').val();
+                
+                if (viewType === 'excel') {
+                    // Load Excel view
+                    if (distributorId) {
+                        loadExcelView(distributorId);
+                    } else {
+                        $('#excelViewContainer').html('');
+                    }
+                    return;
+                }
+                
+                if (distributorId) {
+                    // Enable dealer dropdown
+                    $('#dealerSelect').prop('disabled', false);
+                    
+                    // Load dealers for the selected distributor
+                    $('#dealerSelect').html('<option value="">Loading...</option>');
+                    
+                    $.ajax({
+                        url: '@Url.Action("GetDealersByDistributor", "DealerOrders")',
+                        type: 'GET',
+                        data: { distributorId: distributorId },
+                        success: function (result) {
+                            var dealerSelect = $('#dealerSelect');
+                            dealerSelect.html('<option value="">-- Select Dealer --</option>');
+                            
+                            if (result.success && result.dealers && result.dealers.length > 0) {
+                                // Separate ordered and non-ordered dealers
+                                var orderedDealers = [];
+                                var nonOrderedDealers = [];
+                                
+                                $.each(result.dealers, function (index, dealer) {
+                                    if (dealer.hasOrderedToday) {
+                                        orderedDealers.push(dealer);
+                                    } else {
+                                        nonOrderedDealers.push(dealer);
+                                    }
+                                });
+                                
+                                // Add non-ordered dealers first
+                                $.each(nonOrderedDealers, function (index, dealer) {
+                                    dealerSelect.append('<option value="' + dealer.id + '">' + dealer.name + '</option>');
+                                });
+                                
+                                // Add ordered dealers at the bottom
+                                if (orderedDealers.length > 0) {
+                                    // Add a separator
+                                    dealerSelect.append('<option disabled>───────Ordered─────────── </option>');
+                                    $.each(orderedDealers, function (index, dealer) {
+                                        dealerSelect.append('<option value="' + dealer.id + '" class="ordered-dealer" data-has-ordered="true">' + dealer.name + ' <i class="fas fa-check-circle text-success"></i></option>');
+                                    });
+                                }
+                            } else {
+                                dealerSelect.html('<option value="">No dealers found</option>');
+                            }
+                        },
+                        error: function () {
+                            $('#dealerSelect').html('<option value="">Error loading dealers</option>');
+                        }
+                    });
+                } else {
+                    // Reset dealer dropdown if no distributor is selected
+                    $('#dealerSelect').prop('disabled', true).html('<option value="">-- Select Dealer --</option>');
+                    $('#dealerOrdersContainer').html('');
+                }
+            });
+            
+            // Handle dealer selection
+            $('#dealerSelect').on('change', function () {
+                var dealerId = $(this).val();
+                var dealerOption = $('#dealerSelect option:selected');
+                var hasOrderedToday = dealerOption.data('has-ordered');
+                var distributorId = $('#distributorSelect').val();
+                
+                // Check if dealer has already ordered today
+                if (hasOrderedToday) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Order Already Placed',
+                        text: 'An order has already been placed for this dealer today. You can view and edit the existing order.',
+                        confirmButtonText: 'View Order',
+                        confirmButtonColor: '#3085d6'
+                    });
+                }
+                
+                if (dealerId && distributorId) {
+                    // Show loading indicator
+                    $('#dealerOrdersContainer').html('<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div><p class="small">Loading order details...</p></div>');
+                    
+                    $.ajax({
+                        url: '@Url.Action("LoadDealerOrder", "DealerOrders")',
+                        type: 'POST',
+                        data: { 
+                            distributorId: distributorId,
+                            dealerId: dealerId 
+                        },
+                        success: function (result) {
+                            if (result.success === false) {
+                                // Handle error from server
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: result.message,
+                                    confirmButtonText: 'OK',
+                                    confirmButtonColor: '#3085d6'
+                                });
+                                $('#dealerSelect').val('');
+                                $('#dealerOrdersContainer').html('');
+                            } else {
+                                $('#dealerOrdersContainer').html(result);
+                            }
+                        },
+                        error: function () {
+                            $('#dealerOrdersContainer').html('<div class="alert alert-danger py-1 px-2 mb-2" role="alert"><i class="fa fa-exclamation-triangle"></i> Error loading order details. Please try again.</div>');
+                        }
+                    });
+                } else {
+                    $('#dealerOrdersContainer').html('');
+                }
+            });
+            
+            // Handle successful order saving
+            $(document).on('orderSaved', function(event, dealerId, dealerName) {
+                // Move the dealer card to the successful orders container
+                var dealerCard = $('#dealer-card-' + dealerId);
+                if (dealerCard.length) {
+                    // Add success styling
+                    dealerCard.removeClass('border-left-primary').addClass('border-left-success');
+                    dealerCard.find('.card-header').removeClass('text-primary').addClass('text-success');
+                    
+                    // Add success tick icon
+                    var header = dealerCard.find('.card-header h6');
+                    header.html('<i class="fas fa-check-circle"></i> ' + dealerName + ' <span class="badge badge-success">Ordered</span>');
+                    
+                    // Collapse the card
+                    dealerCard.find('.dealer-collapse-content').addClass('d-none');
+                    dealerCard.find('.toggle-icon').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                    
+                    // Move to successful orders container
+                    $('#successfulOrdersList').append(dealerCard);
+                    
+                    // Show the successful orders container if it was hidden
+                    $('#successfulOrdersContainer').show();
+                    
+                    // Update the dealer option in the dropdown to show it's ordered
+                    var dealerOption = $('#dealerSelect option[value="' + dealerId + '"]');
+                    if (dealerOption.length) {
+                        var optionText = dealerOption.text();
+                        dealerOption.text(optionText + ' ✓');
+                        dealerOption.attr('data-has-ordered', 'true');
+                        dealerOption.addClass('ordered-dealer');
+                    }
+                }
+            });
+            
+            // Function to load Excel view
+            function loadExcelView(distributorId) {
+                $('#excelViewContainer').html('<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></div><p class="small">Loading Excel view...</p></div>');
+                
+                $.ajax({
+                    url: '@Url.Action("LoadExcelView", "DealerOrders")',
+                    type: 'POST',
+                    data: { distributorId: distributorId },
+                    success: function (result) {
+                        if (result.success === false) {
+                            // Handle error from server
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: result.message,
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#3085d6'
+                            });
+                            $('#excelViewContainer').html('');
+                        } else {
+                            $('#excelViewContainer').html(result);
+                        }
+                    },
+                    error: function () {
+                        $('#excelViewContainer').html('<div class="alert alert-danger py-1 px-2 mb-2" role="alert"><i class="fa fa-exclamation-triangle"></i> Error loading Excel view. Please try again.</div>');
+                    }
+                });
+            }
+            
+            // Show the successful orders container initially if there are any
+            if ($('#successfulOrdersList').children().length > 0) {
+                $('#successfulOrdersContainer').show();
+            } else {
+                $('#successfulOrdersContainer').hide();
+            }
+        });
+    </script>
+    
+    <style>
+        .ordered-dealer {
+            color: #6c757d !important;
+            font-style: italic;
+        }
+        .select2-container--default .select2-results__option[aria-disabled=true] {
+            font-weight: bold;
+            color: #6c757d;
+        }
+        
+        /* Responsive adjustments for small screens */
+        @@media (max-width: 991.98px) {
+            .form-group {
+                margin-bottom: 1rem;
+            }
+            
+            .card-header {
+                padding: 0.5rem 0.75rem !important;
+            }
+            
+            .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Extra compact for mobile */
+        @@media (max-width: 575.98px) {
+            .card-body {
+                padding: 0.5rem !important;
+            }
+            
+            .form-group {
+                margin-bottom: 0.75rem;
+            }
+            
+            .mb-2 {
+                margin-bottom: 0.5rem !important;
+            }
+            
+            .p-2 {
+                padding: 0.5rem !important;
+            }
+        }
+        
+        /* Excel view styles */
+        .excel-table-container {
+            overflow-x: auto;
+        }
+        
+        .excel-table th, .excel-table td {
+            white-space: nowrap;
+            padding: 0.5rem;
+            text-align: center;
+        }
+        
+        .excel-table th.dealer-col {
+            min-width: 150px;
+        }
+        
+        .excel-table th.material-col {
+            min-width: 80px;
+        }
+        
+        .excel-table .total-col {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+    </style>
+}

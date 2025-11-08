@@ -133,7 +133,7 @@ namespace Milk_Bakery.Controllers
 					if (check == true)
 					{
 						i = i + 1;
-						fileContent += companydetails.companycode + " " + cusdetails.segementcode3party + "-" + companydetails.companycode + "-" + cusdetails.custsegementcode + " " + cusdetails.custsegementcode.Substring(cusdetails.custsegementcode.Length - 4) + purchase.OrderNo.Substring(purchase.OrderNo.Length - 4) + " " + purchase.OrderNo + "/" + purchase.OrderDate.ToString("dd/MM/yy").Replace("/", "").Replace("-", "") + " " + purchase.OrderDate.ToString("dd/MM/yy") + " " + purchase.OrderDate.ToString("dd/MM/yy") + " " + purchase.OrderDate.ToString("dd/MM/yy") + i.ToString().PadLeft(20) + " " + material.material3partycode.PadRight(15) + total.ToString().PadLeft(11) + " " + "N" + " " + segment.Segement_Code + Environment.NewLine;
+						//fileContent += companydetails.companycode + " " + cusdetails.segementcode3party + "-" + companydetails.companycode + "-" + cusdetails.custsegementcode + " " + cusdetails.custsegementcode.Substring(cusdetails.custsegementcode.Length - 4) + purchase.OrderNo.Substring(purchase.OrderNo.Length - 4) + " " + purchase.OrderNo + "/" + purchase.OrderDate.ToString("dd/MM/yy").Replace("/", "").Replace("-", "") + " " + purchase.OrderDate.ToString("dd/MM/yy") + " " + purchase.OrderDate.ToString("dd/MM/yy") + " " + purchase.OrderDate.ToString("dd/MM/yy") + i.ToString().PadLeft(20) + " " + material.material3partycode.PadRight(15) + total.ToString().PadLeft(11) + " " + "N" + " " + segment.Segement_Code + Environment.NewLine;
 					}
 
 				}

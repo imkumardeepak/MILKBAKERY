@@ -1,0 +1,41 @@
+TECHNOLOGY STACK
+
+Backend Technologies:
+- Language: C# (.NET Core 6+)
+- Framework: ASP.NET Core MVC
+- ORM: Entity Framework Core
+- Database: SQL Server
+- Background Processing: IHostedService implementation
+- Dependency Injection: Built-in ASP.NET Core DI container
+- Logging: Default .NET logging framework
+- Session Management: ASP.NET Core Session State
+- Caching: IMemoryCache for in-memory caching
+
+Frontend Technologies:
+- HTML5/CSS3: Modern markup and styling
+- Bootstrap 4+: Responsive design framework
+- jQuery: Interactive UI components
+- DataTables: Advanced table functionality
+- Chart.js: Data visualization and dashboard charts
+- Select2: Enhanced dropdown components
+- SweetAlert: Beautiful alert dialogs
+- JSZip: File compression utilities
+- FontAwesome: Icon library
+
+Additional Libraries and Tools:
+- AspNetCoreHero.ToastNotification: Notification system
+- Newtonsoft.Json: JSON serialization/deserialization
+- DocumentFormat.OpenXml: Excel file processing
+- Humanizer: String formatting and human-readable text generation
+
+Development Environment:
+- IDE: Visual Studio 2022 or VS Code
+- .NET SDK: Version 6.0 or higher
+- Database: SQL Server (Express or full version)
+- Package Manager: NuGet
+
+Build and Deployment:
+- Build Tool: dotnet build
+- Package Manager: NuGet
+- Deployment Targets: IIS, cloud platforms (Azure), or self-hosted
+- Framework: Framework-dependent or self-contained deployment

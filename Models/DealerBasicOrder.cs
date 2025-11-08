@@ -35,9 +35,9 @@ namespace Milk_Bakery.Models
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Basic amount must be greater than 0")]
-        [Display(Name = "Basic Amount")]
-        public decimal BasicAmount { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Rate must be greater than 0")]
+        [Display(Name = "Rate")]
+        public decimal Rate { get; set; }
 
         // Navigation property
         [ForeignKey("DealerId")]

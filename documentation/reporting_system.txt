@@ -1,0 +1,89 @@
+REPORTING SYSTEM
+
+The Milk & Bakery Management System includes a comprehensive reporting module for business intelligence and operational tracking:
+
+1. Dashboard Reporting:
+- Home controller provides dashboard statistics
+- Pending verification orders count
+- Pending processing orders count
+- Total processed orders count
+- Total monetary value of orders
+- Dealer count statistics
+- Memory caching for performance (5-minute cache)
+- Role-based dashboard content
+
+2. Route Reporting:
+- RouteReportController for route-based reporting
+- Route tracking and performance metrics
+- Customer visit tracking
+- Delivery performance analysis
+
+3. Visit Reporting:
+- VisitReportController for sales visit tracking
+- VisitEnteriesController for visit entry management
+- Visit entry recording with date and customer information
+- Visit history tracking
+
+4. Outstanding Reporting:
+- OutstandingController for financial tracking
+- Outstanding amount calculations
+- Customer account balance monitoring
+- Payment tracking and reconciliation
+
+5. Crates Tracking Reporting:
+- CratesTrackingReportController for crate movement tracking
+- Customer-specific crate balance reporting
+- Segment-based crate tracking
+- Date range filtering capabilities
+- Division, dispatch date, opening, inward, outward, balance columns
+
+6. Variance Order Reporting:
+- VarianceOrderReportController for order variance analysis
+- Order discrepancy identification
+- Quantity variance reporting
+- Rate variance analysis
+
+7. Delivered Quantity Reporting:
+- DeliveredQuantityReportController for delivery tracking
+- Actual delivered quantities vs ordered quantities
+- Delivery variance analysis
+- Customer delivery performance
+
+8. Gate Pass Reporting:
+- GatePassController for gate pass management
+- Material movement authorization
+- Security tracking for outbound materials
+- Gate pass generation and printing
+
+9. Report Controllers:
+- RouteReportController
+- VisitReportController
+- OutstandingController
+- CratesTrackingReportController
+- VarianceOrderReportController
+- DeliveredQuantityReportController
+- GatePassController
+
+10. Charting and Visualization:
+- Home controller includes charting capabilities
+- Order amount trends over time (7-day view)
+- Crates outward movements by type
+- DataTables integration for tabular data
+- Chart.js for graphical representations
+- AJAX-based chart data loading
+
+11. Key Reporting Features:
+- Date range filtering for most reports
+- Customer-specific reporting
+- Segment-based filtering
+- Export capabilities (implied through DataTables)
+- Real-time data retrieval
+- Performance optimization through caching
+- Role-based report access
+- User-friendly interfaces with filtering options
+
+12. Data Models for Reporting:
+- DashboardStats for dashboard metrics
+- Various ViewModel classes for report-specific data
+- Complex queries for data aggregation
+- Join operations across multiple entities

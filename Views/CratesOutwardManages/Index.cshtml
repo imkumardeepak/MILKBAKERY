@@ -1,0 +1,144 @@
+@{
+    ViewData["Title"] = "Crates Outward Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .card-header-custom {
+        background-color: #dc3545;
+        /* Red color for outward */
+        color: white;
+        padding: 0.75rem 1rem;
+    }
+
+    .feature-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+        background-color: #fff;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .card-icon {
+        font-size: 2.5rem;
+        color: #dc3545;
+        /* Red color for outward */
+        margin-bottom: 1rem;
+    }
+
+    .card-title {
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #495057;
+    }
+
+    .card-text {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-custom {
+        background-color: #dc3545;
+        /* Red color for outward */
+        border-color: #dc3545;
+        color: white;
+        font-weight: 500;
+        padding: 0.5rem 1.5rem;
+    }
+
+    .btn-custom:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        color: white;
+    }
+
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-radius: 50%;
+        margin: 0 auto 1rem;
+    }
+
+    .feature-icon i {
+        color: #dc3545;
+        font-size: 1.5rem;
+    }
+
+    .section-title {
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: #495057;
+        border-bottom: 2px solid #dc3545;
+        padding-bottom: 0.5rem;
+        display: inline-block;
+    }
+
+    .container-custom {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    @@media
+    (max-width: 768px) {
+        .feature-card {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
+<div class="container-fluid px-0">
+    <div class="card mb-3">
+        <div class="card-header card-header-custom p-2">
+            <div class="d-flex align-items-center">
+                <a asp-controller="CratesManages" asp-action="Index" class="btn btn-link text-white p-0 me-2">
+                    <i class="fas fa-arrow-left fa-lg"></i>
+                </a>
+                <h5 class="mb-0 text-white flex-grow-1 text-center">Crates Outward Management</h5>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="container-custom">
+                <h3 class="section-title">Outward Entry Options</h3>
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="feature-card h-100 p-4 text-center">
+                            <div class="feature-icon">
+                                <i class="fas fa-file-upload"></i>
+                            </div>
+                            <h4 class="card-title">Upload Bulk Outward Entry</h4>
+                            <p class="card-text">Upload a CSV or Excel file containing outward crate entries for
+                                multiple customers at once.</p>
+                            <a href="@Url.Action("UploadBulkOutwardEntry", "CratesOutwardManages")"
+                                class="btn btn-custom">
+                                <i class="fas fa-file-upload me-2"></i>Upload File
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="feature-card h-100 p-4 text-center">
+                            <div class="feature-icon">
+                                <i class="fas fa-edit"></i>
+                            </div>
+                            <h4 class="card-title">Manual Bulk Outward Entry</h4>
+                            <p class="card-text">Manually enter outward crate quantities for multiple customers in a
+                                single form.</p>
+                            <a href="@Url.Action("BulkOutwardEntry", "CratesOutwardManages")" class="btn btn-custom">
+                                <i class="fas fa-edit me-2"></i>Enter Manually
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

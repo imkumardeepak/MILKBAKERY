@@ -1,0 +1,217 @@
+@{
+    ViewData["Title"] = "Dispatch Route Sheet";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="mt-3">
+    <div class="card mb-3">
+        <div class="card-header text-white p-1" style="background-color:#17a2b8;">
+            <div class="d-flex align-items-baseline">
+                <a href="/OrderReconciliation/Index" class="btn btn-link text-white"><i class="fa fa-arrow-left"></i></a>
+                <h5 class="mx-auto text-white text-2xl font-semibold">Dispatch Route Sheet</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="dispatchDate" class="form-label font-weight-bold">Dispatch Date:</label>
+                    <input type="date" id="dispatchDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-4">
+                    <label for="customerFilter" class="form-label font-weight-bold">Customer/Distributor:</label>
+                    <select id="customerFilter" class="form-control select2">
+                        <option value="">-- Select Customer --</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button id="filterBtn" class="btn btn-primary mr-2">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <button id="exportBtn" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table id="dispatchTable" class="table table-striped table-bordered" style="width:100%">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Dealer Name</th>
+                                    <!-- Material columns will be added dynamically -->
+                                    <th>Qty</th>
+                                    <th>Amount</th>
+                                    <th>Old</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2
+            $('.select2').select2();
+            
+            // Load customers/distributors
+            loadCustomers();
+            
+            // Load initial data
+            loadData();
+            
+            // Filter button click event
+            $('#filterBtn').on('click', function () {
+                loadData();
+            });
+            
+            // Export button click event
+            $('#exportBtn').on('click', function () {
+                exportToExcel();
+            });
+            
+            // Date change event
+            $('#dispatchDate').on('change', function () {
+                loadData();
+            });
+            
+            // Customer filter change event
+            $('#customerFilter').on('change', function () {
+                loadData();
+            });
+            
+            function loadCustomers() {
+                $.ajax({
+                    url: '@Url.Action("GetAllCustomers", "OrderReconciliation")',
+                    type: 'GET',
+                    success: function (result) {
+                        if (result.success) {
+                            var select = $('#customerFilter');
+                            
+                            $.each(result.customers, function (index, customer) {
+                                select.append('<option value="' + customer.id + '">' + customer.name + '</option>');
+                            });
+                        }
+                    },
+                    error: function () {
+                        console.log('Error loading customers');
+                    }
+                });
+            }
+            
+            function loadData() {
+                var date = $('#dispatchDate').val();
+                var customerId = $('#customerFilter').val();
+                
+                $.ajax({
+                    url: '@Url.Action("GetDispatchData", "OrderReconciliation")',
+                    type: 'GET',
+                    data: {
+                        date: date,
+                        customerId: customerId
+                    },
+                    success: function (result) {
+                        if (result.success) {
+                            var tbody = $('#dispatchTable tbody');
+                            var thead = $('#dispatchTable thead tr');
+                            tbody.empty();
+                            
+                            // Clear existing material columns (except the first one and the last four)
+                            thead.find('th:not(:first):not(:nth-last-child(-n+4))').remove();
+                            
+                            if (result.data && result.data.length > 0) {
+                                // Add material columns to header (only quantity for each material)
+                                if (result.materials && result.materials.length > 0) {
+                                    for (var i = 0; i < result.materials.length; i++) {
+                                        var material = result.materials[i];
+                                        // Add quantity column only
+                                        thead.find('th:nth-last-child(4)').before('<th>' + material + '</th>');
+                                    }
+                                }
+                                
+                                // Process each row of data
+                                $.each(result.data, function (index, item) {
+                                    // Check if this is the total row
+                                    if (item.dealerName === "Total") {
+                                        var row = '<tr class="table-info font-weight-bold">';
+                                        row += '<td>' + (item.dealerName || '') + '</td>';
+                                        
+                                        // Add material quantities only
+                                        if (result.materials && result.materials.length > 0) {
+                                            for (var i = 0; i < result.materials.length; i++) {
+                                                var material = result.materials[i];
+                                                row += '<td>' + (item[material] || 0) + '</td>';
+                                            }
+                                        }
+                                        
+                                        // Add total quantity, amount, balance, and total with balance
+                                        row += '<td>' + (item.total || 0) + '</td>';
+                                        row += '<td>' + (item.totalAmount || 0) + '</td>';
+                                        row += '<td>' + (item.balance || 0) + '</td>';
+                                        row += '<td>' + (item.totalWithBalance || 0) + '</td>';
+                                        row += '</tr>';
+                                        tbody.append(row);
+                                    } else {
+                                        var row = '<tr>';
+                                        row += '<td>' + (item.dealerName || '') + '</td>';
+                                        
+                                        // Add material quantities only
+                                        if (result.materials && result.materials.length > 0) {
+                                            for (var i = 0; i < result.materials.length; i++) {
+                                                var material = result.materials[i];
+                                                row += '<td>' + (item[material] || 0) + '</td>';
+                                            }
+                                        }
+                                        
+                                        // Add total quantity, amount, balance, and total with balance
+                                        row += '<td>' + (item.total || 0) + '</td>';
+                                        row += '<td>' + (item.totalAmount || 0) + '</td>';
+                                        row += '<td>' + (item.balance || 0) + '</td>';
+                                        row += '<td>' + (item.totalWithBalance || 0) + '</td>';
+                                        row += '</tr>';
+                                        tbody.append(row);
+                                    }
+                                });
+                            } else {
+                                // Add material columns to header even when no data
+                                if (result.materials && result.materials.length > 0) {
+                                    for (var i = 0; i < result.materials.length; i++) {
+                                        var material = result.materials[i];
+                                        // Add quantity column only
+                                        thead.find('th:nth-last-child(4)').before('<th>' + material + '</th>');
+                                    }
+                                }
+                                
+                                tbody.append('<tr><td colspan="' + (1 + (result.materials ? result.materials.length : 0) + 4) + '" class="text-center">No data found</td></tr>');
+                            }
+                        } else {
+                            $('#dispatchTable tbody').empty().append('<tr><td colspan="8" class="text-center">Error loading data: ' + result.message + '</td></tr>');
+                        }
+                    },
+                    error: function () {
+                        $('#dispatchTable tbody').empty().append('<tr><td colspan="8" class="text-center">Error loading data</td></tr>');
+                    }
+                });
+            }
+            
+            function exportToExcel() {
+                var date = $('#dispatchDate').val();
+                var customerId = $('#customerFilter').val();
+                var url = '@Url.Action("ExportDispatchToExcel", "OrderReconciliation")' + 
+                          '?date=' + encodeURIComponent(date) + 
+                          '&customerId=' + encodeURIComponent(customerId || '');
+                window.location.href = url;
+            }
+        });
+    </script>
+}

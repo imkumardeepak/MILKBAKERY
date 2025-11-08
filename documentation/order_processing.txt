@@ -1,0 +1,61 @@
+ORDER PROCESSING SYSTEM
+
+The Milk & Bakery Management System implements a comprehensive order processing workflow for customer purchases:
+
+1. Purchase Order Management:
+- PurchaseOrder entity represents customer orders
+- Fields include: order number, date, customer information, segment details
+- Verification and processing flags for workflow management
+- Related ProductDetails collection for order items
+
+2. Product Details:
+- ProductDetail entity represents individual items in an order
+- Fields: product name, code, unit, quantity, rate, price
+- Associated with PurchaseOrder through foreign key relationship
+- Calculated Total field (not mapped to database)
+
+3. Order Creation Workflow:
+- Role-based interface customization (Customer, Sales, Admin)
+- Customer users see simplified interface with pre-selected customer data
+- Sales users can select from assigned customers
+- Admin users have full access to all customers
+- Dynamic product loading based on segment selection
+- Automatic order number generation with P prefix and zero-padded numbering
+
+4. Order Validation:
+- Duplicate order prevention (one order per customer per day)
+- Segment-based product filtering
+- Non-negative quantity requirements
+- Required field validation
+
+5. Order Editing:
+- Existing orders can be modified
+- Product details can be updated
+- Associated product details are removed and re-added during edit
+- Verification and processing flags maintained
+
+6. Order Verification and Processing:
+- Three-state workflow: Created (verifyflag=0, processflag=0) -> Verified (verifyflag=1, processflag=0) -> Processed (verifyflag=1, processflag=1)
+- Dashboard displays counts for each state
+- File generation for order processing
+
+7. Controllers:
+- PurchaseOrdersController handles all order operations
+- Index action for order listing with date range filtering
+- Create action for new order creation with role-based logic
+- Edit action for modifying existing orders
+- Delete action for order removal
+- Details action for order viewing
+
+8. Views:
+- Index view with filtering capabilities
+- Create view with multi-step form process
+- _PurchaseOrderPartial for AJAX-loaded product selection
+- Details view for order information display
+
+9. Supporting Features:
+- AJAX integration for dynamic product loading
+- Strongly typed views with complex model binding
+- Session-based customer filtering
+- Customer-to-employee mapping for sales users
+- Customer-to-customer mapping for customer users
