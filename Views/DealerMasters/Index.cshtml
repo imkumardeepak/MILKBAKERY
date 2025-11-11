@@ -6,6 +6,7 @@
     
     // Create a dictionary to map customer IDs to customer names for easy lookup
     var customerDictionary = new Dictionary<int, string>();
+    string selectedCustomerName = "";
     if (ViewBag.CustomerList != null)
     {
         foreach (var customer in ViewBag.CustomerList as IEnumerable<Milk_Bakery.Models.Customer_Master>)
@@ -13,80 +14,91 @@
             customerDictionary[customer.Id] = customer.Name;
         }
     }
+    
+    // Get selected customer name
+    if (ViewBag.SelectedCustomerId != null && ViewBag.Customers != null)
+    {
+        foreach (SelectListItem customer in ViewBag.Customers)
+        {
+            if (customer.Value == ViewBag.SelectedCustomerId.ToString())
+            {
+                selectedCustomerName = customer.Text;
+                break;
+            }
+        }
+    }
 }
 
-<div class="w-full bg-white shadow-lg rounded-lg overflow-hidden mt-2">
-    <div class="bg-blue-500 px-2 py-2 flex items-center justify-between">
-        <h2 class="text-white text-2xl font-semibold">Dealer Master</h2>
+<div class="w-full bg-white shadow rounded overflow-hidden mt-2">
+    <div class="bg-blue-600 px-4 py-3 flex items-center justify-between">
+        <h2 class="text-white text-xl font-semibold">Dealer Master</h2>
         <div class="flex space-x-2">
-            <a asp-action="UploadDealers" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn flex items-center justify-center">
+            <a asp-action="UploadDealers" class="h-9 px-3 rounded text-white text-sm hover:bg-green-700 bg-green-600 btn flex items-center justify-center">
                 <i class="fa fa-upload mr-1"></i> Upload
             </a>
-            <a asp-action="AddOrEdit" asp-route-id="0" class="h-10 w-32 rounded-sm shadow-md text-white text-[16px] hover:bg-blue-700 bg-blue-600 btn flex items-center justify-center">
+            <a asp-action="AddOrEdit" asp-route-id="0" class="h-9 px-3 rounded text-white text-sm hover:bg-blue-700 bg-blue-600 btn flex items-center justify-center">
                 <i class="fa fa-plus mr-1"></i> Add
             </a>
         </div>
     </div>
-    <div class="p-2">
-        <div class="w-screen-lg mt-2">
-            @if (ViewBag.Customers != null && ViewBag.Customers.Count > 1)
-            {
-                <div class="mb-4">
-                    <form method="get" class="flex items-center space-x-4">
-                        <label for="selectedCustomerId" class="text-gray-700 font-medium">Select Customer:</label>
-                        <select name="selectedCustomerId" id="selectedCustomerId" class="text-[13px] h-10 text-gray-700 w-64 border-2 px-2 rounded-sm">
-                            @foreach (SelectListItem customer in ViewBag.Customers)
-                            {
-                                if (!string.IsNullOrEmpty(customer.Value))
-                                {
-                                    <option value="@customer.Value" asp-selected="@(ViewBag.SelectedCustomerId?.ToString() == customer.Value)">@customer.Text</option>
-
-                                }
-                            }
-                        </select>
-                        <button type="submit" class="h-10 w-24 rounded-sm shadow-md text-white text-[16px] hover:bg-green-700 bg-green-600 btn">Filter</button>
-                    </form>
-                </div>
-            }
-            <div class="table-responsive table-container max-h-screen overflow-y-auto">
-                <table class="w-full divide-y divide-gray-200" id="dataTable">
-                    <thead class="bg-gray-200 sticky top-0">
-                        <tr>
-                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Id</th>
-                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Customer Name</th>
-                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Name</th>
-                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Phone No</th>
-                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Orders</th>
-                            <th scope="col" class="sticky top-0 px-2 py-2 text-xs font-medium text-black-800 uppercase tracking-wider">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach (var item in Model)
+    <div class="p-3">
+        @if (ViewBag.Customers != null && ViewBag.Customers.Count > 1)
+        {
+            <div class="mb-4 bg-gray-50 p-3 rounded">
+                <form method="get" class="flex items-center space-x-3">
+                    <label for="selectedCustomerId" class="text-gray-700 font-medium text-sm">Select Customer:</label>
+                    <select name="selectedCustomerId" id="selectedCustomerId" class="text-sm h-9 text-gray-700 w-64 border rounded px-2">
+                        @foreach (SelectListItem customer in ViewBag.Customers)
                         {
-                            <tr>
-                                <td class="px-2 py-2 whitespace-nowrap">@item.Id</td>
-                                <td class="px-2 py-2 whitespace-nowrap">
-                                    @if (customerDictionary.ContainsKey(item.DistributorId))
-                                    {
-                                        @customerDictionary[item.DistributorId]
-                                    }
-                                    else
-                                    {
-                                        @item.DistributorId
-                                    }
-                                </td>
-                                <td class="px-2 py-2 whitespace-nowrap">@item.Name</td>
-                                <td class="px-2 py-2 whitespace-nowrap">@item.PhoneNo</td>
-                                <td class="px-2 py-2 whitespace-nowrap">@item.DealerBasicOrders.Count</td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    <a asp-action="AddOrEdit" asp-route-id="@item.Id" class="h-10 w-10 rounded-sm shadow-md text-white text-[16px] hover:bg-yellow-700 bg-yellow-600 btn"><i class="fas fa-pencil-alt"></i> </a> |
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="h-10 w-10 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn" onclick="return confirmation(this);"><i class="fas fa-trash-alt"></i></a>
-                                </td>
-                            </tr>
+                            if (!string.IsNullOrEmpty(customer.Value))
+                            {
+                                <option value="@customer.Value" asp-selected="@(ViewBag.SelectedCustomerId?.ToString() == customer.Value)">@customer.Text</option>
+                            }
                         }
-                    </tbody>
-                </table>
+                    </select>
+                    <button type="submit" class="h-9 px-4 rounded text-white text-sm hover:bg-green-700 bg-green-600 btn">Filter</button>
+                </form>
             </div>
+        }
+        
+        @if (!string.IsNullOrEmpty(selectedCustomerName))
+        {
+            <div class="mb-4">
+                <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
+                    Customer: @selectedCustomerName
+                </span>
+            </div>
+        }
+        
+        <div class="table-responsive">
+            <table class="w-full divide-y divide-gray-200 text-sm" id="dataTable">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th scope="col" class="px-2 py-1 text-xs font-medium text-gray-700 uppercase tracking-wider text-left">Name</th>
+                        <th scope="col" class="px-2 py-1 text-xs font-medium text-gray-700 uppercase tracking-wider text-left">Phone No</th>
+                        <th scope="col" class="px-2 py-1 text-xs font-medium text-gray-700 uppercase tracking-wider text-left">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var item in Model)
+                    {
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-2 py-1 whitespace-nowrap">@item.Name</td>
+                            <td class="px-2 py-1 whitespace-nowrap">@item.PhoneNo</td>
+                            <td class="px-2 py-1 whitespace-nowrap">
+                                <div class="flex space-x-1">
+                                    <a asp-action="AddOrEdit" asp-route-id="@item.Id" class="h-7 w-7 rounded text-white text-xs hover:bg-yellow-700 bg-yellow-600 btn flex items-center justify-center">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="h-7 w-7 rounded text-white text-xs hover:bg-red-700 bg-red-600 btn flex items-center justify-center" onclick="return confirmation(this);">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -104,7 +116,14 @@
                 // If not initialized, initialize it
                 $('#dataTable').DataTable({
                     "order": [[0, "desc"]],
-                    "pageLength": 25
+                    "pageLength": 25,
+                    "responsive": true,
+                    "autoWidth": false,
+                    "columnDefs": [
+                        { "width": "45%", "targets": 0 },
+                        { "width": "30%", "targets": 1 },
+                        { "width": "15%", "targets": 2 }
+                    ]
                 });
             }
         });

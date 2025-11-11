@@ -5,7 +5,7 @@
     string name = Context.Request.HttpContext.Session.GetString("name");
 }
 
-@if (role == "Customer")
+@if (role.ToLower() == "customer")
 {
 
     <div class="mt-3">
@@ -208,7 +208,7 @@
 
     </div>
 }
-else if (role == "Sales")
+else if (role.ToString() == "sales")
 {
     <div class="mt-3">
 
@@ -323,7 +323,7 @@ else if (role == "Sales")
     </div>
 
 }
-else if (role == "Plant")
+else if (role.ToString() == "plant")
 {
     <div class="mt-3">
         <!-- Breadcrumbs-->

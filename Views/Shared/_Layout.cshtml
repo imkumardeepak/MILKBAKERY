@@ -74,7 +74,7 @@ string name = Context.Request.HttpContext.Session.GetString("name");
 
 <body id="page-top">
 
-	@if (role == "Customer")
+	@if (role.ToLower() == "customer")
 	{
 		<nav class="navbar navbar-expand navbar-dark bg-dark static-top">
 			<a class="navbar-brand mr-1" href="/Home/Index">Online Order Manager</a>
@@ -188,7 +188,7 @@ string name = Context.Request.HttpContext.Session.GetString("name");
 
 
 	}
-	else if (role == "Sales")
+	else if (role.ToLower() == "sales")
 	{
 		<nav class="navbar navbar-expand navbar-dark bg-dark static-top">
 			<a class="navbar-brand mr-1" href="/Home/Index">Online Order Manager</a>
@@ -298,7 +298,7 @@ string name = Context.Request.HttpContext.Session.GetString("name");
 			</div>
 		</div>
 	}
-	else if (role == "Manager")
+	else if (role.ToLower() == "manager")
 	{
 		<nav class="navbar navbar-expand navbar-dark bg-dark static-top">
 			<button class="btn btn-link btn-sm text-white order-1 order-sm-0" id="sidebarToggle" href="#">
