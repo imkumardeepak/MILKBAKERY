@@ -15,12 +15,12 @@
 			</div>
 		</div>
 		<div class="card-body">
-			<form asp-action="AddOrEdit">
+			<form asp-action="AddOrEdit" id="CodeSbyAnizForm">
 				<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 				<div class="row">
 					<div class="form-group col-sm-6">
 						<label asp-for="empl" class="control-label"></label>
-						<select asp-for="empl" id="myDropdown1" class="form-control" asp-items="@ViewBag.employee" onchange="changewb()"></select>
+						<select asp-for="empl" id="myDropdown1" class="form-control" asp-items="@ViewBag.employee" onchange="handleSelectChange(this)"></select>
 						<span asp-validation-for="empl" class="text-danger"></span>
 					</div>
 					<div class="form-group col-sm-6">
@@ -48,13 +48,10 @@
 						<tbody id="CsDiv">
 							@for (int i = 0; i < Model.Cust2EmpMaps.Count; i++)
 							{
-
 								<tr>
-
 									<td style="width:300px">
 										<select asp-for="@Model.Cust2EmpMaps[i].customer" class="form-control" asp-items="@ViewBag.customer" onchange="handleSelectChange(this)"></select>
 										<span asp-validation-for="@Model.Cust2EmpMaps[i].customer" class="text-danger"></span>
-
 									</td>
 
 									<td style="width:200px">
@@ -82,65 +79,3 @@
 	</div>
 
 </div>
-
-
-<script>
-	function changewb() {
-
-		if (document.getElementById("myDropdown1").value != "") {
-
-			var selectedValue = document.getElementById("myDropdown1").value;
-
-			$.ajax({
-				url: '@Url.Action("fill_form", "EmpToCustMaps")',
-				type: 'GET',
-				dataType: 'json',
-				data: { selectedvalue: selectedValue },
-				success: function (data) {
-					document.getElementById("phone").value = data;
-				}
-			});
-		}
-
-	}
-</script>
-<script>
-	function handleSelectChange(selectElement) {
-		var tid = selectElement.id;
-		var product = selectElement.value;
-
-		// Check for duplicate selection in other rows
-		var allSelectElements = document.querySelectorAll("select[id*='customer']");
-		var isDuplicate = false;
-
-		allSelectElements.forEach(function (otherSelect) {
-			if (otherSelect.id !== tid && otherSelect.value === product) {
-				isDuplicate = true;
-			}
-		});
-
-		if (isDuplicate) {
-			alert("This customer has already been selected in another row.");
-			selectElement.value = ""; // Reset the selection
-			return;
-		}
-
-		// Proceed to update the phone field if no duplicate is found
-		var txtProductCodeId = tid.replaceAll('customer', 'phone');
-		var txtProductCode = document.getElementById(txtProductCodeId);
-
-		txtProductCode.value = null;
-
-		// Make AJAX call to fetch data
-		$.ajax({
-			url: '@Url.Action("fill_form", "Cust2CustMap")',
-			type: 'GET',
-			dataType: 'json',
-			data: { selectedvalue: product },
-			success: function (data) {
-				txtProductCode.value = data;
-			}
-		});
-	}
-
-</script>

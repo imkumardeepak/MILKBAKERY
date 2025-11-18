@@ -64,7 +64,7 @@ namespace Milk_Bakery.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> AddOrEdit(int id, EmpToCustMap EmpToCustMap)
 		{
-			EmpToCustMap.Cust2EmpMaps.RemoveAll(a => a.phone == null || a.customer == null);
+			EmpToCustMap.Cust2EmpMaps.RemoveAll(a => a.phone == null || a.customer == null || a.IsDeleted == true);
 
 			//insert
 			if (id == 0)

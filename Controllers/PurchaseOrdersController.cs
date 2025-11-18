@@ -69,7 +69,7 @@ namespace Milk_Bakery.Controllers
 
         public IActionResult Create()
         {
-            if (HttpContext.Session.GetString("role") == "Customer")
+            if (string.Equals(HttpContext.Session.GetString("role"), "Customer", StringComparison.OrdinalIgnoreCase))
             {
                 PurchaseOrder item = new PurchaseOrder();
                 var customer = _context.Customer_Master.Where(a => a.phoneno == HttpContext.Session.GetString("UserName")).FirstOrDefault();
@@ -110,7 +110,7 @@ namespace Milk_Bakery.Controllers
                 }
                 return View(item);
             }
-            else if (HttpContext.Session.GetString("role") == "Sales")
+            else if (string.Equals(HttpContext.Session.GetString("role"), "Sales", StringComparison.OrdinalIgnoreCase))
             {
                 PurchaseOrder item = new PurchaseOrder();
 
@@ -151,7 +151,7 @@ namespace Milk_Bakery.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PurchaseOrder purchaseOrder)
         {
-            if (HttpContext.Session.GetString("role") == "Customer")
+            if (string.Equals(HttpContext.Session.GetString("role"), "Customer", StringComparison.OrdinalIgnoreCase))
             {
                 var data = _context.PurchaseOrder.Where(item => item.OrderDate.Date == DateTime.Now.Date && item.Customername == purchaseOrder.Customername).ToList();
 
@@ -393,7 +393,7 @@ namespace Milk_Bakery.Controllers
         private List<SelectListItem> GetCustomer()
         {
 
-            if (HttpContext.Session.GetString("role") == "Sales")
+            if (string.Equals(HttpContext.Session.GetString("role"), "Sales", StringComparison.OrdinalIgnoreCase))
             {
                 var sales = _context.EmployeeMaster.Where(a => a.PhoneNumber == HttpContext.Session.GetString("UserName")).FirstOrDefault();
 
@@ -424,7 +424,7 @@ namespace Milk_Bakery.Controllers
 
                 return lstProducts;
             }
-            else if (HttpContext.Session.GetString("role") == "Customer")
+            else if (string.Equals(HttpContext.Session.GetString("role"), "Customer", StringComparison.OrdinalIgnoreCase))
             {
                 var sales = _context.Customer_Master.Where(a => a.phoneno == HttpContext.Session.GetString("UserName")).FirstOrDefault();
                 var lstProducts = new List<SelectListItem>();

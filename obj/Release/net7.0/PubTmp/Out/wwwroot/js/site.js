@@ -1,4 +1,4 @@
-﻿﻿﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
@@ -420,43 +420,58 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function AddItem(btn) {
-  var table;
-  table = document.getElementById("CodesTable");
+  var table = document.getElementById("CodesTable");
   if (!table) return; // Check if table exists
 
-  var rows = table.getElementsByTagName("tr");
-  var rowOuterHtml = rows[rows.length - 1].outerHTML;
+  var tbody = table.querySelector("tbody");
+  var rows = tbody.getElementsByTagName("tr");
+  
+  // Count only visible rows to determine the next index
+  var visibleRowCount = 0;
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].style.display !== "none") {
+      visibleRowCount++;
+    }
+  }
+  
+  var nextrowIdx = visibleRowCount;
 
-  var lastrowIdx = rows.length - 2;
+  // Determine if this is for EmpToCustMap or Cust2CustMap based on the page URL
+  var isEmpToCustMap = window.location.pathname.includes("EmpToCustMaps");
+  var collectionName = isEmpToCustMap ? "Cust2EmpMaps" : "Mappedcusts";
 
-  var nextrowIdx = eval(lastrowIdx) + 1;
+  // Create a new row with proper structure
+  var newRow = tbody.insertRow();
+  newRow.innerHTML = `
+    <td style="width:300px">
+      <select name="${collectionName}[${nextrowIdx}].customer" id="${collectionName}_${nextrowIdx}__customer" class="form-control" onchange="handleSelectChange(this)">
+        <option value="">--Select Customer--</option>
+      </select>
+      <span class="text-danger field-validation-valid" data-valmsg-for="${collectionName}[${nextrowIdx}].customer" data-valmsg-replace="true"></span>
+    </td>
+    <td style="width:200px">
+      <input class="form-control" type="text" name="${collectionName}[${nextrowIdx}].phone" id="${collectionName}_${nextrowIdx}__phone" readonly>
+      <span class="text-danger field-validation-valid" data-valmsg-for="${collectionName}[${nextrowIdx}].phone" data-valmsg-replace="true"></span>
+      <input type="hidden" name="${collectionName}[${nextrowIdx}].IsDeleted" id="${collectionName}_${nextrowIdx}__IsDeleted" value="false">
+    </td>
+    <td>
+      <button id='btnremove-${nextrowIdx}' type="button" class="btn text-white text-[16px] hover:bg-red-700 bg-red-600 visible" onclick="DeleteItemNew(this)">
+        Delete
+      </button>
+    </td>
+  `;
 
-  rowOuterHtml = rowOuterHtml.replaceAll(
-    "_" + lastrowIdx + "_",
-    "_" + nextrowIdx + "_"
-  );
-  rowOuterHtml = rowOuterHtml.replaceAll(
-    "[" + lastrowIdx + "]",
-    "[" + nextrowIdx + "]"
-  );
-  rowOuterHtml = rowOuterHtml.replaceAll("-" + lastrowIdx, "-" + nextrowIdx);
-
-  var newRow = table.insertRow();
-  newRow.innerHTML = rowOuterHtml;
-  $(newRow).find("select.select").select2();
-  var x = document.getElementsByTagName("INPUT");
-
-  for (var cnt = 0; cnt < x.length; cnt++) {
-    if (
-      x[cnt].type == "text" &&
-      x[cnt].id.indexOf("_" + nextrowIdx + "_") > 0
-    ) {
-      if (x[cnt].id.indexOf("Unit") == 0) x[cnt].value = "";
-    } else if (
-      x[cnt].type == "number" &&
-      x[cnt].id.indexOf("_" + nextrowIdx + "_") > 0
-    )
-      x[cnt].value = 0;
+  // Copy options from the first select element if it exists
+  var firstSelect = tbody.querySelector("select[name*='customer']");
+  var newSelect = newRow.querySelector("select");
+  
+  if (firstSelect && newSelect) {
+    // Copy all options from the first select to the new select
+    for (var i = 0; i < firstSelect.options.length; i++) {
+      var option = firstSelect.options[i];
+      var newOption = new Option(option.text, option.value, option.defaultSelected, option.selected);
+      newSelect.add(newOption);
+    }
   }
 
   rebindvalidators();
@@ -502,36 +517,49 @@ function DeleteItemNew(btn) {
   var tbody = table.querySelector("tbody");
   var btnIdx = btn.id.replace("btnremove-", "");
 
+  // Determine if this is for EmpToCustMap or Cust2CustMap based on the page URL
+  var isEmpToCustMap = window.location.pathname.includes("EmpToCustMaps");
+  var collectionName = isEmpToCustMap ? "Cust2EmpMaps" : "Mappedcusts";
+
   // Mark the corresponding hidden IsDeleted input field as true
-  var idOfIsDeleted = btnIdx + "__IsDeleted";
-  var txtIsDeleted = document.querySelector("[id$='" + idOfIsDeleted + "']");
+  var idOfIsDeleted = collectionName + "_" + btnIdx + "__IsDeleted";
+  var txtIsDeleted = document.getElementById(idOfIsDeleted);
   if (txtIsDeleted) {
     txtIsDeleted.value = "true";
   }
 
-  // Remove the row
+  // Hide the row instead of removing it to maintain form collection indices
   var row = $(btn).closest("tr");
-  row.remove();
+  row.hide();
 
-  // Update the IDs of remaining rows to keep them consistent
+  // Update the IDs of remaining visible rows to keep them consistent
   var rows = tbody.getElementsByTagName("tr");
+  var visibleRowIndex = 0;
+  
   for (var i = 0; i < rows.length; i++) {
-    // Update the delete button ID
-    var deleteButton = rows[i].querySelector("button[id^='btnremove-']");
-    if (deleteButton) {
-      deleteButton.id = "btnremove-" + i;
-    }
+    // Only process visible rows
+    if (rows[i].style.display !== "none") {
+      // Update the delete button ID
+      var deleteButton = rows[i].querySelector("button[id^='btnremove-']");
+      if (deleteButton) {
+        deleteButton.id = "btnremove-" + visibleRowIndex;
+      }
 
-    // Update the indices in form inputs
-    var inputs = rows[i].querySelectorAll(
-      "[id$='__IsDeleted'], [id$='__qty'], [id$='__phone']"
-    );
-    inputs.forEach((input) => {
-      var name = input.name.replace(/\[\d+\]/, `[${i}]`);
-      var id = input.id.replace(/\d+__/, `${i}__`);
-      input.name = name;
-      input.id = id;
-    });
+      // Update the indices in form inputs
+      var inputs = rows[i].querySelectorAll("input, select");
+      inputs.forEach((input) => {
+        if (input.name) {
+          // Update name attributes
+          input.name = input.name.replace(/\[\d+\]/, "[" + visibleRowIndex + "]");
+        }
+        if (input.id) {
+          // Update id attributes
+          input.id = input.id.replace(/_\d+__/g, collectionName + "_" + visibleRowIndex + "__");
+        }
+      });
+      
+      visibleRowIndex++;
+    }
   }
 }
 
@@ -696,6 +724,78 @@ function handleKeyDown(event) {
 //    }
 
 //}, false);
+
+function handleSelectChange(selectElement) {
+  var tid = selectElement.id;
+  var product = selectElement.value;
+
+  // Check if this is for the main employee/customer dropdown (myDropdown1)
+  if (tid === "myDropdown1") {
+    // Determine which controller to use based on the page context
+    // We can determine this by checking if we're on EmpToCustMaps or Cust2CustMap page
+    var path = window.location.pathname;
+    var controller = path.includes("EmpToCustMaps") ? "EmpToCustMaps" : "Cust2CustMap";
+    
+    if (product !== "") {
+      $.ajax({
+        url: '/' + controller + '/fill_form',
+        type: 'GET',
+        dataType: 'json',
+        data: { selectedvalue: product },
+        success: function (data) {
+          document.getElementById("phone").value = data;
+        }
+      });
+    } else {
+      document.getElementById("phone").value = "";
+    }
+    return;
+  }
+
+  // Check if this is for customer selection in dynamic table rows
+  var isEmpToCustMap = tid.includes("Cust2EmpMaps");
+  
+  // For EmpToCustMap, check for duplicate selection
+  if (isEmpToCustMap) {
+    var allSelectElements = document.querySelectorAll("select[id*='customer']");
+    var isDuplicate = false;
+
+    allSelectElements.forEach(function (otherSelect) {
+      if (otherSelect.id !== tid && otherSelect.value === product) {
+        isDuplicate = true;
+      }
+    });
+
+    if (isDuplicate) {
+      alert("This customer has already been selected in another row.");
+      selectElement.value = ""; // Reset the selection
+      return;
+    }
+  }
+
+  // Proceed to update the phone field for customer selection in dynamic table rows
+  var txtProductCodeId = tid.replaceAll('customer', 'phone');
+  var txtProductCode = document.getElementById(txtProductCodeId);
+
+  if (txtProductCode) {
+    txtProductCode.value = null;
+
+    // Make AJAX call to fetch customer data
+    // For dynamic table rows, we always fetch customer phone numbers from Cust2CustMapController
+    // because we're always looking up customer phone numbers, not employee phone numbers
+    $.ajax({
+      url: '/Cust2CustMap/fill_form',
+      type: 'GET',
+      dataType: 'json',
+      data: { selectedvalue: product },
+      success: function (data) {
+        if (txtProductCode) {
+          txtProductCode.value = data;
+        }
+      }
+    });
+  }
+}
 
 // Check if tableContainer exists before adding event listener
 const tableContainer = document.querySelector(".table-container");
