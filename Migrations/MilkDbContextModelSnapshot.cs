@@ -1280,6 +1280,9 @@ namespace Milk_Bakery.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("IsSpecial")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Route")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1289,6 +1292,9 @@ namespace Milk_Bakery.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsSpecial")
+                        .HasDatabaseName("IX_RouteMaster_IsSpecial");
 
                     b.ToTable("RouteMaster");
                 });

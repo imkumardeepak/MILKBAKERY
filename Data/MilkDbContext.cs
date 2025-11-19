@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Models;
 using static Milk_Bakery.Models.InvoiceDetails;
 
@@ -27,9 +27,9 @@ namespace Milk_Bakery.Data
 		public DbSet<MaterialMaster> MaterialMaster { get; set; } = default!;
 		public DbSet<PurchaseOrder> PurchaseOrder { get; set; } = default!;
 		public DbSet<ProductDetail> ProductDetails { get; set; } = default!;
-        public DbSet<Role> Roles { get; set; } = default!;
-        public DbSet<PageAccess> PageAccesses { get; set; } = default!;
-        public DbSet<MenuItem> MenuItems { get; set; } = default!;
+		public DbSet<Role> Roles { get; set; } = default!;
+		public DbSet<PageAccess> PageAccesses { get; set; } = default!;
+		public DbSet<MenuItem> MenuItems { get; set; } = default!;
 		public DbSet<CustTransaction> custTransactions { get; set; } = default!;
 		public DbSet<User> Users { get; set; } = default!;
 		public DbSet<Cust2CustMap> Cust2CustMap { get; set; } = default!;
@@ -108,15 +108,19 @@ namespace Milk_Bakery.Data
 			modelBuilder.Entity<Invoice>()
 				.HasIndex(e => e.setflag)
 				.HasDatabaseName("IX_Invoices_setflag");
-				
+
 			// Configure default values for ConversionTable
 			modelBuilder.Entity<ConversionTable>()
 				.Property(e => e.UnitQuantity)
 				.HasDefaultValue(0);
-				
+
 			modelBuilder.Entity<ConversionTable>()
 				.Property(e => e.TotalQuantity)
 				.HasDefaultValue(0);
+
+			modelBuilder.Entity<RouteMaster>()
+				.HasIndex(s => s.IsSpecial)
+				.HasDatabaseName("IX_RouteMaster_IsSpecial");
 		}
 	}
 }
