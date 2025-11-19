@@ -79,11 +79,11 @@ namespace Milk_Bakery.Controllers
 						.ToListAsync();
 
 					ViewBag.SelectedCustomerId = customerIdToShow.ToString();
-					
+
 					// Pass customer data to view for displaying customer names
 					var customers = await _context.Customer_Master.ToListAsync();
 					ViewBag.CustomerList = customers;
-					
+
 					return View(dealers);
 				}
 				else
@@ -101,7 +101,7 @@ namespace Milk_Bakery.Controllers
 				var dealers = await _context.DealerMasters
 					.Include(d => d.DealerBasicOrders)
 					.ToListAsync();
-					
+
 				// Pass customer data to view for displaying customer names
 				var customers = await _context.Customer_Master.ToListAsync();
 				ViewBag.CustomerList = customers;
@@ -288,6 +288,16 @@ namespace Milk_Bakery.Controllers
 							return View(viewModel);
 						}
 
+
+						//add in user table
+						var user = new User
+						{
+							name = viewModel.DealerMaster.Name,
+							phoneno = viewModel.DealerMaster.PhoneNo,
+							ConfirmPassword = "1234",
+							Password = "1234",
+							Role = "Dealer"
+						};
 						// Add the dealer master
 						_context.Add(viewModel.DealerMaster);
 						await _context.SaveChangesAsync();
@@ -363,7 +373,16 @@ namespace Milk_Bakery.Controllers
 								viewModel.DealerMaster.RouteCode = customer.route;
 							}
 						}
-
+						//update user table
+						var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == viewModel.DealerMaster.PhoneNo && u.Role == "Dealer");
+						if (user != null)
+						{
+							user.name = viewModel.DealerMaster.Name;
+							user.phoneno = viewModel.DealerMaster.PhoneNo;
+							user.Role = "Dealer";
+							user.Password = "1234";
+							_context.Update(user);
+						}
 						// Update the dealer master
 						_context.Update(viewModel.DealerMaster);
 
@@ -632,7 +651,7 @@ namespace Milk_Bakery.Controllers
 							{
 								// Get the distributor ID from the selected customer
 								int distributorId = customerId;
-								
+
 								var dealer = new DealerMaster
 								{
 									Name = values[0].Trim(),
@@ -676,6 +695,14 @@ namespace Milk_Bakery.Controllers
 
 					if (existingDealer == null)
 					{
+						User user = new User();
+						user.phoneno = dealer.PhoneNo;
+						user.Password = "1234";
+						user.Role = "Dealer";
+						user.ConfirmPassword = "1234";
+						user.name = dealer.Name;
+
+						_context.Users.Add(user);
 						_context.DealerMasters.Add(dealer);
 					}
 					else
@@ -691,6 +718,17 @@ namespace Milk_Bakery.Controllers
 						{
 							existingDealer.RouteCode = customer.route;
 						}
+
+						// Update user name
+						var user = await _context.Users.FirstOrDefaultAsync(u => u.phoneno == existingDealer.PhoneNo && u.Role == "Dealer");
+						if (user != null)
+						{
+							user.name = dealer.Name;
+							user.phoneno = dealer.PhoneNo;
+							user.Password = "1234";
+							_context.Users.Update(user);
+						}
+
 
 						_context.DealerMasters.Update(existingDealer);
 					}
