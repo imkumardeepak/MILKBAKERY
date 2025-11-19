@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Milk_Bakery.Data;
@@ -28,7 +28,7 @@ namespace Milk_Bakery.Controllers
         private List<SelectListItem> GetCustomer()
         {
             var lstProducts = new List<SelectListItem>();
-            if (HttpContext.Session.GetString("role") == "Manager")
+            if (string.Equals(HttpContext.Session.GetString("role"), "Manager", StringComparison.OrdinalIgnoreCase))
             {
                 var segement = _context.EmployeeMaster.Where(a => a.PhoneNumber == HttpContext.Session.GetString("UserName")).FirstOrDefault();
                 lstProducts = _context.EmployeeMaster.Where(a => a.UserType == "Sales" && a.Segment == segement.Segment).AsNoTracking().Select(n =>

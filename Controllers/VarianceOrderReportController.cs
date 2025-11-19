@@ -31,7 +31,7 @@ namespace Milk_Bakery.Controllers
 
 			// Set default customer for Customer role
 			var role = HttpContext.Session.GetString("role");
-			if (role == "Customer")
+			if (string.Equals(role, "Customer", StringComparison.OrdinalIgnoreCase))
 			{
 				var userName = HttpContext.Session.GetString("UserName");
 				var customer = await _context.Customer_Master
@@ -81,7 +81,7 @@ namespace Milk_Bakery.Controllers
 
 			// Apply customer filter based on role
 			var role = HttpContext.Session.GetString("role");
-			if (role == "Customer")
+			if (string.Equals(role, "Customer", StringComparison.OrdinalIgnoreCase))
 			{
 				// For customer role, get the logged-in customer
 				var userName = HttpContext.Session.GetString("UserName");
@@ -124,7 +124,7 @@ namespace Milk_Bakery.Controllers
 				.Where(i => i.OrderDate >= fromDate && i.OrderDate <= toDate && i.setflag == 1);
 
 			// Apply customer filter based on role
-			if (role == "Customer")
+			if (string.Equals(role, "Customer", StringComparison.OrdinalIgnoreCase))
 			{
 				// For customer role, get the logged-in customer
 				var userName = HttpContext.Session.GetString("UserName");
@@ -298,7 +298,7 @@ namespace Milk_Bakery.Controllers
 			var role = HttpContext.Session.GetString("role");
 			var userName = HttpContext.Session.GetString("UserName");
 
-			if (role == "Customer")
+			if (string.Equals(role, "Customer", StringComparison.OrdinalIgnoreCase))
 			{
 				// For customer role, return only the logged-in customer and mapped customers
 				var loggedInCustomer = await _context.Customer_Master
@@ -344,7 +344,7 @@ namespace Milk_Bakery.Controllers
 		// Method to get customer dropdown similar to DealerMastersController
 		private List<SelectListItem> GetCustomer()
 		{
-			if (HttpContext.Session.GetString("role") == "Sales")
+			if (string.Equals(HttpContext.Session.GetString("role"), "Sales", StringComparison.OrdinalIgnoreCase))
 			{
 				var sales = _context.EmployeeMaster.Where(a => a.PhoneNumber == HttpContext.Session.GetString("UserName")).FirstOrDefault();
 
@@ -381,7 +381,7 @@ namespace Milk_Bakery.Controllers
 
 				return lstProducts;
 			}
-			else if (HttpContext.Session.GetString("role") == "Customer")
+			else if (string.Equals(HttpContext.Session.GetString("role"), "Customer", StringComparison.OrdinalIgnoreCase))
 			{
 				var loggedInCustomer = _context.Customer_Master.Where(a => a.phoneno == HttpContext.Session.GetString("UserName")).FirstOrDefault();
 				var lstProducts = new List<SelectListItem>();

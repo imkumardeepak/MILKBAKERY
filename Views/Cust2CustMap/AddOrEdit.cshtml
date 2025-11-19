@@ -14,12 +14,12 @@
 			</div>
 		</div>
 		<div class="card-body">
-			<form asp-action="AddOrEdit">
+			<form asp-action="AddOrEdit" id="CodeSbyAnizForm">
 				<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 				<div class="row">
 					<div class="form-group col-sm-6">
 						<label asp-for="custname" class="control-label"></label>
-						<select asp-for="custname" id="myDropdown1" class="form-control" asp-items="@ViewBag.customer" onchange="changewb()"></select>
+						<select asp-for="custname" id="myDropdown1" class="form-control" asp-items="@ViewBag.customer" onchange="handleSelectChange(this)"></select>
 						<span asp-validation-for="custname" class="text-danger"></span>
 					</div>
 					<div class="form-group col-sm-6">
@@ -49,7 +49,6 @@
 							{
 
 								<tr>
-
 									@*  <td style=" display: none;">
 								@Model.ProductDetails[i].ProductName
 
@@ -85,51 +84,3 @@
 	</div>
 
 </div>
-
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script>
-	// $(document).ready(function () {
-	//     $('.select').select2();
-	// });
-
-	function changewb() {
-
-		if (document.getElementById("myDropdown1").value != "") {
-
-			var selectedValue = document.getElementById("myDropdown1").value;
-
-			$.ajax({
-				url: '@Url.Action("fill_form", "Cust2CustMap")',
-				type: 'GET',
-				dataType: 'json',
-				data: { selectedvalue: selectedValue },
-				success: function (data) {
-					document.getElementById("phone").value = data;
-				}
-			});
-		}
-	}
-</script>
-<script>
-	function handleSelectChange(selectElement) {
-		var tid = selectElement.id;
-		var product = selectElement.value;
-
-		var txtProductCodeId = tid.replaceAll('customer', 'phone');
-		var txtProductCode = document.getElementById(txtProductCodeId);
-
-		txtProductCode.value = null;
-
-		$.ajax({
-			url: '@Url.Action("fill_form", "Cust2CustMap")',
-			type: 'GET',
-			dataType: 'json',
-			data: { selectedvalue: product },
-			success: function (data) {
-				txtProductCode.value = data;
-			}
-		});
-	}
-
-
-</script>

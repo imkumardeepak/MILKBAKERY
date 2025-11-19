@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -176,7 +176,7 @@ namespace Milk_Bakery.Controllers
         private List<SelectListItem> GetCustomer()
         {
 
-            if (HttpContext.Session.GetString("role") == "Sales")
+            if (string.Equals(HttpContext.Session.GetString("role"), "Sales", StringComparison.OrdinalIgnoreCase))
             {
                 var sales = _context.EmployeeMaster.Where(a => a.PhoneNumber == HttpContext.Session.GetString("UserName")).FirstOrDefault();
 
@@ -207,7 +207,7 @@ namespace Milk_Bakery.Controllers
 
                 return lstProducts;
             }
-            else if (HttpContext.Session.GetString("role") == "Customer")
+            else if (string.Equals(HttpContext.Session.GetString("role"), "Customer", StringComparison.OrdinalIgnoreCase))
             {
                 var sales = _context.Customer_Master.Where(a => a.phoneno == HttpContext.Session.GetString("UserName")).FirstOrDefault();
                 var lstProducts = new List<SelectListItem>();

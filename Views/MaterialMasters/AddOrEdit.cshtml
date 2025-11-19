@@ -35,18 +35,20 @@
                         <select asp-for="Unit" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.unit"></select>
                         <span asp-validation-for="Unit" class="text-danger"></span>
                     </div>
-
+                    <div class="col-span-3 relative">
+                        <span class="absolute bg-white left-3 -top-[12px] px-2">Category<span class="text-red-500">*</span></span>
+                       <select id="CategorySelect" asp-for="Category" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.Category"></select>
+                        <span asp-validation-for="Category" class="text-danger"></span>
+                    </div>
                     <div class="col-span-4 relative">
                         <span class="absolute bg-white left-3 -top-[12px] px-2">Sub Category<span class="text-red-500">*</span></span>
-                        <select id="myDropdown" asp-for="subcategory" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" asp-items="@ViewBag.subcatgory" onchange="dropdownChanged()"></select>
+                        <select id="SubCategorySelect" asp-for="subcategory" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm">
+                            <option value="">----Select SubCategory----</option>
+                        </select>
                         <span asp-validation-for="subcategory" class="text-danger"></span>
                     </div>
                    
-                    <div class="col-span-3 relative">
-                        <span class="absolute bg-white left-3 -top-[12px] px-2">Category<span class="text-red-500">*</span></span>
-                        <input asp-for="Category" id="resultTextbox" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" readonly />
-                        <span asp-validation-for="Category" class="text-danger"></span>
-                    </div>
+
                     <div class="col-span-2 relative">
                         <span class="absolute bg-white left-3 -top-[12px] px-2">Sequence<span class="text-red-500">*</span></span>
                         <input asp-for="sequence" class="text-[13px] h-10 text-gray-700 w-full border-2 px-2 rounded-sm" type="number" />
@@ -95,27 +97,52 @@
     </div>
 </div>
 
-<script>
-    function dropdownChanged() {
-        var selectedOption = document.getElementById("myDropdown").value;
+@section Scripts {
+    <script>
+        $(document).ready(function () {
 
-        // Make an AJAX request to the controller action
-        $.ajax({
-            url: '/MaterialMasters/ActionName',
-            type: 'POST',
-            data: { optionValue: selectedOption },
-            success: function (result) {
-               
-                document.getElementById("resultTextbox").value = result.data;
-            },
-            error: function (xhr, status, error) {
-                // Handle the error response
-                console.log("An error occurred while executing the action.");
+            // When the Category dropdown changes
+            $('#CategorySelect').change(function () {
+                var selectedCategory = $(this).val();
+                
+                // Clear the SubCategory dropdown
+                $('#SubCategorySelect').empty();
+                $('#SubCategorySelect').append('<option value="">----Select SubCategory----</option>');
+                
+                // If a category is selected, populate subcategories
+                if (selectedCategory !== '') {
+                    $.ajax({
+                        url: '@Url.Action("GetSubCategoriesByCategory", "MaterialMasters")',
+                        type: 'POST',
+                        data: { 
+                            category: selectedCategory,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function (subCategories) {
+                            // Populate the SubCategory dropdown
+                            $.each(subCategories, function (index, subCategory) {
+                                $('#SubCategorySelect').append('<option value="' + subCategory.value + '">' + subCategory.text + '</option>');
+                            });
+                            
+                            // If we're editing and there's a selected subcategory, select it
+                            var selectedSubCategory = '@Model.subcategory';
+                            if (selectedSubCategory) {
+                                $('#SubCategorySelect').val(selectedSubCategory);
+                            }
+                        },
+                        error: function () {
+                            console.log('Error loading subcategories');
+                        }
+                    });
+                }
+            });
+            
+            // Trigger the change event on page load if a category is already selected (for edit mode)
+            var selectedCategory = $('#CategorySelect').val();
+            if (selectedCategory) {
+                $('#CategorySelect').trigger('change');
             }
         });
-    }
-</script>
-
-@section Scripts {
+    </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+}}

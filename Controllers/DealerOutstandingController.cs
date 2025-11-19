@@ -224,7 +224,7 @@ namespace Milk_Bakery.Controllers
                 {
                     latestOutstanding.PaidAmount = receivedAmount;
                     // Update outstanding amount based on received amount
-                    latestOutstanding.BalanceAmount = latestOutstanding.InvoiceAmount - receivedAmount;
+                    latestOutstanding.BalanceAmount = latestOutstanding.InvoiceAmount + latestOutstanding.BalanceAmount - receivedAmount;
                     await _context.SaveChangesAsync();
 
                     return Json(new { success = true, message = "Received amount updated successfully." });
@@ -245,7 +245,7 @@ namespace Milk_Bakery.Controllers
             var role = HttpContext.Session.GetString("role");
             var userName = HttpContext.Session.GetString("UserName");
 
-            if (role == "Customer")
+            if (string.Equals(role, "Customer", StringComparison.OrdinalIgnoreCase))
             {
                 // For customer role, get the logged-in customer and their mapped customers
                 var loggedInCustomer = await _context.Customer_Master
@@ -279,7 +279,7 @@ namespace Milk_Bakery.Controllers
                     return customers;
                 }
             }
-            else if (role == "Sales")
+            else if (string.Equals(role, "Sales", StringComparison.OrdinalIgnoreCase))
             {
                 // For sales role, get mapped customers
                 var empToCustMap = await _context.EmpToCustMap

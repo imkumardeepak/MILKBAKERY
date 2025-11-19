@@ -33,6 +33,7 @@ namespace Milk_Bakery.Controllers
 
 		public async Task<IActionResult> AddOrEdit(int id = 0)
 		{
+
 			ViewBag.customer = GetCustomer();
 			if (id == 0)
 			{
@@ -64,7 +65,7 @@ namespace Milk_Bakery.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> AddOrEdit(int id, Cust2CustMap Cust2CustMap)
 		{
-			Cust2CustMap.Mappedcusts.RemoveAll(a => a.phone == null || a.customer == null);
+			Cust2CustMap.Mappedcusts.RemoveAll(a => a.phone == null || a.customer == null || a.IsDeleted == true);
 
 			//insert
 			if (id == 0)
@@ -134,11 +135,11 @@ namespace Milk_Bakery.Controllers
 			var lstProducts = new List<SelectListItem>();
 
 			lstProducts = _context.Customer_Master.AsNoTracking().Select(n =>
-			new SelectListItem
-			{
-				Value = n.Name,
-				Text = n.Name
-			}).ToList();
+		  new SelectListItem
+		  {
+			  Value = n.Name.Trim(),
+			  Text = n.Name.Trim()
+		  }).OrderBy(n => n.Text).ToList();
 
 			var defItem = new SelectListItem()
 			{

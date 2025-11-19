@@ -72,16 +72,9 @@ namespace Milk_Bakery.Controllers
 			var userName = HttpContext.Session.GetString("UserName");
 
 			// Add "All Customers" option at the beginning
-			var customers = new List<SelectListItem>
-			{
-				new SelectListItem
-				{
-					Value = "0",
-					Text = "All Customers"
-				}
-			};
+			var customers = new List<SelectListItem>();
 
-			if (role == "Customer")
+			if (string.Equals(role, "Customer", StringComparison.OrdinalIgnoreCase))
 			{
 				// For customer role, get the logged-in customer and their mapped customers
 				var loggedInCustomer = _context.Customer_Master
@@ -125,7 +118,7 @@ namespace Milk_Bakery.Controllers
 					}
 				}
 			}
-			else if (role == "Sales")
+			else if (string.Equals(role, "Sales", StringComparison.OrdinalIgnoreCase))
 			{
 				// For sales role, get mapped customers
 				var empToCustMap = _context.EmpToCustMap
@@ -165,6 +158,12 @@ namespace Milk_Bakery.Controllers
 						Value = n.Id.ToString(),
 						Text = n.Name
 					}).ToList();
+
+				allCustomers.Insert(0, new SelectListItem
+				{
+					Value = "0",
+					Text = "All Customers"
+				});
 
 				customers.AddRange(allCustomers);
 			}
