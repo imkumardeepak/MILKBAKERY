@@ -19,7 +19,7 @@
                     <input type="date" id="dispatchDateFilter" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
-                    <button id="filterBtn" type="submit" class="btn btn-primary">
+                    <button id="filterBtn" type="button" class="btn btn-primary">
                         <i class="fas fa-filter"></i> Filter
                     </button>
                 </div>
@@ -83,125 +83,80 @@
                 // Store the URL for AJAX calls
                 var getGatePassDataUrl = '@Url.Action("GetGatePassDataByDate", "GatePass")';
                 
-                // Log elements to check if they exist
-                console.log("Filter button:", $('#filterBtn'));
-                console.log("Date input:", $('#dispatchDateFilter'));
+                // Attach events to filter button and date input
+                $('#filterBtn').off('click').on('click', function (e) {
+                    e.preventDefault();
+                    var selectedDate = $('#dispatchDateFilter').val();
+                    filterGatePassData(selectedDate);
+                });
                 
-                // Check if elements exist before attaching events
-                if ($('#filterBtn').length > 0) {
-                    console.log("Attaching click event to filter button");
-                    // Remove any existing click events first
-                    $('#filterBtn').off('click').on('click', function (e) {
-                        try {
-                            e.preventDefault();
-                            console.log("Filter button clicked");
-                            var selectedDate = $('#dispatchDateFilter').val();
-                            console.log("Selected date:", selectedDate);
-                            filterGatePassData(selectedDate);
-                        } catch (error) {
-                            console.error("Error in filter button click handler:", error);
-                        }
-                    });
-                } else {
-                    console.log("Filter button not found");
-                }
-                
-                if ($('#dispatchDateFilter').length > 0) {
-                    console.log("Attaching change event to date input");
-                    // Remove any existing change events first
-                    $('#dispatchDateFilter').off('change').on('change', function () {
-                        try {
-                            console.log("Date changed");
-                            var selectedDate = $(this).val();
-                            console.log("New date value:", selectedDate);
-                            filterGatePassData(selectedDate);
-                        } catch (error) {
-                            console.error("Error in date change handler:", error);
-                        }
-                    });
-                } else {
-                    console.log("Date input not found");
-                }
+                $('#dispatchDateFilter').off('change').on('change', function () {
+                    var selectedDate = $(this).val();
+                    filterGatePassData(selectedDate);
+                });
                 
                 // Function to filter gate pass data by date
                 function filterGatePassData(date) {
-                    try {
-                        console.log("filterGatePassData called with date:", date);
-                        
-                        // Validate date format
-                        if (!date || date === '') {
-                            console.log("No date selected");
-                            // Show message to user
-                            dataTable.clear().draw();
-                            dataTable.row.add([
-                                '<td colspan="4" class="text-center">Please select a date to filter gate pass data</td>'
-                            ]).draw(false);
-                            return;
-                        }
-                        
-                        // Show loading indicator
+                    // Validate date format
+                    if (!date || date === '') {
                         dataTable.clear().draw();
                         dataTable.row.add([
-                            '<td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td>'
+                            '<td colspan="4" class="text-center">Please select a date to filter gate pass data</td>'
                         ]).draw(false);
-                        
-                        // Make AJAX call to get filtered data
-                        $.ajax({
-                            url: getGatePassDataUrl,
-                            type: 'GET',
-                            data: { date: date },
-                            success: function (result) {
-                                try {
-                                    console.log("AJAX success, result:", result);
-                                    // Clear existing data
-                                    dataTable.clear().draw();
+                        return;
+                    }
+                    
+                    // Show loading indicator
+                    dataTable.clear().draw();
+                    dataTable.row.add([
+                        '<td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td>'
+                    ]).draw(false);
+                    
+                    // Make AJAX call to get filtered data
+                    $.ajax({
+                        url: getGatePassDataUrl,
+                        type: 'GET',
+                        data: { date: date },
+                        success: function (result) {
+                            // Clear existing data
+                            dataTable.clear().draw();
+                            
+                            if (result.success && result.data && result.data.length > 0) {
+                                // Add new data to table
+                                $.each(result.data, function (index, item) {
+                                    // Parse the date properly
+                                    var dispatchDate = new Date(item.dispatchDate);
+                                    var formattedDate = dispatchDate.toLocaleDateString('en-GB');
                                     
-                                    if (result.success && result.data && result.data.length > 0) {
-                                        // Add new data to table
-                                        $.each(result.data, function (index, item) {
-                                            // Parse the date properly
-                                            var dispatchDate = new Date(item.dispatchDate);
-                                            var formattedDate = dispatchDate.toLocaleDateString('en-GB');
-                                            
-                                            // Create print URL
-                                            var printUrl = '@Url.Action("PrintGatePass", "GatePass")?truckNumber=' + encodeURIComponent(item.truckNumber) + 
-                                                           '&date=' + encodeURIComponent(dispatchDate.toISOString().split('T')[0]);
-                                            
-                                            // Add row to table
-                                            dataTable.row.add([
-                                                item.truckNumber,
-                                                formattedDate,
-                                                item.customerCount,
-                                                '<a href="' + printUrl + '" class="btn btn-primary btn-sm"><i class="fas fa-print"></i> Print Gate Pass</a>'
-                                            ]).draw(false);
-                                        });
-                                    } else {
-                                        // Show no data message
-                                        dataTable.row.add([
-                                            '<td colspan="4" class="text-center">No gate pass data available for the selected date</td>'
-                                        ]).draw(false);
-                                    }
-                                } catch (error) {
-                                    console.error("Error in AJAX success handler:", error);
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                console.log("AJAX error:", error);
-                                console.log("Status:", status);
-                                console.log("Response:", xhr);
-                                
-                                // Clear existing data
-                                dataTable.clear().draw();
-                                
-                                // Show error message
+                                    // Create print URL with proper encoding
+                                    var printUrl = '@Url.Action("PrintGatePass", "GatePass")?truckNumber=' + encodeURIComponent(item.truckNumber) + 
+                                                   '&date=' + encodeURIComponent(item.dispatchDate.split('T')[0]);
+                                    
+                                    // Add row to table
+                                    dataTable.row.add([
+                                        item.truckNumber,
+                                        formattedDate,
+                                        item.customerCount,
+                                        '<a href="' + printUrl + '" class="btn btn-primary btn-sm"><i class="fas fa-print"></i> Print Gate Pass</a>'
+                                    ]).draw(false);
+                                });
+                            } else {
+                                // Show no data message
                                 dataTable.row.add([
-                                    '<td colspan="4" class="text-center">Error loading data. Please try again.</td>'
+                                    '<td colspan="4" class="text-center">No gate pass data available for the selected date</td>'
                                 ]).draw(false);
                             }
-                        });
-                    } catch (error) {
-                        console.error("Error in filterGatePassData function:", error);
-                    }
+                        },
+                        error: function (xhr, status, error) {
+                            // Clear existing data
+                            dataTable.clear().draw();
+                            
+                            // Show error message
+                            dataTable.row.add([
+                                '<td colspan="4" class="text-center">Error loading data. Please try again.</td>'
+                            ]).draw(false);
+                        }
+                    });
                 }
             } catch (error) {
                 console.error("Error in document ready function:", error);

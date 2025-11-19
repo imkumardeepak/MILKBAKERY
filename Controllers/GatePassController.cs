@@ -66,7 +66,6 @@ namespace Milk_Bakery.Controllers
 				else
 				{
 					_logger.LogInformation("Attempting to parse date: {Date}", date);
-					
 					// Try multiple date formats
 					string[] formats = { "yyyy-MM-dd", "dd/MM/yyyy", "M/d/yyyy", "MM/dd/yyyy" };
 					if (!DateTime.TryParseExact(date, formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out filterDate))

@@ -35,6 +35,7 @@ namespace Milk_Bakery.Controllers
 			ViewBag.unit = Getunit();
 			ViewBag.crates = GetCratesType();
 			ViewBag.subcatgory = Getsubcategory();
+			ViewBag.Category = GetCategory(); // Add this line to ensure Category dropdown is populated
 			ViewBag.gram = Getunit();
 			ViewBag.segement = GetSegement();
 			if (id == 0)
@@ -103,6 +104,7 @@ namespace Milk_Bakery.Controllers
 				}
 			}
 			ViewBag.unit = Getunit();
+			ViewBag.Category = GetCategory();
 			ViewBag.subcatgory = Getsubcategory();
 			ViewBag.crates = GetCratesType();
 			ViewBag.gram = Getunit();
@@ -167,6 +169,43 @@ namespace Milk_Bakery.Controllers
 			{
 				Value = "",
 				Text = "----Select SubCategory----"
+			};
+
+			lstProducts.Insert(0, defItem);
+
+			return lstProducts;
+		}
+
+		[HttpPost]
+		public IActionResult GetSubCategoriesByCategory(string category)
+		{
+			var subCategories = _context.Sub_CategoryMaster
+				.Where(s => s.CategoryName == category)
+				.Select(n => new SelectListItem
+				{
+					Value = n.SubCategoryName,
+					Text = n.SubCategoryName
+				})
+				.ToList();
+
+			return Json(subCategories);
+		}
+
+		private List<SelectListItem> GetCategory()
+		{
+			var lstProducts = new List<SelectListItem>();
+
+			lstProducts = _context.CategoryMaster.AsNoTracking().Select(n =>
+			new SelectListItem
+			{
+				Value = n.CategoryName,
+				Text = n.CategoryName
+			}).ToList();
+
+			var defItem = new SelectListItem()
+			{
+				Value = "",
+				Text = "----Select Category----"
 			};
 
 			lstProducts.Insert(0, defItem);
