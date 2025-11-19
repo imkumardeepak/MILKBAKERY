@@ -33,23 +33,54 @@ namespace Milk_Bakery.Controllers
 		public IActionResult Index()
 		{
 			ViewBag.segemnt = GetSegement();
-			ViewBag.customer = GetCustomer();
+			ViewBag.Route = GetRoute();
 			return View();
 		}
 
+		[HttpGet]
+		public JsonResult GetSubCategories(string segment)
+		{
+			// Only return subcategories for dairy segments
+			if (string.IsNullOrEmpty(segment) || !segment.ToLower().Contains("dairy"))
+			{
+				return Json(new List<SelectListItem>());
+			}
 
+			// Get subcategories based on segment
+			var subCategories = _context.MaterialMaster
+				.Where(m => m.segementname == segment && m.isactive)
+				.Select(m => m.subcategory)
+				.Distinct()
+				.OrderBy(sc => sc)
+				.Select(sc => new SelectListItem
+				{
+					Value = sc,
+					Text = sc
+				})
+				.ToList();
+
+			return Json(subCategories);
+		}
 
 		[HttpPost]
-		public async Task<IActionResult> ActionNameAsync(string Customer, string Segement, DateTime FromDate, DateTime ToDate)
+		public async Task<IActionResult> ActionNameAsync(string Customer, string Segement, string SubCategory, DateTime FromDate, DateTime ToDate)
 		{
 			if (Customer == "All Route")
 			{
 				try
 				{
 					// Fetch and cache materials as a dictionary
-					var materialMap = await _context.MaterialMaster
+					var materialQuery = _context.MaterialMaster
 						.AsNoTracking()
-						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true)
+						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true);
+
+					// Apply subcategory filter if selected
+					if (!string.IsNullOrEmpty(SubCategory))
+					{
+						materialQuery = materialQuery.Where(a => a.subcategory == SubCategory);
+					}
+
+					var materialMap = await materialQuery
 						.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 					var materialShortNames = materialMap.Values.Distinct().ToList();
@@ -79,19 +110,33 @@ namespace Milk_Bakery.Controllers
 
 						var routeCustomers = customerSequenceMap.Keys.ToList();
 
-						var purchaseOrders = await _context.PurchaseOrder
-							.AsNoTracking()
-							.Include(po => po.ProductDetails)
-							.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate &&
-							po.Segementname == Segement && routeCustomers.Contains(po.Customername))
-							.ToListAsync();
+						// For dairy segments, get all customers even if they don't have orders
+						bool isDairySegment = Segement.ToLower().Contains("dairy");
+						List<string> distinctCustomers;
+						
+						if (isDairySegment)
+						{
+							// For dairy segments, use all customers in the route
+							distinctCustomers = routeCustomers
+								.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
+								.ToList();
+						}
+						else
+						{
+							// For non-dairy segments, only use customers with orders
+							var purchaseOrders = await _context.PurchaseOrder
+								.AsNoTracking()
+								.Include(po => po.ProductDetails)
+								.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate &&
+								po.Segementname == Segement && routeCustomers.Contains(po.Customername))
+								.ToListAsync();
 
-						// Get all customers in the route, ordered by sequence
-						var distinctCustomers = purchaseOrders
-							.Select(po => po.Customername)
-							.Distinct()
-							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
-							.ToList();
+							distinctCustomers = purchaseOrders
+								.Select(po => po.Customername)
+								.Distinct()
+								.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
+								.ToList();
+						}
 
 						if (distinctCustomers.Count > 0)
 						{
@@ -107,11 +152,19 @@ namespace Milk_Bakery.Controllers
 							headingRow["CustomerName"] = route.ShortCode + "-" + route.Route.ToUpper();
 							combinedDataTable.Rows.Add(headingRow);
 
+							// Get purchase orders for this route
+							var purchaseOrdersForRoute = await _context.PurchaseOrder
+								.AsNoTracking()
+								.Include(po => po.ProductDetails)
+								.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate &&
+								po.Segementname == Segement && routeCustomers.Contains(po.Customername))
+								.ToListAsync();
+
 							int i = 1;
 							foreach (var customerName in distinctCustomers)
 							{
 								// Check if customer has orders in the date range
-								var orderDetails = purchaseOrders
+								var orderDetails = purchaseOrdersForRoute
 									.Where(po => po.Customername == customerName)
 									.SelectMany(po => po.ProductDetails)
 									.GroupBy(p => new { p.PurchaseOrder.Customername, p.ProductName })
@@ -128,6 +181,12 @@ namespace Milk_Bakery.Controllers
 								row["CustomerName"] = customerName;
 
 								int sum = 0;
+								// Initialize all material columns to 0
+								foreach (var mat in materialShortNames)
+								{
+									row[mat] = 0;
+								}
+								
 								foreach (var item in orderDetails)
 								{
 									if (materialMap.TryGetValue(item.ProductName, out var shortName))
@@ -193,9 +252,17 @@ namespace Milk_Bakery.Controllers
 				// Single route logic
 				try
 				{
-					var materialMap = await _context.MaterialMaster
+					var materialQuery = _context.MaterialMaster
 						.AsNoTracking()
-						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true)
+						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true);
+
+					// Apply subcategory filter if selected
+					if (!string.IsNullOrEmpty(SubCategory))
+					{
+						materialQuery = materialQuery.Where(a => a.subcategory == SubCategory);
+					}
+
+					var materialMap = await materialQuery
 						.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 					var materialShortNames = materialMap.Values.Distinct().ToList();
@@ -210,16 +277,32 @@ namespace Milk_Bakery.Controllers
 
 					var routeCustomers = customerSequenceMap.Keys.ToList();
 
-					var purchaseOrders = await _context.PurchaseOrder
-						.AsNoTracking()
-						.Include(po => po.ProductDetails)
-						.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
-						.ToListAsync();
+					// For dairy segments, get all customers even if they don't have orders
+					bool isDairySegment = Segement.ToLower().Contains("dairy");
+					List<string> distinctCustomers;
+					
+					if (isDairySegment)
+					{
+						// For dairy segments, use all customers in the route
+						distinctCustomers = routeCustomers
+							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
+							.ToList();
+					}
+					else
+					{
+						// For non-dairy segments, only use customers with orders
+						var purchaseOrdersForNonDairy = await _context.PurchaseOrder
+							.AsNoTracking()
+							.Include(po => po.ProductDetails)
+							.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
+							.ToListAsync();
 
-					// Get all customers in the route, ordered by sequence
-					var allRouteCustomers = routeCustomers
-						.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
-						.ToList();
+						distinctCustomers = purchaseOrdersForNonDairy
+							.Select(po => po.Customername)
+							.Distinct()
+							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
+							.ToList();
+					}
 
 					DataTable combinedDataTable = new DataTable();
 					combinedDataTable.Columns.Add("Srno");
@@ -232,8 +315,15 @@ namespace Milk_Bakery.Controllers
 					heading["CustomerName"] = Customer.ToUpper();
 					combinedDataTable.Rows.Add(heading);
 
+					// Get purchase orders
+					var purchaseOrders = await _context.PurchaseOrder
+						.AsNoTracking()
+						.Include(po => po.ProductDetails)
+						.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
+						.ToListAsync();
+
 					int i = 1;
-					foreach (var customerName in allRouteCustomers)
+					foreach (var customerName in distinctCustomers)
 					{
 						// Check if customer has orders in the date range
 						var orderDetails = purchaseOrders
@@ -253,6 +343,12 @@ namespace Milk_Bakery.Controllers
 						row["CustomerName"] = customerName;
 
 						int sum = 0;
+						// Initialize all material columns to 0
+						foreach (var mat in materialShortNames)
+						{
+							row[mat] = 0;
+						}
+						
 						foreach (var item in orderDetails)
 						{
 							if (materialMap.TryGetValue(item.ProductName, out var shortName))
@@ -332,7 +428,7 @@ namespace Milk_Bakery.Controllers
 
 			return lstProducts;
 		}
-		private List<SelectListItem> GetCustomer()
+		private List<SelectListItem> GetRoute()
 		{
 
 			var lstProducts = new List<SelectListItem>();
@@ -358,14 +454,22 @@ namespace Milk_Bakery.Controllers
 
 
 		[HttpPost]
-		public async Task<IActionResult> Export(string Customer, string Segement, DateTime FromDate, DateTime ToDate)
+		public async Task<IActionResult> Export(string Customer, string Segement, string SubCategory, DateTime FromDate, DateTime ToDate)
 		{
 			try
 			{
 				// Material Map
-				var materialMap = await _context.MaterialMaster
+				var materialQuery = _context.MaterialMaster
 					.AsNoTracking()
-					.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true)
+					.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true);
+
+				// Apply subcategory filter if selected
+				if (!string.IsNullOrEmpty(SubCategory))
+				{
+					materialQuery = materialQuery.Where(a => a.subcategory == SubCategory);
+				}
+
+				var materialMap = await materialQuery
 					.ToDictionaryAsync(m => m.Materialname, m => m.ShortName);
 
 				var materialShortNames = materialMap.Values.Distinct().ToList();
@@ -396,40 +500,76 @@ namespace Milk_Bakery.Controllers
 
 						var routeCustomers = customerSequenceMap.Keys.ToList();
 
-						var purchaseOrders = await _context.PurchaseOrder
+						// For dairy segments, get all customers even if they don't have orders
+						bool isDairySegment = Segement.ToLower().Contains("dairy");
+						List<string> distinctCustomers;
+						
+						if (isDairySegment)
+						{
+							// For dairy segments, use all customers in the route
+							distinctCustomers = routeCustomers
+								.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
+								.ToList();
+						}
+						else
+						{
+							// For non-dairy segments, only use customers with orders
+							var purchaseOrders = await _context.PurchaseOrder
+								.AsNoTracking()
+								.Include(po => po.ProductDetails)
+								.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
+								.ToListAsync();
+
+							distinctCustomers = purchaseOrders
+								.Select(po => po.Customername)
+								.Distinct()
+								.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
+								.ToList();
+						}
+
+						if (!distinctCustomers.Any()) continue;
+
+						DataTable routeData = new DataTable();
+						routeData.Columns.Add("Srno");
+						routeData.Columns.Add("CustomerName");
+						foreach (var mat in materialShortNames)
+							routeData.Columns.Add(mat, typeof(int));
+						routeData.Columns.Add("Total", typeof(int));
+
+						// Add route heading row
+						DataRow headingRow = routeData.NewRow();
+						headingRow["CustomerName"] = route.ShortCode + "-" + route.Route.ToUpper();
+						routeData.Rows.Add(headingRow);
+
+						// Get purchase orders for this route
+						var purchaseOrdersForRoute = await _context.PurchaseOrder
 							.AsNoTracking()
 							.Include(po => po.ProductDetails)
 							.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
 							.ToListAsync();
 
-						// Get all customers in the route, ordered by sequence
-						var distinctCustomers = purchaseOrders
-								.Select(po => po.Customername)
-								.Distinct()
-							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
-							.ToList();
-
-						if (!distinctCustomers.Any()) continue;
-
-						DataTable routeData = CreateTableStructure(materialShortNames);
-						routeData.Rows.Add(CreateHeaderRow(route.ShortCode + "-" + route.Route.ToUpper(), routeData));
-
 						int i = 1;
 						foreach (var cust in distinctCustomers)
 						{
 							// Check if customer has orders in the date range
-							var details = purchaseOrders
+							var details = purchaseOrdersForRoute
 								.Where(po => po.Customername == cust)
 								.SelectMany(po => po.ProductDetails)
 								.GroupBy(p => p.ProductName)
 								.Select(g => new { ProductName = g.Key, Total = g.Sum(x => x.qty) })
 								.ToList();
 
-							var row = routeData.NewRow();
+							DataRow row = routeData.NewRow();
 							row["Srno"] = i++;
 							row["CustomerName"] = cust;
 
 							int totalQty = 0;
+							// Initialize all material columns to 0
+							foreach (var mat in materialShortNames)
+							{
+								row[mat] = 0;
+							}
+							
 							foreach (var d in details)
 							{
 								if (materialMap.TryGetValue(d.ProductName, out var shortName))
@@ -442,10 +582,41 @@ namespace Milk_Bakery.Controllers
 							routeData.Rows.Add(row);
 						}
 
-						routeData.Rows.Add(CreateTotalRow(routeData));
+						// Routewise total
+						DataRow routeTotal = routeData.NewRow();
+						routeTotal["CustomerName"] = "Routewise Total";
+						foreach (DataColumn col in routeData.Columns)
+						{
+							if (col.ColumnName != "Srno" && col.ColumnName != "CustomerName")
+							{
+								int total = routeData.AsEnumerable()
+									.Where(r => r[col] != DBNull.Value && r["CustomerName"].ToString() != "Routewise Total")
+									.Sum(r => Convert.ToInt32(r[col]));
+								routeTotal[col.ColumnName] = total;
+							}
+						}
+						routeData.Rows.Add(routeTotal);
 						finalData.Merge(routeData);
 					}
-					finalData.Rows.Add(CreateOverallRow(finalData));
+					
+					// Overall total
+					if (finalData.Rows.Count > 0)
+					{
+						DataRow overall = finalData.NewRow();
+						overall["CustomerName"] = "OverAll Total";
+
+						foreach (DataColumn column in finalData.Columns)
+						{
+							if (column.ColumnName != "Srno" && column.ColumnName != "CustomerName")
+							{
+								int total = finalData.AsEnumerable()
+									.Where(r => r["CustomerName"].ToString() == "Routewise Total" && r[column] != DBNull.Value)
+									.Sum(r => Convert.ToInt32(r[column]));
+								overall[column.ColumnName] = total;
+							}
+						}
+						finalData.Rows.Add(overall);
+					}
 				}
 				else
 				{
@@ -460,19 +631,46 @@ namespace Milk_Bakery.Controllers
 
 					var routeCustomers = customerSequenceMap.Keys.ToList();
 
-					var purchaseOrders = await _context.PurchaseOrder
+					// For dairy segments, get all customers even if they don't have orders
+					bool isDairySegment = Segement.ToLower().Contains("dairy");
+					List<string> distinctCustomers;
+					
+					if (isDairySegment)
+					{
+						// For dairy segments, use all customers in the route
+						distinctCustomers = routeCustomers
+							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
+							.ToList();
+					}
+					else
+					{
+						// For non-dairy segments, only use customers with orders
+						var purchaseOrderQueryForNonDairy = _context.PurchaseOrder
+							.AsNoTracking()
+							.Include(po => po.ProductDetails)
+							.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername));
+
+						var purchaseOrdersForNonDairy = await purchaseOrderQueryForNonDairy.ToListAsync();
+						
+						distinctCustomers = purchaseOrdersForNonDairy
+							.Select(po => po.Customername)
+							.Distinct()
+							.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
+							.ToList();
+					}
+
+					// Add header row
+					DataRow heading = finalData.NewRow();
+					heading["CustomerName"] = Customer.ToUpper();
+					finalData.Rows.Add(heading);
+
+					// Get purchase orders
+					var purchaseOrderQuery = _context.PurchaseOrder
 						.AsNoTracking()
 						.Include(po => po.ProductDetails)
-						.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername))
-						.ToListAsync();
+						.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername));
 
-					var distinctCustomers = purchaseOrders
-						.Select(po => po.Customername)
-						.Distinct()
-						.OrderBy(name => customerSequenceMap.ContainsKey(name) ? customerSequenceMap[name] : int.MaxValue)
-						.ToList();
-
-					finalData.Rows.Add(CreateHeaderRow(Customer.ToUpper(), finalData));
+					var purchaseOrders = await purchaseOrderQuery.ToListAsync();
 
 					int i = 1;
 					foreach (var cust in distinctCustomers)
@@ -485,11 +683,17 @@ namespace Milk_Bakery.Controllers
 							.Select(g => new { ProductName = g.Key, Total = g.Sum(x => x.qty) })
 							.ToList();
 
-						var row = finalData.NewRow();
+						DataRow row = finalData.NewRow();
 						row["Srno"] = i++;
 						row["CustomerName"] = cust;
 
 						int totalQty = 0;
+						// Initialize all material columns to 0
+						foreach (var mat in materialShortNames)
+						{
+							row[mat] = 0;
+						}
+						
 						foreach (var d in details)
 						{
 							if (materialMap.TryGetValue(d.ProductName, out var shortName))
@@ -501,7 +705,21 @@ namespace Milk_Bakery.Controllers
 						row["Total"] = totalQty;
 						finalData.Rows.Add(row);
 					}
-					finalData.Rows.Add(CreateTotalRow(finalData));
+					
+					// Routewise total
+					DataRow routeTotal = finalData.NewRow();
+					routeTotal["CustomerName"] = "Routewise Total";
+					foreach (DataColumn col in finalData.Columns)
+					{
+						if (col.ColumnName != "Srno" && col.ColumnName != "CustomerName")
+						{
+							int total = finalData.AsEnumerable()
+								.Where(r => r[col] != DBNull.Value && r["CustomerName"].ToString() != "Routewise Total")
+								.Sum(r => Convert.ToInt32(r[col]));
+							routeTotal[col.ColumnName] = total;
+						}
+					}
+					finalData.Rows.Add(routeTotal);
 				}
 
 				if (finalData.Rows.Count == 0)
@@ -561,54 +779,6 @@ namespace Milk_Bakery.Controllers
 				return View(); // or return StatusCode(500, ex.Message);
 			}
 		}
-		private DataTable CreateTableStructure(List<string> materials)
-		{
-			var table = new DataTable();
-			table.Columns.Add("Srno");
-			table.Columns.Add("CustomerName");
-			foreach (var mat in materials)
-				table.Columns.Add(mat, typeof(int));
-			table.Columns.Add("Total", typeof(int));
-			return table;
-		}
-
-		private DataRow CreateHeaderRow(string name, DataTable table)
-		{
-			var row = table.NewRow();
-			row["CustomerName"] = name;
-			return row;
-		}
-
-		private DataRow CreateTotalRow(DataTable table)
-		{
-			var row = table.NewRow();
-			row["CustomerName"] = "Routewise Total";
-			foreach (DataColumn col in table.Columns)
-			{
-				if (col.ColumnName == "Srno" || col.ColumnName == "CustomerName") continue;
-				int sum = table.AsEnumerable()
-					.Where(r => r[col] != DBNull.Value && r["CustomerName"].ToString() != "Routewise Total")
-					.Sum(r => Convert.ToInt32(r[col]));
-				row[col.ColumnName] = sum;
-			}
-			return row;
-		}
-
-		private DataRow CreateOverallRow(DataTable table)
-		{
-			var row = table.NewRow();
-			row["CustomerName"] = "OverAll Total";
-			foreach (DataColumn col in table.Columns)
-			{
-				if (col.ColumnName == "Srno" || col.ColumnName == "CustomerName") continue;
-				int sum = table.AsEnumerable()
-					.Where(r => r["CustomerName"].ToString() == "Routewise Total" && r[col] != DBNull.Value)
-					.Sum(r => Convert.ToInt32(r[col]));
-				row[col.ColumnName] = sum;
-			}
-			return row;
-		}
-
 	}
 }
 

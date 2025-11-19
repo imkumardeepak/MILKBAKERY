@@ -32,7 +32,14 @@
                     <select id="segement" class="form-control" asp-items="@ViewBag.segemnt"></select>
                 </div>
                 <div class="form-group col-sm-6">
-                    <select id="customer" asp-items="@ViewBag.customer" class="form-control select2"></select>
+                    <select id="customer" asp-items="@ViewBag.Route" class="form-control select2"></select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-sm-6" id="subcategoryContainer" style="display: none;">
+                    <select id="subcategory" class="form-control" disabled>
+                        <option value="">----Select Sub Category----</option>
+                    </select>
                 </div>
             </div>
             <div class="row">
@@ -89,13 +96,14 @@
         loadingIndicator.style.display = 'block';
         var CustomerValue = document.getElementById("customer").value;
         var SegementValue = document.getElementById("segement").value;
+        var SubCategoryValue = document.getElementById("subcategory").value;
         var fromdate = document.getElementById("Fromdate").value;
         var todate = document.getElementById("todate").value;
         // Make an AJAX request to the controller action
         $.ajax({
             url: '/RouteReport/ActionName',
             type: 'POST',
-            data: { Customer: CustomerValue, Segement: SegementValue, FromDate: fromdate, ToDate: todate },
+            data: { Customer: CustomerValue, Segement: SegementValue, SubCategory: SubCategoryValue, FromDate: fromdate, ToDate: todate },
             success: function (result) {
                 $('#output').empty();
                 $("#output").html(result);
@@ -109,6 +117,37 @@
         });
     }
     
+    // Add function to handle segment change
+    $(document).ready(function () {
+        $('#segement').change(function () {
+            var segment = $(this).val();
+            // Show subcategory dropdown only if segment contains "dairy" (case insensitive)
+            if (segment && segment.toLowerCase().includes('dairy')) {
+                $.ajax({
+                    url: '/RouteReport/GetSubCategories',
+                    type: 'GET',
+                    data: { segment: segment },
+                    success: function (data) {
+                        $('#subcategory').empty();
+                        $('#subcategory').append('<option value="">----Select Sub Category----</option>');
+                        $.each(data, function (index, item) {
+                            $('#subcategory').append('<option value="' + item.value + '">' + item.text + '</option>');
+                        });
+                        $('#subcategory').prop('disabled', false);
+                        $('#subcategoryContainer').show();
+                    },
+                    error: function () {
+                        console.log("Error loading subcategories");
+                    }
+                });
+            } else {
+                $('#subcategory').empty();
+                $('#subcategory').append('<option value="">----Select Sub Category----</option>');
+                $('#subcategory').prop('disabled', true);
+                $('#subcategoryContainer').hide();
+            }
+        });
+    });
 
 </script>
 <script>
@@ -117,6 +156,7 @@
         loadingIndicator.style.display = 'block';
         var CustomerValue = document.getElementById("customer").value;
         var SegementValue = document.getElementById("segement").value;
+        var SubCategoryValue = document.getElementById("subcategory").value;
         var fromdate = document.getElementById("Fromdate").value;
         var todate = document.getElementById("todate").value;
 
@@ -124,7 +164,7 @@
         $.ajax({
             url: '/RouteReport/Export',
             type: 'POST',
-            data: { Customer: CustomerValue, Segement: SegementValue, FromDate: fromdate, ToDate: todate },
+            data: { Customer: CustomerValue, Segement: SegementValue, SubCategory: SubCategoryValue, FromDate: fromdate, ToDate: todate },
             xhrFields: {
                 responseType: 'blob' // Important: Set the response type to blob
             },
