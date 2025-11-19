@@ -135,11 +135,11 @@ namespace Milk_Bakery.Controllers
 			var lstProducts = new List<SelectListItem>();
 
 			lstProducts = _context.Customer_Master.AsNoTracking().Select(n =>
-			new SelectListItem
-			{
-				Value = n.Name,
-				Text = n.Name
-			}).ToList();
+		  new SelectListItem
+		  {
+			  Value = n.Name.Trim(),
+			  Text = n.Name.Trim()
+		  }).OrderBy(n => n.Text).ToList();
 
 			var defItem = new SelectListItem()
 			{

@@ -72,14 +72,7 @@ namespace Milk_Bakery.Controllers
 			var userName = HttpContext.Session.GetString("UserName");
 
 			// Add "All Customers" option at the beginning
-			var customers = new List<SelectListItem>
-			{
-				new SelectListItem
-				{
-					Value = "0",
-					Text = "All Customers"
-				}
-			};
+			var customers = new List<SelectListItem>();
 
 			if (string.Equals(role, "Customer", StringComparison.OrdinalIgnoreCase))
 			{
@@ -165,6 +158,12 @@ namespace Milk_Bakery.Controllers
 						Value = n.Id.ToString(),
 						Text = n.Name
 					}).ToList();
+
+				allCustomers.Insert(0, new SelectListItem
+				{
+					Value = "0",
+					Text = "All Customers"
+				});
 
 				customers.AddRange(allCustomers);
 			}

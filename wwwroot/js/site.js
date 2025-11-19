@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
@@ -226,11 +226,11 @@ function confirmation(ev) {
     confirmButtonColor: "#3085d6",
     cancelButtonColor: "#d33",
     confirmButtonText: "Yes",
-    cancelButtonText: "No"
+    cancelButtonText: "No",
   }).then((result) => {
     if (result.isConfirmed) {
-      ev.closest('a').href = ev.closest('a').href.replace('&amp;', '&');
-      window.location.href = ev.closest('a').href;
+      ev.closest("a").href = ev.closest("a").href.replace("&amp;", "&");
+      window.location.href = ev.closest("a").href;
     }
   });
   return false;
@@ -415,7 +415,7 @@ function AddItem(btn) {
 
   var tbody = table.querySelector("tbody");
   var rows = tbody.getElementsByTagName("tr");
-  
+
   // Count only visible rows to determine the next index
   var visibleRowCount = 0;
   for (var i = 0; i < rows.length; i++) {
@@ -423,7 +423,7 @@ function AddItem(btn) {
       visibleRowCount++;
     }
   }
-  
+
   var nextrowIdx = visibleRowCount;
 
   // Determine if this is for EmpToCustMap or Cust2CustMap based on the page URL
@@ -434,8 +434,7 @@ function AddItem(btn) {
   var newRow = tbody.insertRow();
   newRow.innerHTML = `
     <td style="width:300px">
-      <select name="${collectionName}[${nextrowIdx}].customer" id="${collectionName}_${nextrowIdx}__customer" class="form-control" onchange="handleSelectChange(this)">
-        <option value="">--Select Customer--</option>
+      <select name="${collectionName}[${nextrowIdx}].customer" id="${collectionName}_${nextrowIdx}__customer" class="form-control select2" onchange="handleSelectChange(this)">
       </select>
       <span class="text-danger field-validation-valid" data-valmsg-for="${collectionName}[${nextrowIdx}].customer" data-valmsg-replace="true"></span>
     </td>
@@ -454,12 +453,17 @@ function AddItem(btn) {
   // Copy options from the first select element if it exists
   var firstSelect = tbody.querySelector("select[name*='customer']");
   var newSelect = newRow.querySelector("select");
-  
+
   if (firstSelect && newSelect) {
     // Copy all options from the first select to the new select
     for (var i = 0; i < firstSelect.options.length; i++) {
       var option = firstSelect.options[i];
-      var newOption = new Option(option.text, option.value, option.defaultSelected, option.selected);
+      var newOption = new Option(
+        option.text,
+        option.value,
+        option.defaultSelected,
+        option.selected
+      );
       newSelect.add(newOption);
     }
   }
@@ -525,7 +529,7 @@ function DeleteItemNew(btn) {
   // Update the IDs of remaining visible rows to keep them consistent
   var rows = tbody.getElementsByTagName("tr");
   var visibleRowIndex = 0;
-  
+
   for (var i = 0; i < rows.length; i++) {
     // Only process visible rows
     if (rows[i].style.display !== "none") {
@@ -540,14 +544,20 @@ function DeleteItemNew(btn) {
       inputs.forEach((input) => {
         if (input.name) {
           // Update name attributes
-          input.name = input.name.replace(/\[\d+\]/, "[" + visibleRowIndex + "]");
+          input.name = input.name.replace(
+            /\[\d+\]/,
+            "[" + visibleRowIndex + "]"
+          );
         }
         if (input.id) {
           // Update id attributes
-          input.id = input.id.replace(/_\d+__/g, collectionName + "_" + visibleRowIndex + "__");
+          input.id = input.id.replace(
+            /_\d+__/g,
+            collectionName + "_" + visibleRowIndex + "__"
+          );
         }
       });
-      
+
       visibleRowIndex++;
     }
   }
@@ -724,17 +734,19 @@ function handleSelectChange(selectElement) {
     // Determine which controller to use based on the page context
     // We can determine this by checking if we're on EmpToCustMaps or Cust2CustMap page
     var path = window.location.pathname;
-    var controller = path.includes("EmpToCustMaps") ? "EmpToCustMaps" : "Cust2CustMap";
-    
+    var controller = path.includes("EmpToCustMaps")
+      ? "EmpToCustMaps"
+      : "Cust2CustMap";
+
     if (product !== "") {
       $.ajax({
-        url: '/' + controller + '/fill_form',
-        type: 'GET',
-        dataType: 'json',
+        url: "/" + controller + "/fill_form",
+        type: "GET",
+        dataType: "json",
         data: { selectedvalue: product },
         success: function (data) {
           document.getElementById("phone").value = data;
-        }
+        },
       });
     } else {
       document.getElementById("phone").value = "";
@@ -744,7 +756,7 @@ function handleSelectChange(selectElement) {
 
   // Check if this is for customer selection in dynamic table rows
   var isEmpToCustMap = tid.includes("Cust2EmpMaps");
-  
+
   // For EmpToCustMap, check for duplicate selection
   if (isEmpToCustMap) {
     var allSelectElements = document.querySelectorAll("select[id*='customer']");
@@ -764,7 +776,7 @@ function handleSelectChange(selectElement) {
   }
 
   // Proceed to update the phone field for customer selection in dynamic table rows
-  var txtProductCodeId = tid.replaceAll('customer', 'phone');
+  var txtProductCodeId = tid.replaceAll("customer", "phone");
   var txtProductCode = document.getElementById(txtProductCodeId);
 
   if (txtProductCode) {
@@ -774,15 +786,15 @@ function handleSelectChange(selectElement) {
     // For dynamic table rows, we always fetch customer phone numbers from Cust2CustMapController
     // because we're always looking up customer phone numbers, not employee phone numbers
     $.ajax({
-      url: '/Cust2CustMap/fill_form',
-      type: 'GET',
-      dataType: 'json',
+      url: "/Cust2CustMap/fill_form",
+      type: "GET",
+      dataType: "json",
       data: { selectedvalue: product },
       success: function (data) {
         if (txtProductCode) {
           txtProductCode.value = data;
         }
-      }
+      },
     });
   }
 }
