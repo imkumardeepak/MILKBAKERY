@@ -109,6 +109,7 @@ namespace Milk_Bakery.Controllers
 			}
 
 			await _context.SaveChangesAsync();
+			_notifyService.Success("Record Delete sucessfully");
 			return RedirectToAction(nameof(Index));
 		}
 

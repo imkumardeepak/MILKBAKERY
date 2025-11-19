@@ -38,7 +38,7 @@
             </td>
                                 <td>
                                      <a asp-action="AddOrEdit" asp-route-id="@item.id" class="h-10 w-10 rounded-sm shadow-md text-white text-[16px] hover:bg-yellow-700 bg-yellow-600 btn"><i class="fas fa-pencil-alt"></i> </a>
-                                     <a asp-action="Delete" asp-route-id="@item.id" class="h-10 w-10 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn" onclick="return confirmDelete(this);"><i class="fas fa-trash-alt"></i></a>
+                                     <a asp-action="Delete" asp-route-id="@item.id" class="h-10 w-10 rounded-sm shadow-md text-white text-[16px] hover:bg-red-700 bg-red-600 btn" onclick="return confirmation(this);"><i class="fas fa-trash-alt"></i></a>
                                 </td>
         </tr>
 }

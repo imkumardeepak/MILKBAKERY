@@ -51,11 +51,44 @@ namespace Milk_Bakery.Controllers
 
 		// GET: GatePass/GetGatePassDataByDate
 		[HttpGet]
-		public async Task<IActionResult> GetGatePassDataByDate(DateTime? date)
+		public async Task<IActionResult> GetGatePassDataByDate(string date)
 		{
 			try
 			{
-				var filterDate = date ?? DateTime.Now.Date;
+				_logger.LogInformation("GetGatePassDataByDate called with date parameter: {Date}", date);
+				
+				DateTime filterDate;
+				if (string.IsNullOrEmpty(date))
+				{
+					filterDate = DateTime.Now.Date;
+					_logger.LogInformation("No date provided, using today's date: {FilterDate}", filterDate);
+				}
+				else
+				{
+					_logger.LogInformation("Attempting to parse date: {Date}", date);
+					
+					// Try multiple date formats
+					string[] formats = { "yyyy-MM-dd", "dd/MM/yyyy", "M/d/yyyy", "MM/dd/yyyy" };
+					if (!DateTime.TryParseExact(date, formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out filterDate))
+					{
+						// Try general parsing as fallback
+						if (!DateTime.TryParse(date, out filterDate))
+						{
+							_logger.LogWarning("Failed to parse date: {Date}. Using today's date instead.", date);
+							filterDate = DateTime.Now.Date;
+						}
+						else
+						{
+							_logger.LogInformation("Parsed date using general parsing: {FilterDate}", filterDate);
+						}
+					}
+					else
+					{
+						_logger.LogInformation("Parsed date using exact format: {FilterDate}", filterDate);
+					}
+				}
+
+				_logger.LogInformation("Filtering invoices for date: {FilterDate}", filterDate);
 
 				// Group data by truck number and date, and count customers
 				var groupedData = await _context.Invoices
@@ -64,18 +97,20 @@ namespace Milk_Bakery.Controllers
 					.GroupBy(c => new { c.ShipToCode, c.InvoiceDate, c.ShipToRoute }) // Group by truck (route) and date
 					.Select(g => new GatePassGroupedData
 					{
-						TruckNumber = g.First().VehicleNo,
+						TruckNumber = g.First().VehicleNo ?? "Unknown",
 						DispatchDate = g.Key.InvoiceDate,
 						CustomerCount = g.Count(),
 					})
 					.OrderBy(g => g.TruckNumber)
 					.ToListAsync();
 
+				_logger.LogInformation("Found {Count} gate pass records", groupedData.Count);
+
 				// Convert to JSON-friendly format
 				var jsonData = groupedData.Select(g => new
 				{
 					truckNumber = g.TruckNumber,
-					dispatchDate = g.DispatchDate,
+					dispatchDate = g.DispatchDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"), // ISO format for JavaScript
 					customerCount = g.CustomerCount
 				}).ToList();
 

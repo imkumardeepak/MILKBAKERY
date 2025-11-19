@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
@@ -218,31 +218,21 @@ incrementBtns.forEach((btn, index) => {
 
 var object = { status: false, ele: null };
 function confirmation(ev) {
-  if (object.status) {
-    return true;
-  }
-
-  swal(
-    {
-      title: "Are you sure?",
-      text: "You will not be able to recover this record!",
-      type: "warning",
-
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes",
-      cancelButtonText: "No",
-      confirmButtonClass: "btn btn-success",
-      cancelButtonClass: "btn btn-danger",
-      closeOnConfirm: true,
-    },
-    function () {
-      object.status = true;
-      object.ele = ev;
-      object.ele.click();
+  Swal.fire({
+    title: "Are you sure?",
+    text: "You will not be able to recover this record!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes",
+    cancelButtonText: "No"
+  }).then((result) => {
+    if (result.isConfirmed) {
+      ev.closest('a').href = ev.closest('a').href.replace('&amp;', '&');
+      window.location.href = ev.closest('a').href;
     }
-  );
+  });
   return false;
 }
 
@@ -257,35 +247,6 @@ function confirmation1(ev) {
       text: "Are You Sure To Do Process!",
       type: "warning",
 
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes",
-      cancelButtonText: "No",
-      confirmButtonClass: "btn btn-success",
-      cancelButtonClass: "btn btn-danger",
-      closeOnConfirm: true,
-    },
-    function () {
-      object.status = true;
-      object.ele = ev;
-      object.ele.click();
-    }
-  );
-  return false;
-}
-
-// Custom confirmation dialog for delete operations
-function confirmDelete(ev) {
-  if (object.status) {
-    return true;
-  }
-
-  swal(
-    {
-      title: "Are you sure?",
-      text: "Are you sure you want to delete this item?",
-      type: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
