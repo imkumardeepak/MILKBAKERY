@@ -25,7 +25,7 @@ namespace Milk_Bakery.Controllers
 				// Group data by truck number and date, and count customers
 				var groupedData = await _context.Invoices.Where(c => c.InvoiceDate.Date <= DateTime.Now.Date && c.InvoiceDate.Date >= DateTime.Now.Date.AddDays(-1))
 					.Include(c => c.InvoiceMaterials)
-					.GroupBy(c => new { c.ShipToCode, c.InvoiceDate, c.ShipToRoute }) // Group by truck (route) and date
+					.GroupBy(c => new { c.VehicleNo, c.InvoiceDate }) // Group by truck (route) and date
 					.Select(g => new GatePassGroupedData
 					{
 						TruckNumber = g.First().VehicleNo,
@@ -37,7 +37,7 @@ namespace Milk_Bakery.Controllers
 
 				var viewModel = new GatePassIndexViewModel
 				{
-					GroupedData = groupedData
+					GroupedData = groupedData.Distinct().ToList()
 				};
 
 				return View(viewModel);

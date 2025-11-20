@@ -127,9 +127,9 @@
     </div>
 
     <div class="header">
-        <div class="company-name">HALDIRAM MILK & BAKERY</div>
-        <div class="gate-pass-title">GATE PASS</div>
-        <div><strong>Truck Number:</strong> @Model.TruckNumber</div>
+        <div class="company-name">Haldiram Foods International Pvt. Ltd.</div>
+        <div class="gate-pass-title">Vehicle Gate Pass</div>
+        <div><strong>Vehicle Number:</strong> @Model.TruckNumber</div>
         <div><strong>Dispatch Date:</strong> @Model.DispatchDate.ToString("dd/MM/yyyy")</div>
     </div>
 
@@ -166,14 +166,6 @@
             }
         </tbody>
     </table>
-
-    <div class="summary">
-        <h5>Summary</h5>
-        <p><strong>Total Customers:</strong> @Model.CustomerCount</p>
-        <p><strong>Total Small Crates:</strong> @(Model.CustomerDetails?.Sum(c => c.SmallCrates) ?? 0)</p>
-        <p><strong>Total Large Crates:</strong> @(Model.CustomerDetails?.Sum(c => c.LargeCrates) ?? 0)</p>
-    </div>
-
     <script src="~/Vendor/jquery/jquery.min.js"></script>
     <script src="~/Vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
