@@ -469,33 +469,45 @@ namespace Milk_Bakery.Controllers
 
 		// GET: CratesManages/GetCustomersBySegment
 		[HttpGet]
-		public IActionResult GetCustomersBySegment(string segmentCode)
+		public async Task<IActionResult> GetCustomersBySegment(string segmentCode)
 		{
-			if (string.IsNullOrEmpty(segmentCode))
-			{
+			if (string.IsNullOrWhiteSpace(segmentCode))
 				return Json(new List<object>());
-			}
 
-			// Get customer segment mappings for this segment
-			var customerMappings = _context.CustomerSegementMap
+			// 1. Load special routes
+			var specialRoutes = await _context.RouteMaster
+				.Where(r => r.IsSpecial)
+				.Select(r => r.Route)
+				.ToListAsync();
+
+			var specialRouteSet = new HashSet<string>(specialRoutes);
+
+			// 2. Get all customer names mapped to the segment
+			var customerNames = await _context.CustomerSegementMap
 				.Where(csm => csm.SegementName == segmentCode)
-				.ToList();
+				.Select(csm => csm.Customername)
+				.ToListAsync();
 
-			// Get customer IDs from the mappings
-			var customerIds = customerMappings.Select(csm => csm.Customername).ToList();
+			if (!customerNames.Any())
+				return Json(new List<object>());
 
-			// Get customers that match these names
-			var customers = _context.Customer_Master
-				.Where(cm => customerIds.Contains(cm.Name))
+			var customerNameSet = new HashSet<string>(customerNames);
+
+			// 3. Get valid customers (not part of special route)
+			var customers = await _context.Customer_Master
+				.Where(cm => customerNameSet.Contains(cm.Name) &&
+							 !specialRouteSet.Contains(cm.route))
+				.OrderBy(cm => cm.Name)
 				.Select(cm => new
 				{
 					cm.Id,
 					cm.Name
-				}).OrderBy(cm => cm.Name)
-				.ToList();
+				})
+				.ToListAsync();
 
 			return Json(customers);
 		}
+
 
 		// GET: CratesManages/CreateBulkOpeningEntry																							
 		[HttpGet]
@@ -1262,12 +1274,20 @@ namespace Milk_Bakery.Controllers
 				.Where(csm => csm.SegementName == segmentCode)
 				.ToListAsync();
 
+			// 1. Load special routes
+			var specialRoutes = await _context.RouteMaster
+				.Where(r => r.IsSpecial)
+				.Select(r => r.Route)
+				.ToListAsync();
+
+			var specialRouteSet = new HashSet<string>(specialRoutes);
+
 			// Get customer names from the mappings
 			var customerNames = customerMappings.Select(csm => csm.Customername).ToList();
 
 			// Get customers that match these names
 			var customers = await _context.Customer_Master
-				.Where(cm => customerNames.Contains(cm.Name) && cm.Division == segmentCode)
+				.Where(cm => customerNames.Contains(cm.Name) && cm.Division == segmentCode && !specialRouteSet.Contains(cm.route))
 				.OrderBy(cm => cm.Name)
 				.ToListAsync();
 

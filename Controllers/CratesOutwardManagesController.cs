@@ -80,6 +80,22 @@ namespace Milk_Bakery.Controllers
 								continue;
 							}
 
+							// Check if customer is on a special route
+							bool isSpecialRoute = false;
+							var customerRecord = await _context.Customer_Master
+								.FirstOrDefaultAsync(c => c.Id == customer.CustomerId);
+							
+							if (customerRecord != null)
+							{
+								var routeRecord = await _context.RouteMaster
+									.FirstOrDefaultAsync(r => r.Route == customerRecord.route);
+								
+								if (routeRecord != null)
+								{
+									isSpecialRoute = routeRecord.IsSpecial;
+								}
+							}
+
 							// Check if a record for this customer, segment, crates type, and date already exists
 							var existingRecord = await _context.CratesManages
 								.Where(cm => cm.CustomerId == customer.CustomerId &&
@@ -93,6 +109,13 @@ namespace Milk_Bakery.Controllers
 							{
 								// Update existing record
 								existingRecord.Outward += customer.Outward;
+								
+								// If customer is on a special route, also add the same quantity to inward
+								if (isSpecialRoute)
+								{
+									existingRecord.Inward += customer.Outward;
+								}
+								
 								existingRecord.Balance = existingRecord.Opening + existingRecord.Outward - existingRecord.Inward;
 								_context.CratesManages.Update(existingRecord);
 								recordsProcessed++;
@@ -133,8 +156,8 @@ namespace Milk_Bakery.Controllers
 										DispDate = viewModel.DispDate,
 										Opening = TOPexistingRecord.Balance, // Default opening balance for outward entries
 										Outward = customer.Outward,
-										Inward = 0, // Default inward for outward entries
-										Balance = TOPexistingRecord.Balance + customer.Outward
+										Inward = isSpecialRoute ? customer.Outward : 0, // If special route, inward equals outward
+										Balance = TOPexistingRecord.Balance + customer.Outward - (isSpecialRoute ? customer.Outward : 0)
 									};
 									_context.Add(cratesManage);
 									recordsProcessed++;
@@ -150,8 +173,8 @@ namespace Milk_Bakery.Controllers
 										DispDate = viewModel.DispDate,
 										Opening = 0, // Default opening balance for outward entries
 										Outward = customer.Outward,
-										Inward = 0, // Default inward for outward entries
-										Balance = customer.Outward // Balance calculation (Opening + Outward - Inward)
+										Inward = isSpecialRoute ? customer.Outward : 0, // If special route, inward equals outward
+										Balance = customer.Outward - (isSpecialRoute ? customer.Outward : 0) // Balance calculation (Opening + Outward - Inward)
 									};
 									_context.Add(cratesManage);
 									recordsProcessed++;
@@ -261,6 +284,23 @@ namespace Milk_Bakery.Controllers
 						if (customer.Outward > 0)
 						{
 							var segment = await _context.CustomerSegementMap.FirstOrDefaultAsync(s => s.Customername.Trim() == customer.CustomerName.Trim() && s.SegementName == viewModel.SegmentCode);
+							
+							// Check if customer is on a special route
+							bool isSpecialRoute = false;
+							var customerRecord = await _context.Customer_Master
+								.FirstOrDefaultAsync(c => c.Id == customer.CustomerId);
+							
+							if (customerRecord != null)
+							{
+								var routeRecord = await _context.RouteMaster
+									.FirstOrDefaultAsync(r => r.Route == customerRecord.route);
+								
+								if (routeRecord != null)
+								{
+									isSpecialRoute = routeRecord.IsSpecial;
+								}
+							}
+							
 							// Check if a record for this customer, segment, crates type, and date already exists
 							var existingRecord = await _context.CratesManages
 								.Where(cm => cm.CustomerId == customer.CustomerId &&
@@ -273,6 +313,13 @@ namespace Milk_Bakery.Controllers
 							if (existingRecord != null)
 							{
 								existingRecord.Outward += customer.Outward; // Update Outward
+								
+								// If customer is on a special route, also add the same quantity to inward
+								if (isSpecialRoute)
+								{
+									existingRecord.Inward += customer.Outward;
+								}
+								
 								existingRecord.Balance = existingRecord.Opening + existingRecord.Outward - existingRecord.Inward;
 								_context.CratesManages.Update(existingRecord);
 								recordsProcessed++;
@@ -312,8 +359,8 @@ namespace Milk_Bakery.Controllers
 										DispDate = viewModel.DispDate,
 										Opening = TOPexistingRecord.Balance, // Default opening balance for outward entries
 										Outward = customer.Outward,
-										Inward = 0, // Default inward for outward entries
-										Balance = TOPexistingRecord.Balance + customer.Outward
+										Inward = isSpecialRoute ? customer.Outward : 0, // If special route, inward equals outward
+										Balance = TOPexistingRecord.Balance + customer.Outward - (isSpecialRoute ? customer.Outward : 0)
 									};
 									_context.Add(cratesManage);
 									recordsProcessed++;
@@ -329,8 +376,8 @@ namespace Milk_Bakery.Controllers
 										DispDate = viewModel.DispDate,
 										Opening = 0, // Default opening balance for outward entries
 										Outward = customer.Outward,
-										Inward = 0, // Default inward for outward entries
-										Balance = customer.Outward // Balance calculation (Opening + Outward - Inward)
+										Inward = isSpecialRoute ? customer.Outward : 0, // If special route, inward equals outward
+										Balance = customer.Outward - (isSpecialRoute ? customer.Outward : 0) // Balance calculation (Opening + Outward - Inward)
 									};
 									_context.Add(cratesManage);
 									recordsProcessed++;

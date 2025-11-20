@@ -13,7 +13,7 @@ namespace Milk_Bakery.Models
 		public string ShortCode { get; set; }
 
 		public string Route { get; set; }
-
+		[Display(Name = "Special Route")]
 		public bool IsSpecial { get; set; } = false;
 	}
 }
