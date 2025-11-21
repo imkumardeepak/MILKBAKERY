@@ -11,81 +11,100 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
-    <link href="~/Vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f8f9fa;
+            font-size: 12px;
+            line-height: 1.2;
+            margin: 5px;
+            padding: 0;
+            width: 80mm; /* Standard receipt printer width */
+            max-width: 80mm;
         }
 
         .header {
             text-align: center;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .company-name {
-            font-size: 28px;
+            font-size: 14px;
             font-weight: bold;
             color: #FC2947;
         }
 
         .gate-pass-title {
-            font-size: 24px;
+            font-size: 12px;
             font-weight: bold;
-            margin: 15px 0;
-            color: #333;
+            margin: 5px 0;
+        }
+
+        .vehicle-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
         }
 
         .details-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            font-size: 10px;
         }
 
-            .details-table th, .details-table td {
-                border: 1px solid #ddd;
-                padding: 12px;
+            .details-table th,
+            .details-table td {
+                border: 1px solid #000;
+                padding: 3px;
                 text-align: left;
             }
 
             .details-table th {
-                background-color: #FC2947;
-                color: white;
+                background-color: #f0f0f0;
                 font-weight: bold;
             }
 
-            .details-table tbody tr:nth-child(even) {
-                background-color: #f2f2f2;
-            }
-
-            .details-table tbody tr:hover {
-                background-color: #e9ecef;
-            }
-
         .summary {
-            margin-top: 20px;
-            text-align: right;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
+            margin-top: 8px;
+            padding: 5px;
+            border-top: 1px dashed #000;
+            font-weight: bold;
         }
 
+        .signature-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .signature-box {
+            flex: 1;
+            text-align: center;
+        }
+
+            .signature-box:first-child {
+                margin-right: 10px;
+            }
+
         .print-button {
-            margin: 20px 0;
+            margin: 10px 0;
             text-align: center;
         }
 
         .btn {
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 5px 10px;
+            border-radius: 3px;
             text-decoration: none;
             display: inline-block;
-            margin: 0 5px;
+            margin: 0 3px;
+            font-size: 12px;
         }
 
         .btn-primary {
@@ -100,45 +119,48 @@
             border: 1px solid #6c757d;
         }
 
-        .btn:hover {
-            opacity: 0.8;
-            cursor: pointer;
+        @@media print {
+            .print-button
+
+        {
+            display: none;
         }
 
-        @@media print {
-            .print-button {
-                display: none;
-            }
-            
-            body {
-                background-color: white;
-            }
+        body {
+            margin: 0;
+            padding: 2mm;
+        }
+
+        }
+
+        /* Ensure no page breaks inside important elements */
+        .header, .vehicle-info, .details-table, .summary {
+            page-break-inside: avoid;
         }
     </style>
 </head>
 <body>
     <div class="print-button">
-        <button class="btn btn-primary" onclick="window.print()">
-            <i class="fas fa-print"></i> Print Gate Pass
-        </button>
-        <a href="@Url.Action("Index", "GatePass")" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to List
-        </a>
+        <button class="btn btn-primary" onclick="window.print()">Print Gate Pass</button>
+        <a href="@Url.Action("Index", "GatePass")" class="btn btn-secondary">Back to List</a>
     </div>
 
     <div class="header">
         <div class="company-name">Haldiram Foods International Pvt. Ltd.</div>
-        <div class="gate-pass-title">Vehicle Gate Pass</div>
-        <div><strong>Vehicle Number:</strong> @Model.TruckNumber</div>
-        <div><strong>Dispatch Date:</strong> @Model.DispatchDate.ToString("dd/MM/yyyy")</div>
+        <div class="gate-pass-title">VEHICLE GATE PASS</div>
+    </div>
+
+    <div class="vehicle-info">
+        <div><strong>Vehicle:</strong> @Model.TruckNumber</div>
+        <div><strong>Date:</strong> @Model.DispatchDate.ToString("dd/MM/yy")</div>
     </div>
 
     <table class="details-table">
         <thead>
             <tr>
-                <th>Customer Name</th>
-                <th>Small Crates</th>
-                <th>Large Crates</th>
+                <th>Customer</th>
+                <th>Sml</th>
+                <th>Lrg</th>
             </tr>
         </thead>
         <tbody>
@@ -152,8 +174,8 @@
                         <td>@customer.LargeCrates</td>
                     </tr>
                 }
-                <tr style="background-color: #e9ecef; font-weight: bold;">
-                    <td>Total Customers: @Model.CustomerCount</td>
+                <tr style="font-weight: bold;">
+                    <td>Total: @Model.CustomerCount</td>
                     <td>@Model.CustomerDetails.Sum(c => c.SmallCrates)</td>
                     <td>@Model.CustomerDetails.Sum(c => c.LargeCrates)</td>
                 </tr>
@@ -161,12 +183,23 @@
             else
             {
                 <tr>
-                    <td colspan="3" class="text-center">No customer details available</td>
+                    <td colspan="3">No customer details</td>
                 </tr>
             }
         </tbody>
     </table>
-    <script src="~/Vendor/jquery/jquery.min.js"></script>
-    <script src="~/Vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <div class="summary">
+        <div class="signature-row">
+            <div class="signature-box">
+                Driver Signature<br>
+                ___________________
+            </div>
+            <div class="signature-box">
+                Security Signature<br>
+                ___________________
+            </div>
+        </div>
+    </div>
 </body>
 </html>
