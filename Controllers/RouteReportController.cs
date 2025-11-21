@@ -103,7 +103,7 @@ namespace Milk_Bakery.Controllers
 						// Create a dictionary to map customer names to their sequence numbers
 						var customerSequenceMap = await _context.Customer_Master
 							.AsNoTracking()
-							.Where(a => a.route == route.Route)
+							.Where(a => a.route == route.Route && a.Division == Segement)
 							.Select(a => new { a.Name, a.Sequence })
 							.Distinct()
 							.ToDictionaryAsync(a => a.Name, a => a.Sequence);
@@ -177,14 +177,22 @@ namespace Milk_Bakery.Controllers
 									.ToList();
 
 								DataRow row = combinedDataTable.NewRow();
-								row["Srno"] = i;
+								// For dairy segments, use the sequence from Customer Master instead of simple incrementing
+								if (isDairySegment && customerSequenceMap.ContainsKey(customerName))
+								{
+									row["Srno"] = customerSequenceMap[customerName];
+								}
+								else
+								{
+									row["Srno"] = i;
+								}
 								row["CustomerName"] = customerName;
 
 								int sum = 0;
-								// Initialize all material columns to 0
+								// Initialize all material columns to blank
 								foreach (var mat in materialShortNames)
 								{
-									row[mat] = 0;
+									row[mat] = DBNull.Value;
 								}
 								
 								foreach (var item in orderDetails)
@@ -270,7 +278,7 @@ namespace Milk_Bakery.Controllers
 					// Create a dictionary to map customer names to their sequence numbers
 					var customerSequenceMap = await _context.Customer_Master
 						.AsNoTracking()
-						.Where(a => a.route == Customer)
+						.Where(a => a.route == Customer && a.Division == Segement)
 						.Select(a => new { a.Name, a.Sequence })
 						.Distinct()
 						.ToDictionaryAsync(a => a.Name, a => a.Sequence);
@@ -339,14 +347,22 @@ namespace Milk_Bakery.Controllers
 							.ToList();
 
 						DataRow row = combinedDataTable.NewRow();
-						row["Srno"] = i;
+						// For dairy segments, use the sequence from Customer Master instead of simple incrementing
+						if (isDairySegment && customerSequenceMap.ContainsKey(customerName))
+						{
+							row["Srno"] = customerSequenceMap[customerName];
+						}
+						else
+						{
+							row["Srno"] = i;
+						}
 						row["CustomerName"] = customerName;
 
 						int sum = 0;
-						// Initialize all material columns to 0
+						// Initialize all material columns to blank
 						foreach (var mat in materialShortNames)
 						{
-							row[mat] = 0;
+							row[mat] = DBNull.Value;
 						}
 						
 						foreach (var item in orderDetails)
@@ -493,7 +509,7 @@ namespace Milk_Bakery.Controllers
 						// Create a dictionary to map customer names to their sequence numbers
 						var customerSequenceMap = await _context.Customer_Master
 							.AsNoTracking()
-							.Where(c => c.route == route.Route)
+							.Where(c => c.route == route.Route && c.Division == Segement)
 							.Select(a => new { a.Name, a.Sequence })
 							.Distinct()
 							.ToDictionaryAsync(a => a.Name, a => a.Sequence);
@@ -560,14 +576,23 @@ namespace Milk_Bakery.Controllers
 								.ToList();
 
 							DataRow row = routeData.NewRow();
-							row["Srno"] = i++;
+							// For dairy segments, use the sequence from Customer Master instead of simple incrementing
+							if (isDairySegment && customerSequenceMap.ContainsKey(cust))
+							{
+								row["Srno"] = customerSequenceMap[cust];
+							}
+							else
+							{
+								row["Srno"] = i;
+							}
 							row["CustomerName"] = cust;
+							i++;
 
 							int totalQty = 0;
-							// Initialize all material columns to 0
+							// Initialize all material columns to blank
 							foreach (var mat in materialShortNames)
 							{
-								row[mat] = 0;
+								row[mat] = DBNull.Value;
 							}
 							
 							foreach (var d in details)
@@ -624,7 +649,7 @@ namespace Milk_Bakery.Controllers
 					// Create a dictionary to map customer names to their sequence numbers
 					var customerSequenceMap = await _context.Customer_Master
 						.AsNoTracking()
-						.Where(c => c.route == Customer)
+						.Where(c => c.route == Customer && c.Division == Segement)
 						.Select(a => new { a.Name, a.Sequence })
 						.Distinct()
 						.ToDictionaryAsync(a => a.Name, a => a.Sequence);
@@ -684,14 +709,23 @@ namespace Milk_Bakery.Controllers
 							.ToList();
 
 						DataRow row = finalData.NewRow();
-						row["Srno"] = i++;
+						// For dairy segments, use the sequence from Customer Master instead of simple incrementing
+						if (isDairySegment && customerSequenceMap.ContainsKey(cust))
+						{
+							row["Srno"] = customerSequenceMap[cust];
+						}
+						else
+						{
+							row["Srno"] = i;
+						}
 						row["CustomerName"] = cust;
+						i++;
 
 						int totalQty = 0;
-						// Initialize all material columns to 0
+						// Initialize all material columns to blank
 						foreach (var mat in materialShortNames)
 						{
-							row[mat] = 0;
+							row[mat] = DBNull.Value;
 						}
 						
 						foreach (var d in details)
@@ -754,7 +788,8 @@ namespace Milk_Bakery.Controllers
 					for (int j = 0; j < finalData.Columns.Count; j++)
 					{
 						var cell = worksheet.Cell(i + 3, j + 1);
-						cell.Value = row[j]?.ToString();
+						// Handle DBNull values for Excel export
+						cell.Value = (row[j] == DBNull.Value || row[j] == null) ? "" : row[j].ToString();
 						cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
 
 						string custName = row["CustomerName"].ToString();

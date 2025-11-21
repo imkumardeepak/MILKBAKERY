@@ -5,6 +5,7 @@
     Layout = null;
 
 }
+
 @functions {
     string GetCellClass(string columnName)
     {
@@ -45,6 +46,14 @@
         {
             return ""; // No additional class
         }
+    }
+    string GetCellValue(object value)
+    {
+        if (value == DBNull.Value || value == null)
+        {
+            return ""; // Return blank for DBNull values
+        }
+        return value.ToString();
     }
 }
 <style>
@@ -101,7 +110,7 @@
                     <tr class="@GetRowClass(dr)">
                             @foreach (DataColumn dc in Model.Columns)
                             {
-                            <td class="@GetCellClass(dc.ColumnName)">@dr[dc.ColumnName]</td>
+                            <td class="@GetCellClass(dc.ColumnName)">@GetCellValue(dr[dc.ColumnName])</td>
                             }
                         </tr>
                     }
