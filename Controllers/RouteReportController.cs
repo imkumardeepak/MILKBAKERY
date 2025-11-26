@@ -74,9 +74,7 @@ namespace Milk_Bakery.Controllers
 												.AsNoTracking()
 												.Where(a => !a.Materialname.Contains("CRATES FOR")
 															&& a.segementname == Segement
-															&& a.isactive == true)
-												.OrderBy(a => a.subcategory)
-												.ThenBy(a => a.sequence);
+															&& a.isactive == true);
 
 					// Apply subcategory filter if selected
 					if (!string.IsNullOrEmpty(SubCategory))
@@ -85,8 +83,9 @@ namespace Milk_Bakery.Controllers
 					}
 
 
-					var materialMap = await materialQuery
-						.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
+					var materialMap = await materialQuery.OrderBy(a => a.subcategory)
+												.ThenBy(a => a.sequence)
+												.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 					var materialShortNames = materialMap.Values.Distinct().ToList();
 
@@ -275,8 +274,9 @@ namespace Milk_Bakery.Controllers
 						materialQuery = materialQuery.Where(a => a.subcategory == SubCategory);
 					}
 
-					var materialMap = await materialQuery
-						.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
+					var materialMap = await materialQuery.OrderBy(a => a.subcategory)
+												.ThenBy(a => a.sequence)
+												.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 					var materialShortNames = materialMap.Values.Distinct().ToList();
 
@@ -490,8 +490,9 @@ namespace Milk_Bakery.Controllers
 					materialQuery = materialQuery.Where(a => a.subcategory == SubCategory);
 				}
 
-				var materialMap = await materialQuery
-					.ToDictionaryAsync(m => m.Materialname, m => m.ShortName);
+				var materialMap = await materialQuery.OrderBy(a => a.subcategory)
+												.ThenBy(a => a.sequence)
+												.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 				var materialShortNames = materialMap.Values.Distinct().ToList();
 

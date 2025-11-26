@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Milk&Bakery")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f8038f2285299d2ed7d0ba7ec864a9c964ad21f7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e9e9595caa4a8bd526a6fcf23686b463847e561c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Milk&Bakery")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Milk&Bakery")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
