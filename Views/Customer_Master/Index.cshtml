@@ -38,6 +38,9 @@
                             <th>
                                 @Html.DisplayNameFor(model => model.state)
                             </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.IsActive)
+                            </th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -62,6 +65,9 @@
                                 </td>
                                 <td>
                                     @Html.DisplayFor(modelItem => item.state)
+                                </td>
+                                <td>
+                                    @(item.IsActive ? "Yes" : "No")
                                 </td>
                                 <td class="text-center">
                                     <a asp-action="AddOrEdit" asp-route-id="@item.Id" class="btn btn-warning btn-sm" title="Edit">

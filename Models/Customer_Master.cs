@@ -77,7 +77,8 @@ namespace Milk_Bakery.Models
 		[Display(Name = "Sequence")]
 		public int Sequence { get; set; } = 0;
 
-
+		[Display(Name = "Is Active")]
+		public bool IsActive { get; set; } = true;
 
 	}
 }

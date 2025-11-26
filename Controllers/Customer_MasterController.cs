@@ -35,6 +35,7 @@ namespace Milk_Bakery.Controllers
             {
                 Customer_Master customer = new Customer_Master();
                 customer.Id = id;
+                customer.IsActive = true; // Set default value for new customers
                 return View(customer);
             }
             else
@@ -216,6 +217,7 @@ namespace Milk_Bakery.Controllers
                 while (csv.Read())
                 {
                     var person = csv.GetRecord<Customer_Master>();
+                    person.IsActive = true; // Set default value for uploaded customers
                     user.phoneno = person.phoneno;
                     user.Id = 0;
                     user.Role = "Customer";
@@ -232,6 +234,8 @@ namespace Milk_Bakery.Controllers
 
             return RedirectToAction("Index"); // Redirect to a success page or another view
         }
+
+
 
 
 
