@@ -71,14 +71,19 @@ namespace Milk_Bakery.Controllers
 				{
 					// Fetch and cache materials as a dictionary
 					var materialQuery = _context.MaterialMaster
-						.AsNoTracking()
-						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true);
+												.AsNoTracking()
+												.Where(a => !a.Materialname.Contains("CRATES FOR")
+															&& a.segementname == Segement
+															&& a.isactive == true)
+												.OrderBy(a => a.subcategory)
+												.ThenBy(a => a.sequence);
 
 					// Apply subcategory filter if selected
 					if (!string.IsNullOrEmpty(SubCategory))
 					{
 						materialQuery = materialQuery.Where(a => a.subcategory == SubCategory);
 					}
+
 
 					var materialMap = await materialQuery
 						.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
@@ -103,7 +108,7 @@ namespace Milk_Bakery.Controllers
 						// Create a dictionary to map customer names to their sequence numbers
 						var customerSequenceMap = await _context.Customer_Master
 							.AsNoTracking()
-							.Where(a => a.route == route.Route && a.Division == Segement)
+							.Where(a => a.route == route.Route && a.Division == Segement && a.IsActive == true)
 							.Select(a => new { a.Name, a.Sequence })
 							.Distinct()
 							.ToDictionaryAsync(a => a.Name, a => a.Sequence);
@@ -113,7 +118,7 @@ namespace Milk_Bakery.Controllers
 						// For dairy segments, get all customers even if they don't have orders
 						bool isDairySegment = Segement.ToLower().Contains("dairy");
 						List<string> distinctCustomers;
-						
+
 						if (isDairySegment)
 						{
 							// For dairy segments, use all customers in the route
@@ -194,7 +199,7 @@ namespace Milk_Bakery.Controllers
 								{
 									row[mat] = DBNull.Value;
 								}
-								
+
 								foreach (var item in orderDetails)
 								{
 									if (materialMap.TryGetValue(item.ProductName, out var shortName))
@@ -278,7 +283,7 @@ namespace Milk_Bakery.Controllers
 					// Create a dictionary to map customer names to their sequence numbers
 					var customerSequenceMap = await _context.Customer_Master
 						.AsNoTracking()
-						.Where(a => a.route == Customer && a.Division == Segement)
+						.Where(a => a.route == Customer && a.Division == Segement && a.IsActive == true)
 						.Select(a => new { a.Name, a.Sequence })
 						.Distinct()
 						.ToDictionaryAsync(a => a.Name, a => a.Sequence);
@@ -288,7 +293,7 @@ namespace Milk_Bakery.Controllers
 					// For dairy segments, get all customers even if they don't have orders
 					bool isDairySegment = Segement.ToLower().Contains("dairy");
 					List<string> distinctCustomers;
-					
+
 					if (isDairySegment)
 					{
 						// For dairy segments, use all customers in the route
@@ -364,7 +369,7 @@ namespace Milk_Bakery.Controllers
 						{
 							row[mat] = DBNull.Value;
 						}
-						
+
 						foreach (var item in orderDetails)
 						{
 							if (materialMap.TryGetValue(item.ProductName, out var shortName))
@@ -509,7 +514,7 @@ namespace Milk_Bakery.Controllers
 						// Create a dictionary to map customer names to their sequence numbers
 						var customerSequenceMap = await _context.Customer_Master
 							.AsNoTracking()
-							.Where(c => c.route == route.Route && c.Division == Segement)
+							.Where(c => c.route == route.Route && c.Division == Segement && c.IsActive == true)
 							.Select(a => new { a.Name, a.Sequence })
 							.Distinct()
 							.ToDictionaryAsync(a => a.Name, a => a.Sequence);
@@ -519,7 +524,7 @@ namespace Milk_Bakery.Controllers
 						// For dairy segments, get all customers even if they don't have orders
 						bool isDairySegment = Segement.ToLower().Contains("dairy");
 						List<string> distinctCustomers;
-						
+
 						if (isDairySegment)
 						{
 							// For dairy segments, use all customers in the route
@@ -594,7 +599,7 @@ namespace Milk_Bakery.Controllers
 							{
 								row[mat] = DBNull.Value;
 							}
-							
+
 							foreach (var d in details)
 							{
 								if (materialMap.TryGetValue(d.ProductName, out var shortName))
@@ -623,7 +628,7 @@ namespace Milk_Bakery.Controllers
 						routeData.Rows.Add(routeTotal);
 						finalData.Merge(routeData);
 					}
-					
+
 					// Overall total
 					if (finalData.Rows.Count > 0)
 					{
@@ -649,7 +654,7 @@ namespace Milk_Bakery.Controllers
 					// Create a dictionary to map customer names to their sequence numbers
 					var customerSequenceMap = await _context.Customer_Master
 						.AsNoTracking()
-						.Where(c => c.route == Customer && c.Division == Segement)
+						.Where(c => c.route == Customer && c.Division == Segement && c.IsActive == true)
 						.Select(a => new { a.Name, a.Sequence })
 						.Distinct()
 						.ToDictionaryAsync(a => a.Name, a => a.Sequence);
@@ -659,7 +664,7 @@ namespace Milk_Bakery.Controllers
 					// For dairy segments, get all customers even if they don't have orders
 					bool isDairySegment = Segement.ToLower().Contains("dairy");
 					List<string> distinctCustomers;
-					
+
 					if (isDairySegment)
 					{
 						// For dairy segments, use all customers in the route
@@ -676,7 +681,7 @@ namespace Milk_Bakery.Controllers
 							.Where(po => po.OrderDate >= FromDate && po.OrderDate <= ToDate && po.Segementname == Segement && routeCustomers.Contains(po.Customername));
 
 						var purchaseOrdersForNonDairy = await purchaseOrderQueryForNonDairy.ToListAsync();
-						
+
 						distinctCustomers = purchaseOrdersForNonDairy
 							.Select(po => po.Customername)
 							.Distinct()
@@ -727,7 +732,7 @@ namespace Milk_Bakery.Controllers
 						{
 							row[mat] = DBNull.Value;
 						}
-						
+
 						foreach (var d in details)
 						{
 							if (materialMap.TryGetValue(d.ProductName, out var shortName))
@@ -739,7 +744,7 @@ namespace Milk_Bakery.Controllers
 						row["Total"] = totalQty;
 						finalData.Rows.Add(row);
 					}
-					
+
 					// Routewise total
 					DataRow routeTotal = finalData.NewRow();
 					routeTotal["CustomerName"] = "Routewise Total";
