@@ -1,4 +1,3 @@
-
 @model Milk_Bakery.ViewModels.GatePassViewModel
 
 @{
@@ -52,6 +51,23 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .vehicle-info div {
+            flex: 1 1 45%;
+            margin-bottom: 3px;
+        }
+
+        .driver-route-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .driver-route-info > div {
+            flex: 1 1 45%;
+            margin-bottom: 3px;
         }
 
         .details-table {
@@ -142,7 +158,8 @@
         #barcode {
             width: 100%;
             height: 40px;
-            margin-top: 5px;
+            margin: 0;
+            padding: 0;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -162,14 +179,19 @@
     <div class="vehicle-info">
         <div><strong>Vehicle:</strong> @Model.TruckNumber</div>
         <div><strong>Date:</strong> @Model.DispatchDate.ToString("dd/MM/yy")</div>
+        <div class="driver-route-info">
+            <div><strong>Route:</strong> @Model.Route</div>
+            <div><strong>Driver:</strong> _____________</div>
+        </div>
     </div>
 
     <table class="details-table">
         <thead>
             <tr>
                 <th>Customer</th>
-                <th>Sml</th>
-                <th>Lrg</th>
+                <th>Crates</th>
+                <th>Cartons</th>
+                <th>Numbers</th>
             </tr>
         </thead>
         <tbody>
@@ -179,20 +201,22 @@
                 {
                     <tr>
                         <td>@customer.CustomerName</td>
-                        <td>@customer.SmallCrates</td>
-                        <td>@customer.LargeCrates</td>
+                        <td>@customer.Crates</td>
+                        <td>@customer.Cartons</td>
+                        <td>@customer.Numbers</td>
                     </tr>
                 }
                 <tr style="font-weight: bold;">
                     <td>Total: @Model.CustomerCount</td>
-                    <td>@Model.CustomerDetails.Sum(c => c.SmallCrates)</td>
-                    <td>@Model.CustomerDetails.Sum(c => c.LargeCrates)</td>
+                    <td>@Model.CustomerDetails.Sum(c => c.Crates)</td>
+                    <td>@Model.CustomerDetails.Sum(c => c.Cartons)</td>
+                    <td>@Model.CustomerDetails.Sum(c => c.Numbers)</td>
                 </tr>
             }
             else
             {
                 <tr>
-                    <td colspan="3">No customer details</td>
+                    <td colspan="4">No customer details</td>
                 </tr>
             }
         </tbody>
@@ -211,7 +235,7 @@
         </div>
     </div>
     <script>
-        JsBarcode("#barcode", "@Model.TruckNumber", {
+        JsBarcode("#barcode", "@Model.TruckNumber#@Model.DispatchDate.ToString("dd/MM/yy")#@Model.Route", {
             format: "CODE128",
             lineColor: "#000",
             width: 2,

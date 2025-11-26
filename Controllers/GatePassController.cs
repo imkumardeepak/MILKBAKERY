@@ -49,14 +49,14 @@ namespace Milk_Bakery.Controllers
 			}
 		}
 
-		// GET: GatePass/GetGatePassDataByDate
 		[HttpGet]
+		// GET: GatePass/GetGatePassDataByDate
 		public async Task<IActionResult> GetGatePassDataByDate(string date)
 		{
 			try
 			{
 				_logger.LogInformation("GetGatePassDataByDate called with date parameter: {Date}", date);
-				
+
 				DateTime filterDate;
 				if (string.IsNullOrEmpty(date))
 				{
@@ -134,44 +134,54 @@ namespace Milk_Bakery.Controllers
 					.ToListAsync();
 
 				// Get all material masters to map crates codes
-				var materialMasters = await _context.MaterialMaster.ToListAsync();
+				var materialMasters = await _context.MaterialMaster.AsNoTracking()
+												.Where(a => !a.Materialname.Contains("CRATES FOR")).ToListAsync();
 
 				// Create a dictionary for quick lookup of crates codes by material SAP code
 				var materialCratesMap = materialMasters
-					.Where(m => !string.IsNullOrEmpty(m.CratesTypes))
-					.ToDictionary(m => m.material3partycode, m => m.CratesTypes);
+					.Where(m => !string.IsNullOrEmpty(m.Unit))
+					.ToDictionary(m => m.material3partycode, m => m.Unit);
 
-				// Create dictionaries to store crate type classifications
-				var smallCratesTypes = new Dictionary<string, bool>();
-				var largeCratesTypes = new Dictionary<string, bool>();
+				// Create dictionaries to store unit type classifications
+				var cratesTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				var cartonsTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				var numbersTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-				// Populate dictionaries based on crate type names
-				foreach (var crateType in materialCratesMap.Values.Distinct())
+				// Populate dictionaries based on unit type names
+				foreach (var unitType in materialCratesMap.Values.Distinct())
 				{
-					if (crateType.Contains("Small", StringComparison.OrdinalIgnoreCase))
+					if (unitType.Contains("Crates", StringComparison.OrdinalIgnoreCase))
 					{
-						smallCratesTypes[crateType] = true;
+						cratesTypes.Add(unitType);
 					}
-					else if (crateType.Contains("Large", StringComparison.OrdinalIgnoreCase))
+					else if (unitType.Contains("Carton", StringComparison.OrdinalIgnoreCase))
 					{
-						largeCratesTypes[crateType] = true;
+						cartonsTypes.Add(unitType);
+					}
+					else if (unitType.Contains("Number", StringComparison.OrdinalIgnoreCase))
+					{
+						numbersTypes.Add(unitType);
 					}
 				}
 
-				// Group by customer and sum quantities for small and large crates
+				// Group by customer and sum quantities for crates, cartons, and numbers
 				var customerDetails = invoiceData
 					.GroupBy(i => new { i.ShipToCode, i.ShipToName })
 					.Select(g => new GatePassCustomerDetail
 					{
 						CustomerName = g.Key.ShipToName,
-						SmallCrates = g.SelectMany(i => i.InvoiceMaterials)
-									  .Where(m => materialCratesMap.ContainsKey(m.MaterialSapCode) &&
-												  smallCratesTypes.ContainsKey(materialCratesMap[m.MaterialSapCode]))
-									  .Sum(m => m.QuantityCases),
-						LargeCrates = g.SelectMany(i => i.InvoiceMaterials)
-									  .Where(m => materialCratesMap.ContainsKey(m.MaterialSapCode) &&
-												  largeCratesTypes.ContainsKey(materialCratesMap[m.MaterialSapCode]))
-									  .Sum(m => m.QuantityCases)
+						Crates = g.SelectMany(i => i.InvoiceMaterials)
+								  .Where(m => materialCratesMap.ContainsKey(m.MaterialSapCode) &&
+											  cratesTypes.Contains(materialCratesMap[m.MaterialSapCode]))
+								  .Sum(m => m.QuantityCases),
+						Cartons = g.SelectMany(i => i.InvoiceMaterials)
+								  .Where(m => materialCratesMap.ContainsKey(m.MaterialSapCode) &&
+											  cartonsTypes.Contains(materialCratesMap[m.MaterialSapCode]))
+								  .Sum(m => m.QuantityCases),
+						Numbers = g.SelectMany(i => i.InvoiceMaterials)
+								  .Where(m => materialCratesMap.ContainsKey(m.MaterialSapCode) &&
+											  numbersTypes.Contains(materialCratesMap[m.MaterialSapCode]))
+								  .Sum(m => m.QuantityCases)
 					})
 					.ToList();
 
@@ -180,6 +190,7 @@ namespace Milk_Bakery.Controllers
 					TruckNumber = truckNumber,
 					DispatchDate = date,
 					CustomerCount = customerDetails.Count,
+					Route = invoiceData.FirstOrDefault()?.ShipToRoute ?? "",
 					CustomerDetails = customerDetails
 				};
 
