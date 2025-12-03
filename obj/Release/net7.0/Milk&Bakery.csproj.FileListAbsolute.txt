@@ -830,3 +830,4 @@ D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\rjimswa.dswa.cach
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\rjsmrazor.dswa.cache.json
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\rjsmcshtml.dswa.cache.json
 D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\staticwebassets.build.json.cache
+D:\PROJECT\HALDIRAM\Milk&Bakery\Milk&Bakery\obj\Release\net7.0\swae.build.ex.cache
