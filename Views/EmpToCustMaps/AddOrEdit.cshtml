@@ -34,11 +34,12 @@
 					<table id="CodesTable" class="table table-sm">
 						<thead class="thead-light">
 							<tr>
+								<th>Sr.No</th>
 								<th>Customer Name</th>
 								<th>Phone</th>
 
 								<th style="width:100px;">
-									<button id='btnAddDetailRow' type="button" class="btn  text-white text-[16px] hover:bg-green-700 bg-green-600 visible" onclick="AddItem(this)">
+									<button id='btnAddDetailRow' type="button" class="btn  text-white text-[16px] hover:bg-green-700 bg-green-600 visible" onclick="empMapAddItem(this)">
 										Add
 									</button>
 								</th>
@@ -49,6 +50,9 @@
 							@for (int i = 0; i < Model.Cust2EmpMaps.Count; i++)
 							{
 								<tr>
+									<td style="width:50px">
+										@(i + 1)
+									</td>
 									<td style="width:300px">
 										<select asp-for="@Model.Cust2EmpMaps[i].customer" class="form-control" asp-items="@ViewBag.customer" onchange="handleSelectChange(this)"></select>
 										<span asp-validation-for="@Model.Cust2EmpMaps[i].customer" class="text-danger"></span>
@@ -61,7 +65,7 @@
 									</td>
 
 									<td>
-										<button id='btnremove-@i' type="button" class="btn  text-white text-[16px] hover:bg-red-700 bg-red-600 visible" onclick="DeleteItemNew(this)">
+										<button id='btnremove-@i' type="button" class="btn  text-white text-[16px] hover:bg-red-700 bg-red-600 visible" onclick="empMapDeleteItem(this)" data-row-index="@i">
 											Delete
 										</button>
 									</td>
@@ -77,5 +81,252 @@
 			</form>
 		</div>
 	</div>
-
 </div>
+
+@section Scripts {
+	<script>
+		// Row management system
+		var empMapRowManager = {
+			collectionName: "Cust2EmpMaps",
+			
+			getVisibleRows: function(tbody) {
+				return tbody.querySelectorAll("tr:not([style*='display: none'])");
+			},
+			
+			updateSerialNumbers: function(tbody) {
+				var visibleRows = this.getVisibleRows(tbody);
+				for (var i = 0; i < visibleRows.length; i++) {
+					var srNoCell = visibleRows[i].querySelector("td:first-child");
+					if (srNoCell) {
+						srNoCell.textContent = i + 1;
+					}
+				}
+			},
+			
+			deleteRow: function(btn) {
+				var table = document.getElementById("CodesTable");
+				if (!table) return false;
+
+				var tbody = table.querySelector("tbody");
+				// Use data attribute for more reliable indexing
+				var btnIdx = $(btn).data('row-index') || btn.id.replace("btnremove-", "");
+
+				// Mark the corresponding hidden IsDeleted input field as true
+				var idOfIsDeleted = this.collectionName + "_" + btnIdx + "__IsDeleted";
+				var txtIsDeleted = document.getElementById(idOfIsDeleted);
+				if (txtIsDeleted) {
+					txtIsDeleted.value = "true";
+				}
+
+				// Hide the row instead of removing it to maintain form collection indices
+				var row = $(btn).closest("tr");
+				row.hide();
+
+				// Update serial numbers for visible rows only
+				this.updateSerialNumbers(tbody);
+				
+				return true;
+			},
+			
+			addRow: function(btn) {
+				var table = document.getElementById("CodesTable");
+				if (!table) return false;
+
+				var tbody = table.querySelector("tbody");
+				var visibleRows = this.getVisibleRows(tbody);
+				var nextrowIdx = visibleRows.length;
+
+				// Create a new row with proper structure
+				var newRow = tbody.insertRow();
+				newRow.innerHTML = `
+					<td style="width:50px">
+						${nextrowIdx + 1}
+					</td>
+					<td style="width:300px">
+					  <select name="${this.collectionName}[${nextrowIdx}].customer" id="${this.collectionName}_${nextrowIdx}__customer" class="form-control" onchange="handleSelectChange(this)">
+					  </select>
+					  <span class="text-danger field-validation-valid" data-valmsg-for="${this.collectionName}[${nextrowIdx}].customer" data-valmsg-replace="true"></span>
+					</td>
+					<td style="width:200px">
+					  <input class="form-control" type="text" name="${this.collectionName}[${nextrowIdx}].phone" id="${this.collectionName}_${nextrowIdx}__phone" readonly>
+					  <span class="text-danger field-validation-valid" data-valmsg-for="${this.collectionName}[${nextrowIdx}].phone" data-valmsg-replace="true"></span>
+					  <input type="hidden" name="${this.collectionName}[${nextrowIdx}].IsDeleted" id="${this.collectionName}_${nextrowIdx}__IsDeleted" value="false">
+					</td>
+					<td>
+					  <button id='btnremove-${nextrowIdx}' type="button" class="btn text-white text-[16px] hover:bg-red-700 bg-red-600 visible" onclick="empMapDeleteItem(this)" data-row-index="${nextrowIdx}">
+						Delete
+					  </button>
+					</td>
+				`;
+
+				// Copy options from the first select element if it exists, excluding already selected customers
+				var firstSelect = tbody.querySelector("select[name*='customer']");
+				var newSelect = newRow.querySelector("select");
+
+				if (firstSelect && newSelect) {
+					// Get all currently selected customer values
+					var selectedCustomers = [];
+					var allSelects = tbody.querySelectorAll("select[name*='customer']");
+					allSelects.forEach(function(select) {
+						if (select.value !== "") {
+							selectedCustomers.push(select.value);
+						}
+					});
+
+					// Copy options from the first select to the new select, excluding already selected customers
+					for (var i = 0; i < firstSelect.options.length; i++) {
+						var option = firstSelect.options[i];
+						// Skip empty option and already selected customers
+						if (option.value === "" || !selectedCustomers.includes(option.value)) {
+							var newOption = new Option(
+								option.text,
+								option.value,
+								option.defaultSelected,
+								option.selected
+							);
+							newSelect.add(newOption);
+						}
+					}
+				}
+
+				return true;
+			}
+		};
+
+		// Function to delete an item row from the table
+		function empMapDeleteItem(btn) {
+			// Prevent multiple executions
+			if ($(btn).hasClass('disabled')) {
+				return;
+			}
+			
+			// Disable the button temporarily to prevent double clicks
+			$(btn).addClass('disabled');
+			
+			// Use the row manager to delete the row
+			if (empMapRowManager.deleteRow(btn)) {
+				// Rebind validators after DOM manipulation
+				rebindValidators();
+			}
+			
+			// Re-enable the button
+			$(btn).removeClass('disabled');
+		}
+
+		// Enhanced function to add a new item row to the table
+		function empMapAddItem(btn) {
+			// Use the row manager to add the row
+			if (empMapRowManager.addRow(btn)) {
+				// Rebind validators after DOM manipulation
+				rebindValidators();
+			}
+		}
+
+		// Function to handle select change events
+		function handleSelectChange(selectElement) {
+			var tid = selectElement.id;
+			var product = selectElement.value;
+
+			// Check if this is for the main employee/customer dropdown (myDropdown1)
+			if (tid === "myDropdown1") {
+				// For employee dropdown, we need to use EmpToCustMaps controller
+				if (product !== "") {
+					$.ajax({
+						url: "/EmpToCustMaps/fill_form",
+						type: "GET",
+						dataType: "json",
+						data: { selectedvalue: product },
+						success: function (data) {
+							document.getElementById("phone").value = data;
+						},
+					});
+				} else {
+					document.getElementById("phone").value = "";
+				}
+				return;
+			}
+
+			// Check if this is for customer selection in dynamic table rows
+			// This applies to both initial loaded rows and newly added rows
+			var isCustomerSelection = tid.includes("customer");
+
+			// Check for duplicate customer selection in dynamic table rows
+			if (isCustomerSelection && product !== "") {
+				var allSelectElements = document.querySelectorAll("select[id*='customer']");
+				var isDuplicate = false;
+
+				allSelectElements.forEach(function (otherSelect) {
+					// Check if another select element (not the current one) has the same value
+					if (otherSelect.id !== tid && otherSelect.value === product) {
+						isDuplicate = true;
+					}
+				});
+
+				if (isDuplicate) {
+					alert("This customer has already been selected in another row.");
+					selectElement.value = ""; // Reset the selection
+					return;
+				}
+			}
+
+			// Proceed to update the phone field for customer selection in dynamic table rows
+			var txtProductCodeId = tid.replaceAll("customer", "phone");
+			var txtProductCode = document.getElementById(txtProductCodeId);
+
+			if (txtProductCode) {
+				txtProductCode.value = null;
+
+				// Make AJAX call to fetch customer data
+				// For dynamic table rows, we always fetch customer phone numbers from Cust2CustMapController
+				// because we're always looking up customer phone numbers, not employee phone numbers
+				$.ajax({
+					url: "/Cust2CustMap/fill_form",
+					type: "GET",
+					dataType: "json",
+					data: { selectedvalue: product },
+					success: function (data) {
+						if (txtProductCode) {
+							txtProductCode.value = data;
+						}
+					},
+				});
+			}
+		}
+
+		// Function to rebind validators
+		function rebindValidators() {
+			var $form = $("#CodeSbyAnizForm");
+
+			$form.unbind();
+
+			$form.data("validator", null);
+
+			$.validator.unobtrusive.parse($form);
+
+			$form.validate($form.data("unobtrusiveValidation").options);
+		}
+
+		// Function to check for duplicate customer selections on page load
+		function checkInitialDuplicates() {
+			var allSelectElements = document.querySelectorAll("select[id*='customer']");
+			var selectedValues = [];
+
+			allSelectElements.forEach(function(select) {
+				if (select.value !== "") {
+					if (selectedValues.includes(select.value)) {
+						// Found a duplicate, clear the duplicate selection
+						alert("Duplicate customer found: " + select.value + ". Please correct the selection.");
+						select.value = "";
+					} else {
+						selectedValues.push(select.value);
+					}
+				}
+			});
+		}
+
+		// Call checkInitialDuplicates when document is ready
+		$(document).ready(function() {
+			checkInitialDuplicates();
+		});
+	</script>
+}
