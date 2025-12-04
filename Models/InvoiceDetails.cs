@@ -24,7 +24,7 @@ namespace Milk_Bakery.Models
 
 			public DateTime OrderDate { get; set; }
 
-			
+
 			[MaxLength(200)]
 			public string BillToName { get; set; }
 
@@ -51,6 +51,8 @@ namespace Milk_Bakery.Models
 
 			// Adding setflag column with default value 0 and allowing null
 			public int? setflag { get; set; } = 0;
+
+			public bool? GatePassGenerated { get; set; } = false;
 
 			public List<InvoiceMaterialDetail> InvoiceMaterials { get; set; }
 		}

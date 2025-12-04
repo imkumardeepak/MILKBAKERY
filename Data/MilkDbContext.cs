@@ -104,10 +104,18 @@ namespace Milk_Bakery.Data
 				.Property(e => e.setflag)
 				.HasDefaultValue(0);
 
+			modelBuilder.Entity<Invoice>()
+				.Property(e => e.GatePassGenerated)
+				.HasDefaultValue(false);
+
 			// Create index for setflag column
 			modelBuilder.Entity<Invoice>()
 				.HasIndex(e => e.setflag)
 				.HasDatabaseName("IX_Invoices_setflag");
+
+			modelBuilder.Entity<Invoice>()
+				.HasIndex(e => e.GatePassGenerated)
+				.HasDatabaseName("IX_Invoices_GatePassGenerated");
 
 			// Configure default values for ConversionTable
 			modelBuilder.Entity<ConversionTable>()

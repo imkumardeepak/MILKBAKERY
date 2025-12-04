@@ -1,8 +1,13 @@
 ﻿﻿@{
-
 string role = Context.Request.HttpContext.Session.GetString("role");
 string user = Context.Request.HttpContext.Session.GetString("UserName");
 string name = Context.Request.HttpContext.Session.GetString("name");
+
+if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(user) || string.IsNullOrEmpty(name))
+{
+	Context.Response.Redirect("/Home/Login");
+	return;
+}
 }
 <!DOCTYPE html>
 <html lang="en">

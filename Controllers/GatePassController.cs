@@ -25,14 +25,15 @@ namespace Milk_Bakery.Controllers
 				// Group data by truck number and date, and count customers
 				var groupedData = await _context.Invoices.Where(c => c.InvoiceDate.Date <= DateTime.Now.Date && c.InvoiceDate.Date >= DateTime.Now.Date.AddDays(-1))
 					.Include(c => c.InvoiceMaterials)
-					.GroupBy(c => new { c.VehicleNo, c.InvoiceDate }) // Group by truck (route) and date
+					.GroupBy(c => new { c.VehicleNo, c.InvoiceDate })
 					.Select(g => new GatePassGroupedData
 					{
 						TruckNumber = g.First().VehicleNo,
 						DispatchDate = g.Key.InvoiceDate,
 						CustomerCount = g.Count(),
+						GatePassGenerated = g.Any(i => i.GatePassGenerated == true) // Check if any invoice in the group has gate pass generated
 					})
-					.OrderBy(g => g.TruckNumber)
+					.OrderBy(g => g.DispatchDate)
 					.ToListAsync();
 
 				var viewModel = new GatePassIndexViewModel
@@ -99,6 +100,7 @@ namespace Milk_Bakery.Controllers
 						TruckNumber = g.First().VehicleNo ?? "Unknown",
 						DispatchDate = g.Key.InvoiceDate,
 						CustomerCount = g.Count(),
+						GatePassGenerated = g.Any(i => i.GatePassGenerated == true) // Check if any invoice in the group has gate pass generated
 					})
 					.OrderBy(g => g.TruckNumber)
 					.ToListAsync();
@@ -110,7 +112,8 @@ namespace Milk_Bakery.Controllers
 				{
 					truckNumber = g.TruckNumber,
 					dispatchDate = g.DispatchDate.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"), // ISO format for JavaScript
-					customerCount = g.CustomerCount
+					customerCount = g.CustomerCount,
+					gatePassGenerated = g.GatePassGenerated // Include gate pass status in JSON response
 				}).ToList();
 
 				return Json(new { success = true, data = jsonData });
@@ -184,6 +187,13 @@ namespace Milk_Bakery.Controllers
 								  .Sum(m => m.QuantityCases)
 					})
 					.ToList();
+
+				//update invoiceData set true for gatepass printed
+				await _context.Invoices
+					.Where(i => i.VehicleNo == truckNumber && i.InvoiceDate.Date == date.Date)
+					.ExecuteUpdateAsync(s => s.SetProperty(i => i.GatePassGenerated, true));
+				// Save changes to the database
+				await _context.SaveChangesAsync();
 
 				var viewModel = new GatePassViewModel
 				{

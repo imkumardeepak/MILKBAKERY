@@ -900,6 +900,11 @@ namespace Milk_Bakery.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool?>("GatePassGenerated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTime>("InvoiceDate")
                         .HasColumnType("datetime2");
 
@@ -940,6 +945,9 @@ namespace Milk_Bakery.Migrations
                         .HasDefaultValue(0);
 
                     b.HasKey("InvoiceId");
+
+                    b.HasIndex("GatePassGenerated")
+                        .HasDatabaseName("IX_Invoices_GatePassGenerated");
 
                     b.HasIndex("setflag")
                         .HasDatabaseName("IX_Invoices_setflag");

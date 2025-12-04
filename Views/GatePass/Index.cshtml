@@ -32,6 +32,7 @@
                             <th>Truck Number</th>
                             <th>Dispatch Date</th>
                             <th>Total Customer Count</th>
+                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -40,10 +41,20 @@
                         {
                             @foreach (var item in Model.GroupedData)
                             {
-                                <tr>
+                                <tr class="@(item.GatePassGenerated ? "table-success" : "")">
                                     <td>@item.TruckNumber</td>
                                     <td>@item.DispatchDate.ToString("dd/MM/yyyy")</td>
                                     <td>@item.CustomerCount</td>
+                                    <td>
+                                        @if (item.GatePassGenerated)
+                                        {
+                                            <span class="badge bg-success">Generated</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        }
+                                    </td>
                                     <td>
                                         <a href="@Url.Action("PrintGatePass", "GatePass", new { truckNumber = item.TruckNumber, date = item.DispatchDate.ToString("yyyy-MM-dd") })" 
                                            class="btn btn-primary btn-sm">
@@ -56,7 +67,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="4" class="text-center">No gate pass data available</td>
+                                <td colspan="5" class="text-center">No gate pass data available</td>
                             </tr>
                         }
                     </tbody>
@@ -76,9 +87,18 @@
                 var dataTable = $('#gatePassTable').DataTable({
                     "pageLength": 25,
                     "columnDefs": [
-                        { "orderable": false, "targets": [3] } // Disable sorting on Action column
-                    ]
+                        { "orderable": false, "targets": [4] }, // Disable sorting on Action column (now column 4)
+                        { "type": "status", "targets": [3] }   // Set custom sorting type for Status column
+                    ],
+                    "order": [[ 3, "desc" ]] // Sort by Status column (index 3) in descending order by default (Generated first)
                 });
+
+                // Custom sorting function for the status column
+                $.fn.dataTable.ext.type.order['status-pre'] = function(data) {
+                    // Extract text from the badge HTML
+                    var text = $(data).text();
+                    return (text === 'Generated') ? 1 : 0;
+                };
                 
                 // Store the URL for AJAX calls
                 var getGatePassDataUrl = '@Url.Action("GetGatePassDataByDate", "GatePass")';
@@ -101,15 +121,15 @@
                     if (!date || date === '') {
                         dataTable.clear().draw();
                         dataTable.row.add([
-                            '<td colspan="4" class="text-center">Please select a date to filter gate pass data</td>'
+                            '<td colspan="5" class="text-center">Please select a date to filter gate pass data</td>'
                         ]).draw(false);
                         return;
                     }
-                    
+
                     // Show loading indicator
                     dataTable.clear().draw();
                     dataTable.row.add([
-                        '<td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td>'
+                        '<td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td>'
                     ]).draw(false);
                     
                     // Make AJAX call to get filtered data
@@ -133,17 +153,28 @@
                                                    '&date=' + encodeURIComponent(item.dispatchDate.split('T')[0]);
                                     
                                     // Add row to table
-                                    dataTable.row.add([
+                                    var rowNode = dataTable.row.add([
                                         item.truckNumber,
                                         formattedDate,
                                         item.customerCount,
+                                        item.gatePassGenerated ? 
+                                            '<span class="badge bg-success">Generated</span>' : 
+                                            '<span class="badge bg-warning text-dark">Pending</span>',
                                         '<a href="' + printUrl + '" class="btn btn-primary btn-sm"><i class="fas fa-print"></i> Print Gate Pass</a>'
-                                    ]).draw(false);
+                                    ]).draw(false).node();
+
+                                    // Apply row coloring based on gate pass status
+                                    if (item.gatePassGenerated) {
+                                        $(rowNode).addClass('table-success');
+                                    }
+
+                                    // Re-apply sorting
+                                    dataTable.order([3, 'desc']).draw();
                                 });
                             } else {
                                 // Show no data message
                                 dataTable.row.add([
-                                    '<td colspan="4" class="text-center">No gate pass data available for the selected date</td>'
+                                    '<td colspan="5" class="text-center">No gate pass data available for the selected date</td>'
                                 ]).draw(false);
                             }
                         },
@@ -153,7 +184,7 @@
                             
                             // Show error message
                             dataTable.row.add([
-                                '<td colspan="4" class="text-center">Error loading data. Please try again.</td>'
+                                '<td colspan="5" class="text-center">Error loading data. Please try again.</td>'
                             ]).draw(false);
                         }
                     });

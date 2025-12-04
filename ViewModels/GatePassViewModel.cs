@@ -29,5 +29,6 @@ namespace Milk_Bakery.ViewModels
 		public string TruckNumber { get; set; }
 		public DateTime DispatchDate { get; set; }
 		public int CustomerCount { get; set; }
+		public bool GatePassGenerated { get; set; } // Added to track gate pass generation status
 	}
 }

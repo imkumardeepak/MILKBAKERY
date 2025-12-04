@@ -71,23 +71,33 @@ namespace Milk_Bakery.Controllers
 				{
 					// Fetch and cache materials as a dictionary
 					var materialQuery = _context.MaterialMaster
-												.AsNoTracking()
-												.Where(a => !a.Materialname.Contains("CRATES FOR")
-															&& a.segementname == Segement
-															&& a.isactive == true);
+								.AsNoTracking()
+								.Where(a => !a.Materialname.Contains("CRATES FOR")
+											&& a.segementname == Segement
+											&& a.isactive == true);
 
-					// Apply subcategory filter if selected
+					// Apply subcategory filter
 					if (!string.IsNullOrEmpty(SubCategory))
 					{
 						materialQuery = materialQuery.Where(a => a.subcategory == SubCategory);
 					}
 
+					// **Order by Sub_CategoryMaster.ShortCode**
+					materialQuery = materialQuery
+						.Join(_context.Sub_CategoryMaster.AsNoTracking(),
+							  m => m.subcategory,
+							  sc => sc.SubCategoryName,
+							  (m, sc) => new { Material = m, SubCat = sc })
+						.OrderBy(x => x.SubCat.ShortCode)
+						.ThenBy(x => x.Material.sequence)
+						.Select(x => x.Material);
 
-					var materialMap = await materialQuery.OrderBy(a => a.subcategory)
-												.ThenBy(a => a.sequence)
-												.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
+					// Final Dictionary
+					var materialMap = await materialQuery
+						.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 					var materialShortNames = materialMap.Values.Distinct().ToList();
+
 
 					DataTable finaldata = new DataTable();
 					finaldata.Columns.Add("Srno");
@@ -264,19 +274,32 @@ namespace Milk_Bakery.Controllers
 				// Single route logic
 				try
 				{
+					// Fetch and cache materials as a dictionary
 					var materialQuery = _context.MaterialMaster
-						.AsNoTracking()
-						.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true);
+								.AsNoTracking()
+								.Where(a => !a.Materialname.Contains("CRATES FOR")
+											&& a.segementname == Segement
+											&& a.isactive == true);
 
-					// Apply subcategory filter if selected
+					// Apply subcategory filter
 					if (!string.IsNullOrEmpty(SubCategory))
 					{
 						materialQuery = materialQuery.Where(a => a.subcategory == SubCategory);
 					}
 
-					var materialMap = await materialQuery.OrderBy(a => a.subcategory)
-												.ThenBy(a => a.sequence)
-												.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
+					// **Order by Sub_CategoryMaster.ShortCode**
+					materialQuery = materialQuery
+						.Join(_context.Sub_CategoryMaster.AsNoTracking(),
+							  m => m.subcategory,
+							  sc => sc.SubCategoryName,
+							  (m, sc) => new { Material = m, SubCat = sc })
+						.OrderBy(x => x.SubCat.ShortCode)
+						.ThenBy(x => x.Material.sequence)
+						.Select(x => x.Material);
+
+					// Final Dictionary
+					var materialMap = await materialQuery
+						.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 					var materialShortNames = materialMap.Values.Distinct().ToList();
 
@@ -479,20 +502,32 @@ namespace Milk_Bakery.Controllers
 		{
 			try
 			{
-				// Material Map
+				// Fetch and cache materials as a dictionary
 				var materialQuery = _context.MaterialMaster
-					.AsNoTracking()
-					.Where(a => !a.Materialname.Contains("CRATES FOR") && a.segementname == Segement && a.isactive == true);
+							.AsNoTracking()
+							.Where(a => !a.Materialname.Contains("CRATES FOR")
+										&& a.segementname == Segement
+										&& a.isactive == true);
 
-				// Apply subcategory filter if selected
+				// Apply subcategory filter
 				if (!string.IsNullOrEmpty(SubCategory))
 				{
 					materialQuery = materialQuery.Where(a => a.subcategory == SubCategory);
 				}
 
-				var materialMap = await materialQuery.OrderBy(a => a.subcategory)
-												.ThenBy(a => a.sequence)
-												.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
+				// **Order by Sub_CategoryMaster.ShortCode**
+				materialQuery = materialQuery
+					.Join(_context.Sub_CategoryMaster.AsNoTracking(),
+						  m => m.subcategory,
+						  sc => sc.SubCategoryName,
+						  (m, sc) => new { Material = m, SubCat = sc })
+					.OrderBy(x => x.SubCat.ShortCode)
+					.ThenBy(x => x.Material.sequence)
+					.Select(x => x.Material);
+
+				// Final Dictionary
+				var materialMap = await materialQuery
+					.ToDictionaryAsync(a => a.Materialname, a => a.ShortName);
 
 				var materialShortNames = materialMap.Values.Distinct().ToList();
 

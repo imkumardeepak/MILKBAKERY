@@ -18,6 +18,5 @@ namespace Milk_Bakery.Models
         [StringLength(500)]
         public string CategoryName { get; set;}
 
-       
     }
 }
