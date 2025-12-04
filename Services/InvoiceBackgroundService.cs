@@ -80,13 +80,25 @@ namespace Milk_Bakery.Services
 									_logger.LogWarning("ShipToCode is null or empty for invoice ID: {invoiceId}", invoice.InvoiceId);
 									continue; // Skip processing if ShipToCode is invalid
 								}
+								string shipToCode;
+
+								try
+								{
+									shipToCode = Convert.ToInt64(invoice.ShipToCode.Trim()).ToString();
+								}
+								catch (Exception ex)
+								{
+									_logger.LogError(ex, "Error occurred while parsing ShipToCode for invoice ID: {invoiceId}", invoice.InvoiceId);
+									continue;
+								}
 
 
-								var customer = await dbContext.Customer_Master.FirstOrDefaultAsync(c => c.shortname == invoice.ShipToCode);
+
+								var customer = await dbContext.Customer_Master.FirstOrDefaultAsync(c => c.shortname == shipToCode);
 								if (customer == null)
 								{
 									_logger.LogWarning("Customer not found for invoice ID: {invoiceId}, ShipToCode: {shipToCode}",
-										invoice.InvoiceId, invoice.ShipToCode);
+										invoice.InvoiceId, shipToCode);
 									continue; // Skip processing if customer not found
 								}
 

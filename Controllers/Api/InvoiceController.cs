@@ -194,7 +194,7 @@ namespace Milk_Bakery.Controllers.Api
 				var invoice = _mappingService.MapToEntity(createDto);
 
 				// Set default values
-				invoice.InvoiceDate = invoice.InvoiceDate == default ? DateTime.Now : invoice.InvoiceDate;
+				invoice.InvoiceDate = DateTime.Now;
 				invoice.OrderDate = invoice.OrderDate == default ? DateTime.Now : invoice.OrderDate;
 
 				_context.Invoices.Add(invoice);

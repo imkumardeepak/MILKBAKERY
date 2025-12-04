@@ -23,7 +23,7 @@ namespace Milk_Bakery.Controllers
 			try
 			{
 				// Group data by truck number and date, and count customers
-				var groupedData = await _context.Invoices.Where(c => c.InvoiceDate.Date <= DateTime.Now.Date && c.InvoiceDate.Date >= DateTime.Now.Date.AddDays(-1))
+				var groupedData = await _context.Invoices.Where(c => c.InvoiceDate.Date == DateTime.Now.Date)
 					.Include(c => c.InvoiceMaterials)
 					.GroupBy(c => new { c.VehicleNo, c.InvoiceDate })
 					.Select(g => new GatePassGroupedData
@@ -31,7 +31,7 @@ namespace Milk_Bakery.Controllers
 						TruckNumber = g.First().VehicleNo,
 						DispatchDate = g.Key.InvoiceDate,
 						CustomerCount = g.Count(),
-						GatePassGenerated = g.Any(i => i.GatePassGenerated == true) // Check if any invoice in the group has gate pass generated
+						GatePassGenerated = g.Any(i => i.GatePassGenerated == true) 
 					})
 					.OrderBy(g => g.DispatchDate)
 					.ToListAsync();
@@ -94,7 +94,7 @@ namespace Milk_Bakery.Controllers
 				var groupedData = await _context.Invoices
 					.Include(c => c.InvoiceMaterials)
 					.Where(c => c.InvoiceDate.Date == filterDate.Date) // Filter by selected date
-					.GroupBy(c => new { c.ShipToCode, c.InvoiceDate, c.ShipToRoute }) // Group by truck (route) and date
+					.GroupBy(c => new { c.VehicleNo, c.InvoiceDate })
 					.Select(g => new GatePassGroupedData
 					{
 						TruckNumber = g.First().VehicleNo ?? "Unknown",
@@ -200,7 +200,7 @@ namespace Milk_Bakery.Controllers
 					TruckNumber = truckNumber,
 					DispatchDate = date,
 					CustomerCount = customerDetails.Count,
-					Route = invoiceData.FirstOrDefault()?.ShipToRoute ?? "",
+					Route = string.Join(", ", invoiceData.Select(i => i.ShipToRoute).Distinct()),
 					CustomerDetails = customerDetails
 				};
 
